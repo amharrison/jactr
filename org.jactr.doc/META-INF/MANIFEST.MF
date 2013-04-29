@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: jACT-R Documentation Plug-in
+Bundle-SymbolicName: org.jactr.doc;singleton:=true
+Bundle-Version: 1.0.1.qualifier
+Bundle-Vendor: jactr.org
+Require-Bundle: org.eclipse.pde.core
