@@ -1,0 +1,23 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Launching Plug-in
+Bundle-SymbolicName: org.jactr.launching;singleton:=true
+Bundle-Version: 1.0.1.qualifier
+Bundle-Activator: org.jactr.launching.Activator
+Bundle-Vendor: jactr.org
+Bundle-Localization: plugin
+Require-Bundle: org.eclipse.core.runtime,
+ org.jactr.tools,
+ org.jactr.support,
+ org.jactr.io,
+ org.jactr,
+ org.commonreality,
+ org.eclipse.equinox.launcher,
+ org.eclipse.equinox.app,
+ org.eclipse.osgi.services,
+ org.eclipse.osgi.util
+Eclipse-BuddyPolicy: registered  
+Eclipse-RegisterBuddy: org.apache.log4j
+Bundle-ActivationPolicy: lazy
+Export-Package: org.jactr.launching
+Bundle-ClassPath: .

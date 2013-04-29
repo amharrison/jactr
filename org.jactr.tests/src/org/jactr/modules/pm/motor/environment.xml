@@ -1,0 +1,59 @@
+<environment>
+    <commonreality>
+        <reality class="org.commonreality.reality.impl.DefaultReality">
+            <services>
+                <server
+                    transport="org.commonreality.mina.transport.LocalTransportProvider"
+                    protocol="org.commonreality.mina.protocol.NOOPProtocol"
+                    address="1400"/>
+            </services>
+            <credentials>
+                <credential value="sensor:pass"/>
+                <credential value="agent:pass"/>
+            </credentials>
+        </reality>
+        <sensors>
+            <sensor class="org.commonreality.sensors.keyboard.DefaultKeyboardSensor">
+                <credential value="sensor2:pass"/>
+                <services>
+                    <client
+                        transport="org.commonreality.mina.transport.LocalTransportProvider"
+                        protocol="org.commonreality.mina.protocol.NOOPProtocol"
+                        address="1400"/>
+                </services>
+            </sensor>
+        </sensors>
+        <agents>
+            <agent class="org.jactr.core.reality.ACTRAgent">
+                <credential value="agent:pass"/>
+                <services>
+                    <client
+                        transport="org.commonreality.mina.transport.LocalTransportProvider"
+                        protocol="org.commonreality.mina.protocol.NOOPProtocol"
+                        address="1400"/>
+                </services>
+                <property name="ACTRAgent.ModelName" value="motorTest"/>
+            </agent>
+        </agents>
+    </commonreality>
+    
+    <controller class="org.jactr.core.runtime.controller.debug.DebugController"/>
+    
+    <connector class="org.jactr.core.reality.connector.CommonRealityConnector"/>
+    
+    <models>
+        <model url="org/jactr/modules/pm/motor/motor-test.jactr"
+            alias="motorTest"/>
+    </models>
+    
+    <attachments>
+        <attachment class="org.jactr.core.logging.impl.DefaultModelLogger"
+            attach="motorTest">
+            <parameters>
+                <parameter name="all" value="err"/>
+            </parameters>
+        </attachment>
+    <!-- 
+      -->   
+    </attachments>
+</environment>

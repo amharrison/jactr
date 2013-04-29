@@ -1,0 +1,47 @@
+<actr>
+ <model name="Unit1 Count">
+
+ <modules>
+  <module class="org.jactr.core.module.declarative.six.DefaultDeclarativeModule6"/>
+  <module class="org.jactr.core.module.procedural.six.DefaultProceduralModule6"/>
+  <module class="org.jactr.core.module.goal.six.DefaultGoalModule6"/>
+  <module class="org.jactr.core.module.retrieval.six.DefaultRetrievalModule6"/>
+ </modules>
+
+ 
+ <declarative-memory>
+ <!-- stupid little example -->
+  <chunk-type name="key-type-goal">
+   <slot name="string" equals="nil"/> <!-- string to type -->
+  </chunk-type>
+ </declarative-memory>
+ <procedural-memory>
+ 
+ <!-- snag the next goal -->
+  <production name="start-trial">
+   <conditions>
+     <query buffer="goal">
+      <slot name="buffer" equals="empty"/>
+     </query>
+     <proxy-condition class="org.jactr.tools.bridge.HasNextGoalCondition"/>
+   </conditions>
+   <actions>
+    <output>"Snagging goal"</output>
+    <proxy-action class="org.jactr.tools.bridge.NextGoalAction"/>
+   </actions>
+  </production>
+
+  <production name="respond">
+   <conditions>
+     <match buffer="goal" type="key-type-goal">
+      <slot name="string" equals="=str"/>
+     </match>
+   </conditions>
+   <actions>
+    <output>"Ok, time to type =str"</output>
+    <proxy-action class="org.jactr.tools.bridge.ResponseAction"/>
+   </actions>
+  </production>
+ </procedural-memory>
+ </model>
+</actr>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.jactr"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.jactr.io"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.jactr.launching"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.jactr.support"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.jactr.tools"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.commonreality.mina"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.commonreality"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.jactr.tools.shell"/>
+	<classpathentry kind="lib" path="/org.jactr.support/lib/org/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="/org.jactr.io/lib/antlr-3.1.1.jar" sourcepath="/Users/harrison/Desktop/Inbox/downloads/2008-11-06/antlr-3.1.1/runtime/Java/src"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.jactr.tools.masterslave"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.commonreality.sensors.xml"/>
+	<classpathentry kind="lib" path="/Users/harrison/Archive/Development/Apps/3.7/eclipse-core-dev-32/plugins/org.apache.mina.core_2.0.2.v201108120515.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

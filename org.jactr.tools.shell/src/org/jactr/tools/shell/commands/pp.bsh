@@ -1,0 +1,20 @@
+
+
+pp(){
+ if(this.caller.currentModel==null)
+  for(model : getModels().toArray())
+   pp(model);
+ else
+  pp(this.caller.currentModel);
+}
+
+pp(IModel model){
+ for(production : getProductions(model).toArray())
+  pp(production);
+}
+
+pp(IProduction production){
+  for(line : generateCode(production,"lisp").toArray())
+   print(line);
+  print("");
+}

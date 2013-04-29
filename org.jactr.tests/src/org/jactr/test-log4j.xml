@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+	<!--
+		<appender name="CONSOLE" class="org.apache.log4j.net.SocketAppender">
+		<param name="RemoteHost" value="localhost"/> <param name="Port"
+		value="4445"/> <layout class="org.apache.log4j.PatternLayout"> <param
+		name="ConversionPattern" value="%n%p %t : %c %d{ABSOLUTE} - %m"/>
+		</layout> </appender>
+	-->
+	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+		<param name="Target" value="System.err" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%n%-5p %d{ABSOLUTE}(%t) [%c.%M] %m" />
+		</layout>
+	</appender>
+	<appender name="DebugFileAppender" class="org.apache.log4j.FileAppender">
+		<param name="File" value="jactr-debug.log" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%n%-5p %d{ABSOLUTE}(%t) [%c.%M] %m" />
+		</layout>
+	</appender>
+	<!--
+		<appender name="ErrorFileAppender"
+		class="org.apache.log4j.FileAppender"> <param name="File"
+		value="jactr-error.log"/> <layout
+		class="org.apache.log4j.PatternLayout"> <param
+		name="ConversionPattern" value="%n%-5p %d{ABSOLUTE}(%t) [%c.%M] %m"/>
+		</layout> </appender>
+	-->
+
+
+	<!-- modules -->
+
+	<!--<logger name="org.jactr.core.logging.impl.DefaultModelLogger">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.model.six">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.module.procedural">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.production.action.AddAction">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.queue.TimedEventQueue">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.queue.timedevents.BlockingTimedEvent">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.slot.BasicSlot">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.slot.DefaultConditionalSlot">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.common">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.aural">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.aural.AuralModuleTest">
+		<level value="warn" />
+	</logger>
+	<logger name="org.jactr.modules.pm.vocal">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.visual.instrument">
+		<level value="warn" />
+	</logger>
+	
+	<logger name="org.jactr.core.production.basic.AbstractProduction">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.visual">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.aural.delegate">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.production.request">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.runtime.GeneralExecutionTest">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.chunk.four">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.module.declarative.four.learning">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.visual.delegate">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.vocal">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.io.antlr3">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.io.parser">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.io.participant">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.io.antlr3.generator">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.io.participant.impl">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.io.antlr3.compiler">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.io.antlr3.builder">
+		<level value="debug" />
+	</logger>
+	
+	<logger name="org.jactr.tools.perf">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.tools.analysis">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.tools.async.controller">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.tools.async.shadow">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.entry.iterative.IterativeMain">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.reality.impl.DefaultReality">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.sensors">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.sensors.xml">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.object.manager.impl">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.object.delta">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.reality.impl.handler">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.sensors.speech">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.participant.impl.handlers">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.object.manager.impl.GeneralObjectManager">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.sensors.handlers">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.sensors.keyboard">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.sensors.motor">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.sensors.handlers.AddRemoveTracker">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.sensors.aural">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.sensors.speech">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.reality.impl.handler.ObjectHandler">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.participant.impl.filters">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.tools.shell">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.runtime">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.reality">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.time">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.participant.impl.BasicParticipantIOHandler">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.participant.impl.AbstractParticipant">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.reality.impl.RealityIOHandler">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.reality.impl.StateAndConnectionManager">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.participant.impl.handlers.ControlHandler">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.visual.delegate">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.visual.buffer.processor">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.vocal">
+		<level value="debug" />
+	</logger>
+
+	<logger name="org.jactr.modules.pm.visual">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.common.memory">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.common.efferent">
+		<level value="debug" />
+	</logger>
+	
+	
+	<logger name="org.jactr.io">
+		<level value="debug" />
+	</logger>
+	
+	<logger name="org.jactr.core.slot.DefaultConditionalSlot"><level value="debug" /></logger>
+	<logger name="org.jactr.modules.pm.motor.managers"><level value="debug" /></logger>
+	<logger name="org.jactr.modules.pm.common.efferent.EfferentCommandManager"><level value="debug" /></logger>
+	<logger name="org.jactr.modules.pm.aural">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.modules.pm.common.memory">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.module.retrieval.six"><level value="debug" /></logger>
+	
+	<logger name="org.jactr.io.antlr3.parser">
+		<level value="debug" />
+	</logger>
+	-->
+	<logger name="org.jactr.core.module.procedural.six.DefaultConflictSetAssembler">
+		<level value="debug" />
+	</logger>
+	
+	<root>
+		<level value="warn" />
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="DebugFileAppender" />
+	</root>
+</log4j:configuration>

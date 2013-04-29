@@ -1,0 +1,74 @@
+import java.util.HashSet;
+
+bindings = new HashSet();
+
+bindValues(IModel model)
+{
+ 
+ for(production : getProductions(model).toArray())
+ try
+  {
+   var = production.getSymbolicProduction().getName();
+   var = var.replaceAll("-","_");
+   global.namespace.setVariable(var, production, false);
+   bindings.add(var);
+  } 
+ catch(EvalError e)
+  {
+   print("warning : cannot directly reference production "+production);
+  } 
+ 
+ for(chunk : getChunks(model).toArray())
+ try
+  {
+   var = chunk.getSymbolicChunk().getName();
+   var = var.replaceAll("-","_");
+   global.namespace.setVariable(var, chunk, false);
+   bindings.add(var);
+  } 
+ catch(EvalError e)
+  {
+   print("warning : cannot directly reference chunk "+chunk);
+  }
+  
+ for(chunkType : getChunkTypes(model).toArray())
+ try
+  {
+   var = chunkType.getSymbolicChunkType().getName();
+   var = var.replaceAll("-","_");
+   global.namespace.setVariable(var, chunkType, false);
+   bindings.add(var);
+  } 
+ catch(EvalError e)
+  {
+   print("warning : cannot directly reference chunktype "+chunkType);
+  }
+}
+
+unbindValues()
+{
+  for(var : bindings.toArray())
+   global.namespace.unsetVariable(var);
+  bindings.clear();
+}
+
+use()
+{
+  if(this.caller.currentModel!=null)
+   unbindValues();
+   
+  this.caller.currentModel = null;
+}
+
+
+use(String modelName){
+  use();
+  
+  for(model : getModels().toArray())
+   if(model.getName().equalsIgnoreCase(modelName))
+    {
+      this.caller.currentModel = model;
+      bindValues(model);
+      break;
+    }   
+}

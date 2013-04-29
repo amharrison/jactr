@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Temporal Plug-in
+Bundle-SymbolicName: org.jactr.modules.temporal;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: jactr.org
+Require-Bundle: org.jactr,
+ org.jactr.support,
+ org.commonreality,
+ org.jactr.io
+Export-Package: org.jactr.modules.temporal,
+ org.jactr.modules.temporal.buffer,
+ org.jactr.modules.temporal.buffer.processor,
+ org.jactr.modules.temporal.io,
+ org.jactr.modules.temporal.six
+Eclipse-RegisterBuddy: org.jactr, org.jactr.io, org.commonreality, org.apache.log4j, org.apache.commons.logging 

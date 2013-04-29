@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+      
+   <extension point="org.jactr.modules" name="Threaded Cognition Modules" id="org.jactr.core.modules">
+     
+      <module
+            class="org.jactr.modules.threaded.procedural.DefaultThreadedProceduralModule6"
+            defaultEnabled="false"
+            name="Threaded Procedural v6"
+            requiresCommonReality="false"
+            weight="10">
+         <description>
+            Handles conflict resolution in threaded cases.
+         </description>
+      </module>
+      <module
+            class="org.jactr.modules.threaded.goal.DefaultThreadedGoalModule6"
+            defaultEnabled="false"
+            name="Threaded Goal v6"
+            requiresCommonReality="false"
+            weight="10">
+         <description>
+            Provides a capacity goal buffer permitting multiple goals to be executed in parallel
+         </description>
+      </module>
+   </extension>
+   <extension
+        point="org.jactr.io.astparticipants">
+     <astparticipant
+           contributingClass="org.jactr.modules.threaded.procedural.DefaultThreadedProceduralModule6"
+           content="org/jactr/io/include/procedural.jactr"
+           class="org.jactr.modules.threaded.io.ThreadedProceduralModuleParticipant"/>
+     <astparticipant
+           contributingClass="org.jactr.modules.threaded.goal.DefaultThreadedGoalModule6"
+           content="org/jactr/io/include/goal.jactr"
+           class="org.jactr.modules.threaded.io.ThreadedGoalModuleParticipant"/>
+   </extension>         
+</plugin>

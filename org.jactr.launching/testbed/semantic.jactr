@@ -1,0 +1,304 @@
+<actr>
+ <model name="semantic">
+
+ <modules>
+  <module class="org.jactr.core.module.declarative.six.DefaultDeclarativeModule6"/>
+  <module class="org.jactr.core.module.procedural.six.DefaultProceduralModule6"/>
+  <module class="org.jactr.core.module.goal.six.DefaultGoalModule6"/>
+  <module class="org.jactr.core.module.retrieval.six.DefaultRetrievalModule6"/>
+ </modules> 
+ 
+  <declarative-memory>
+
+ <chunk-type name="attribute"/>
+ <chunk-type name="object" />
+ 
+   <chunk-type name="property">
+    <slot name="object" equals="nil"/>
+    <slot name="attribute" equals="nil"/>
+    <slot name="value" equals="nil"/>
+   </chunk-type>
+
+  <chunk-type name="is-member">
+   <slot name="object" equals="nil"/>
+   <slot name="category" equals="nil"/>
+   <slot name="judgement" equals="nil"/>
+  </chunk-type>
+
+ <chunk name="shark" type="chunk"/>
+ <chunk name="dangerous" type="chunk"/>
+ <chunk name="true" type="chunk"/>
+ <chunk name="locomotion" type="chunk"/>
+ <chunk name="swimming" type="chunk"/>
+ <chunk name="category" type="chunk"/>
+ <chunk name="fish" type="chunk"/>
+ <chunk name="salmon" type="chunk"/>
+ <chunk name="edible" type="chunk"/>
+ <chunk name="breathe" type="chunk"/>
+ <chunk name="gills" type="chunk"/>
+ <chunk name="animal" type="chunk"/>
+ <chunk name="moves" type="chunk"/>
+ <chunk name="skin" type="chunk"/>
+ <chunk name="canary" type="chunk"/>
+ <chunk name="yellow" type="chunk"/>
+ <chunk name="sings" type="chunk"/>
+ <chunk name="bird" type="chunk"/>
+ <chunk name="ostrich" type="chunk"/>
+ <chunk name="flies" type="chunk"/>
+ <chunk name="false" type="chunk"/>
+ <chunk name="height" type="chunk"/>
+ <chunk name="tall" type="chunk"/>
+ <chunk name="wings" type="chunk"/>
+ <chunk name="flying" type="chunk"/>
+ <chunk name="yes" type="chunk"/>
+ <chunk name="no" type="chunk"/>
+ <chunk name="pending" type="chunk"/>
+ <chunk name="color" type="chunk"/>
+
+ <chunk name="p1" type="property">
+  <slot name="object" equals="shark"/>
+  <slot name="attribute" equals="dangerous"/>
+  <slot name="value" equals="true"/>
+ </chunk>
+
+  <chunk name="p2" type="property">
+  <slot name="object" equals="shark"/>
+  <slot name="attribute" equals="locomotion"/>
+  <slot name="value" equals="swimming"/>
+ </chunk>
+
+  <chunk name="p3" type="property">
+  <slot name="object" equals="shark"/>
+  <slot name="attribute" equals="category"/>
+  <slot name="value" equals="fish"/>
+ </chunk>
+
+  <chunk name="p4" type="property">
+  <slot name="object" equals="salmon"/>
+  <slot name="attribute" equals="edible"/>
+  <slot name="value" equals="true"/>
+ </chunk>
+
+  <chunk name="p5" type="property">
+  <slot name="object" equals="salmon"/>
+  <slot name="attribute" equals="locomotion"/>
+  <slot name="value" equals="swimming"/>
+ </chunk>
+
+  <chunk name="p6" type="property">
+  <slot name="object" equals="salmon"/>
+  <slot name="attribute" equals="category"/>
+  <slot name="value" equals="fish"/>
+ </chunk>
+
+  <chunk name="p7" type="property">
+  <slot name="object" equals="fish"/>
+  <slot name="attribute" equals="breathe"/>
+  <slot name="value" equals="gills"/>
+ </chunk>
+
+  <chunk name="p8" type="property">
+  <slot name="object" equals="fish"/>
+  <slot name="attribute" equals="locomotion"/>
+  <slot name="value" equals="swimming"/>
+ </chunk>
+
+  <chunk name="p9" type="property">
+  <slot name="object" equals="fish"/>
+  <slot name="attribute" equals="category"/>
+  <slot name="value" equals="animal"/>
+ </chunk>
+
+  <chunk name="p10" type="property">
+  <slot name="object" equals="animal"/>
+  <slot name="attribute" equals="moves"/>
+  <slot name="value" equals="true"/>
+ </chunk>
+
+  <chunk name="p11" type="property">
+  <slot name="object" equals="animal"/>
+  <slot name="attribute" equals="skin"/>
+  <slot name="value" equals="true"/>
+ </chunk>
+
+  <chunk name="p12" type="property">
+  <slot name="object" equals="canary"/>
+  <slot name="attribute" equals="color"/>
+  <slot name="value" equals="yellow"/>
+ </chunk>
+
+  <chunk name="p13" type="property">
+  <slot name="object" equals="canary"/>
+  <slot name="attribute" equals="sings"/>
+  <slot name="value" equals="true"/>
+ </chunk>
+
+  <chunk name="p14" type="property">
+  <slot name="object" equals="canary"/>
+  <slot name="attribute" equals="category"/>
+  <slot name="value" equals="bird"/>
+ </chunk>
+
+  <chunk name="p15" type="property">
+  <slot name="object" equals="ostrich"/>
+  <slot name="attribute" equals="flies"/>
+  <slot name="value" equals="false"/>
+ </chunk>
+
+  <chunk name="p16" type="property">
+  <slot name="object" equals="ostrich"/>
+  <slot name="attribute" equals="height"/>
+  <slot name="value" equals="tall"/>
+ </chunk>
+
+  <chunk name="p17" type="property">
+  <slot name="object" equals="ostrich"/>
+  <slot name="attribute" equals="category"/>
+  <slot name="value" equals="bird"/>
+ </chunk>
+
+  <chunk name="p18" type="property">
+  <slot name="object" equals="bird"/>
+  <slot name="attribute" equals="wings"/>
+  <slot name="value" equals="true"/>
+ </chunk>
+
+ <chunk name="p19" type="property">
+  <slot name="object" equals="bird"/>
+  <slot name="attribute" equals="locomotion"/>
+  <slot name="value" equals="flying"/>
+ </chunk>
+
+ <chunk name="p20" type="property">
+  <slot name="object" equals="bird"/>
+  <slot name="attribute" equals="category"/>
+  <slot name="value" equals="animal"/>
+ </chunk>
+
+ <chunk name="g1" type="is-member">
+  <slot name="object" equals="canary"/>
+  <slot name="category" equals="bird"/>
+  <slot name="judgement" equals="nil"/>
+ </chunk>
+
+ <chunk name="g2" type="is-member">
+  <slot name="object" equals="canary"/>
+  <slot name="category" equals="animal"/>
+  <slot name="judgement" equals="nil"/>
+ </chunk>
+
+ <chunk name="g3" type="is-member">
+  <slot name="object" equals="canary"/>
+  <slot name="category" equals="fish"/>
+  <slot name="judgement" equals="nil"/>
+ </chunk>
+  </declarative-memory>
+
+  <procedural-memory>
+
+   <production name="initial-retrieve">
+    <condition>
+     <match buffer="goal" type="is-member">
+       <slot name="object" equals="=obj"/>
+       <slot name="category" equals="=cat"/>
+       <slot name="judgement" equals="nil"/>
+      </match>
+     <query buffer="retrieval">
+      <slot name="state" equals="free"/>
+     </query>
+       
+    </condition>
+    <action>
+     <modify buffer="goal">
+       <slot name="judgement" equals="pending"/>
+     </modify>
+      <add buffer="retrieval" type="property">
+        <slot name="object" equals="=obj"/>
+        <slot name="attribute" equals="category"/>
+      </add>
+      <output>"trying to remember something about =obj "</output>
+    </action>
+   </production>
+
+    <production name="direct-verify">
+    <condition>
+     <match buffer="goal" type="is-member">
+       <slot name="object" equals="=obj"/>
+       <slot name="category" equals="=cat"/>
+       <slot name="judgement" equals="pending"/>
+      </match>
+      <match buffer="retrieval" type="property">
+       <slot name="object" equals="=obj"/>
+       <slot name="attribute" equals="category"/>
+       <slot name="value" equals="=cat"/>
+      </match>
+    </condition>
+    <action>
+     <modify buffer="goal">
+      <slot name="judgement" equals="yes"/>
+     </modify>
+     <output>"Yes, a =obj is a =cat"</output>
+     <remove buffer="retrieval"/>
+    </action>
+   </production>
+
+   <production name="chain-category">
+    <condition>
+     <match buffer="goal" type="is-member">
+       <slot name="object" equals="=obj"/>
+       <slot name="category" equals="=cat"/>
+       <slot name="judgement" equals="pending"/>
+      </match>
+      <match buffer="retrieval" type="property">
+       <slot name="object" equals="=obj"/>
+       <slot name="attribute" equals="category"/>
+       <slot name="value" equals="=val"/>
+       <slot name="value" not="=cat"/>
+       <slot name=":state" equals="free"/>  <!-- ensure no pending retrievals -->
+      </match>
+    </condition>
+    <action>
+     <modify buffer="goal">
+      <slot name="object" equals="=val"/>
+     </modify>
+     <add buffer="retrieval" type="property">
+      <slot name="object" equals="=val"/>
+      <slot name="attribute" equals="category"/>
+     </add>
+     <output>"=obj is a =val I wonder if =val is a =cat"</output>
+     <output>"Im trying to remember something about =val"</output>
+    </action>
+   </production>
+
+
+    <production name="fail">
+    <condition>
+     <match buffer="goal" type="is-member">
+       <slot name="object" equals="=obj"/>
+       <slot name="category" equals="=cat"/>
+       <slot name="judgement" equals="pending"/>
+      </match>
+       
+     <!-- 
+      <match buffer="retrieval" type="error"/>
+     -->
+
+       <query buffer="retrieval" >
+        <slot name="state" equals="error"/>
+       </query>
+      
+    </condition>
+    <action>
+     <modify buffer="goal">
+      <slot name="judgement" equals="no"/>
+     </modify>
+     <output>"No, a =obj is not a =cat"</output>
+     <remove buffer="retrieval"/>
+    </action>
+   </production>
+
+
+  </procedural-memory>
+ <buffer name="goal" chunk="g3"/>
+ </model>
+</actr>

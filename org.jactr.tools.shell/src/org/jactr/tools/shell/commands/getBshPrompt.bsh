@@ -1,0 +1,8 @@
+import org.jactr.core.model.IModel;
+
+getBshPrompt(){
+  String prompt = "jactr > ";
+  if(this.caller.currentModel instanceof IModel)
+   prompt = "jactr."+this.caller.currentModel.getName()+" > ";
+  return this.caller.runState+" "+prompt;
+}

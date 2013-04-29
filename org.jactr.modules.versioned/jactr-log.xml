@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+	
+	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+		<param name="Target" value="System.err"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="%n%-5p %d{ABSOLUTE}(%t) [%c.%M] %m"/>
+		</layout>
+	</appender>
+	
+	<appender name="ErrorFileAppender"
+		class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="jactr-error.log"/>
+		<param name="MaxFileSize" value="1MB"/>
+		<!-- Keep one backup file -->
+		<param name="MaxBackupIndex" value="1"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="%n%-5p %d{ABSOLUTE}(%t) [%c.%M] %m"/>
+		</layout>
+	</appender>
+	
+	<!--
+	<logger name="org.jactr"><level value="debug"/></logger>	
+	-->
+	
+	<root>
+		<level value="warn"/>
+		<appender-ref ref="ErrorFileAppender"/>
+		<appender-ref ref="CONSOLE"/>
+	</root>
+</log4j:configuration>

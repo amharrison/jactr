@@ -1,0 +1,14 @@
+
+productions(){
+ if(this.caller.currentModel==null)
+  for(model : getModels().toArray())
+   productions(model);
+ else
+  productions(this.caller.currentModel);
+}
+
+productions(IModel model)
+{
+ for(production : getProductions(model).toArray())
+  print(production.getSymbolicProduction().getName());
+}

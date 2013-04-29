@@ -1,0 +1,76 @@
+<environment>
+    <commonreality>
+        <reality class="org.commonreality.reality.impl.DefaultReality">
+            <services>
+                <server
+                    transport="org.commonreality.mina.transport.LocalTransportProvider"
+                    protocol="org.commonreality.mina.protocol.NOOPProtocol"
+                    address="1400"/>
+            </services>
+            <credentials>
+                <credential value="sensor:pass"/>
+                <credential value="sensor2:pass"/>
+                <credential value="visualTest:pass"/>
+            </credentials>
+        </reality>
+        <sensors>
+            <sensor class="org.commonreality.sensors.xml.XMLSensor">
+                <credential value="sensor:pass"/>
+                <services>
+                    <client
+                        transport="org.commonreality.mina.transport.LocalTransportProvider"
+                        protocol="org.commonreality.mina.protocol.NOOPProtocol"
+                        address="1400"/>
+                </services>
+                <property name="XMLSensor.DataURI"
+                    value="org/jactr/modules/pm/visual/sensorData.xml"/>
+            </sensor>
+            
+            <sensor class="org.commonreality.sensors.speech.DefaultSpeechSensor">
+                <credential value="sensor2:pass"/>
+                <services>
+                    <client
+                        transport="org.commonreality.mina.transport.LocalTransportProvider"
+                        protocol="org.commonreality.mina.protocol.NOOPProtocol"
+                        address="1400"/>
+                </services>
+            </sensor>
+        </sensors>
+        <agents>
+            <agent class="org.jactr.core.reality.ACTRAgent">
+                <credential value="agent:pass"/>
+                <services>
+                    <client
+                        transport="org.commonreality.mina.transport.LocalTransportProvider"
+                        protocol="org.commonreality.mina.protocol.NOOPProtocol"
+                        address="1400"/>
+                </services>
+                <property name="ACTRAgent.ModelName" value="visualTest"/>
+            </agent>
+        </agents>
+    </commonreality>
+    
+    <controller class="org.jactr.core.runtime.controller.DefaultController"/>
+    
+    <connector class="org.jactr.core.reality.connector.CommonRealityConnector"/>
+    
+    <models>
+        <model url="org/jactr/modules/pm/visual/visual-test.jactr"
+            alias="visualTest"/>
+    </models>
+    
+    <attachments>
+    <!--  
+        <attachment
+            class="org.jactr.modules.pm.visual.instrument.visiconviewer.VisiconViewer"
+            attach="visualTest"/>    
+    -->
+        
+        <attachment class="org.jactr.core.logging.impl.DefaultModelLogger"
+            attach="visualTest">
+            <parameters>
+                <parameter name="all" value="err"/>
+            </parameters>
+        </attachment>
+    </attachments>
+</environment>

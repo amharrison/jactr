@@ -1,0 +1,10 @@
+
+generate(object){
+ generate(object, "lisp");
+}
+
+generate(object, language){
+  for(line : generateCode(object,language).toArray())
+   print(line);
+  print(""); 
+}

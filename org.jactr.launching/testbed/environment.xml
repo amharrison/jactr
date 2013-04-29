@@ -1,0 +1,21 @@
+<!-- automatically generated environment.xml file -->
+<environment>
+<!-- jactr controller configuration -->
+<controller class="org.jactr.core.runtime.controller.debug.DebugController" />
+<connector class="org.jactr.core.reality.connector.LocalConnector"/>
+ <models>
+  <model url="semantic.jactr" alias="semantic"/>
+ </models>
+<attachments>
+   <attachment class="org.jactr.core.logging.impl.DefaultModelLogger" attach="semantic">
+         <parameters>
+             <parameter name="OUTPUT" value="out"/>
+             <parameter name="GOAL" value="out"/>
+             <parameter name="RETRIEVAL" value="out"/>
+             <parameter name="TIME" value="out"/>
+             <parameter name="VISUAL" value="out"/>
+             <parameter name="PROCEDURAL" value="out"/>
+         </parameters>
+    </attachment>
+</attachments>
+</environment>

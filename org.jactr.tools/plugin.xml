@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+   <extension-point id="iterative" name="Iterative Listeners" schema="schema/iterative.exsd"/>
+   <extension-point id="tracers" name="Runtime Tracers" schema="schema/tracer.exsd"/>
+   <extension-point id="sinks" name="Trace data sinks" schema="schema/sinks.exsd"/>
+
+   <extension
+         point="org.jactr.instruments" name="jACT-R Tools Instruments" id="org.jactr.tools.instruments">
+       
+      <instrument
+            class="org.jactr.tools.io.ModelRecorder"
+            hidden="false"
+            name="Model Recorder">
+         <parameter
+               name="attach"
+               value="all"/>
+         <description>Instrument that records the runtime&apos;s models at the start and stop of execution. The format of the saved models can be configured to use any of the installed syntaxes (e.g., jactr, lisp). The location of the files can also be specified.
+
+SaveAsExtension : extension of the code generator to use. (default: jactr)
+StartDirectory : local working directory path to save the start state models to. Will be created if missing. (default: start/)
+StopDirectory : local working directory path to save the stop models to. Will be created if missing. (default: stop/)
+TrimModuleContributions : Don&apos;t include the injected content from modules and extensions in the generated code. (default: true).
+
+http://jactr.org/node/144</description>
+         <parameter
+               name="SaveAsExtension"
+               value="jactr"/>
+         <parameter
+               name="StartDirectory"
+               value="start"/>
+         <parameter
+               name="StopDirectory"
+               value="stop"/>
+          <parameter
+               name="TrimModuleContributions"
+               value="true"/>     
+      </instrument>
+      <instrument
+            class="org.jactr.tools.tracer.RuntimeTracer"
+            hidden="true"
+            name="RuntimeTracer">
+         <description>Do not enable! This instrument is automatically managed by the IDE. Routes jACT-R events to on a specificly named Executor thread to the ITraceSinkClass.
+         </description>
+         <parameter
+               name="attach"
+               value="all"/>
+         <parameter
+               name="ITraceSinkClass"
+               value="org.jactr.tools.tracer.sinks.FileSink"/>
+         <parameter
+               name="ListenerClasses"
+               value=""/>
+         <parameter
+               name="Executor"
+               value="Background"/>
+      </instrument>
+      <instrument
+            class="org.jactr.tools.track.chunktype.ChunkTypeProductionTracker"
+            hidden="false"
+            name="ChunkTypeProductionTracker">
+         <parameter name="attach" value="all"/>
+		  <parameter name="FileName" value="production.txt"/>
+		  <parameter name="MaxFileSize" value="1"/>
+          <parameter name="NumberOfBackups" value="2"/>
+         <description>track the names, firing times and durations for production sequences based on goal chunks
+         </description>      
+      </instrument>
+      <instrument
+            class="org.jactr.tools.change.ChangeTracker"
+            hidden="false"
+            name="Change Tracker">
+         <parameter
+               name="Format"
+               value="jactr">
+         </parameter>
+         <parameter
+               name="TrackActiveChunks"
+               value="true">
+         </parameter>
+         <parameter
+               name="TrackInstantiations"
+               value="true">
+         </parameter>
+         <parameter
+               name="TrackNewChunks"
+               value="true">
+         </parameter>
+         <description>
+            Tracks chunk changes and selected production instantiations during the run, outputing the formatted code (lisp or jactr) to the model logger under the stream name "CHANGE"
+         </description>
+      </instrument>
+      <instrument
+            class="org.jactr.tools.utility.UtilityTracker"
+            hidden="false"
+            name="Utility Tracker">
+         <parameter
+               name="FileName"
+               value="utility.txt">
+         </parameter>
+         <parameter
+               name="TrackInstantiations"
+               value="true">
+         </parameter>
+         <parameter
+               name="Pattern"
+               value=".*">
+         </parameter>
+         <description>
+            Tracks the expected utility of productions that match the provided patterns (regex) and outputs them to the file. If TrackInstantiations is true, it will log the instantiation&apos;s utility (subject to noise) rather than the production&apos;s.Note: can only be attached to one model
+         </description>
+         <parameter name="attach" value="" />
+      </instrument>
+      <instrument
+            class="org.jactr.tools.stat.StatTracker"
+            hidden="false"
+            name="Stat Tracker">
+         <parameter
+               name="SampleFrequency"
+               value="100">
+         </parameter>
+         <description>
+            Samples number of chunks, types, productions, simulated run time and real run time every SampleFrequency cycles. Outputs to modelname-stats.txt.
+         </description>
+      </instrument>
+      <instrument
+            class="org.jactr.tools.async.sync.SynchronizationManager"
+            hidden="false"
+            name="IDE Synchronization Manager">
+         <parameter
+               name="SynchronizationDelayInMS"
+               value="10000">
+         </parameter>
+         <description>
+            Enable this instrument if your model is running too fast for the IDE to keep up with (this can result in full processor use and memory over committment). The synchronizer will periodically create synchronization points which will block the model until the IDE has processed the backlog of messages.
+         </description>
+      </instrument>
+      <instrument
+            class="org.jactr.tools.throttle.RuntimeThrottler"
+            hidden="false"
+            name="Runtime Throttler">
+         <parameter
+               name="MinimumCycleRealTime"
+               value="0.05">
+         </parameter>
+         <description>
+            Slows model execution down so that each model cycle runs at for least MinimumCycleRealTime. This is useful if your model is running too face to trace or is maxing out your processor.
+         </description>
+      </instrument>
+   </extension>
+   <extension
+         point="org.jactr.tools.iterative">
+      <listener
+            class="org.jactr.entry.iterative.impl.GeneralPerformanceListener"
+            hidden="false"
+            name="PerformanceListener">
+         <description>
+            Tracks general performance of the model runs. Takes the following parameters: FileName=where to output the data, RowHeader=text to display at the head of the data, BlockSize=how many iterations to collapse data over.
+         </description>
+         <parameter
+               name="FileName"
+               value="perf.txt">
+         </parameter>
+         <parameter
+               name="BlockSize"
+               value="1">
+         </parameter>
+         <parameter
+               name="RowHeader" value=" ">
+         </parameter>
+      </listener>
+      <listener
+            class="org.jactr.entry.iterative.impl.RealTimeFactorPerformanceListener"
+            hidden="false"
+            name="RealTimePerformanceListener">
+         <description>
+            Performance listener that tracks the real time scalor over a series of runs. FileName=where to output the data, RowHeader=text to display at the head of the data, BlockSize=how many iterations to collapse data over.
+         </description>
+         <parameter
+               name="FileName"
+               value="rt-perf.txt">
+         </parameter>
+         <parameter
+               name="BlockSize"
+               value="1">
+         </parameter>
+         <parameter
+               name="RowHeader" value=" ">
+         </parameter>
+      </listener>
+      <listener
+            class="org.jactr.tools.itr.ModuleParameterModifier"
+            hidden="false"
+            name="ModuleParameterModifier">
+         <description>
+            Enables the setting of a specific module&apos;s parameter in a structured manner. Parameter=name of the parameter, Values= comma separated list of parameter values, ModuleClass= full class name of the module that is to be modified.
+         </description>
+         <parameter
+               name="ParameterName"
+               value="parameterName">
+         </parameter>
+         <parameter
+               name="ParameterValues"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ModuleClass"
+               value="moduleClassName">
+         </parameter>
+      </listener>
+      
+       <listener
+             class="org.jactr.tools.itr.ModelParameterModifier"
+             hidden="false"
+             name="ModelParameterModifier">
+         <description>
+            Enables the setting of a specific model&apos;s parameter in a structured manner. Parameter=name of the parameter, Values= comma separated list of parameter values.
+         </description>
+         <parameter
+               name="ParameterName"
+               value="parameterName">
+         </parameter>
+         <parameter
+               name="ParameterValues"
+               value=" ">
+         </parameter>
+      </listener>
+     
+      <listener
+            class="org.jactr.tools.itr.ZipDataListener"
+            hidden="false"
+            name="Zip Archive Listener">
+         <description>
+            Archives and deletes files generated during the bulk run. FileName=zip file to save to. IgnoreRootDir determines if the root directory contents are archived as well, not just the individual runs.
+         </description>
+         <parameter
+               name="IgnoreRootDir"
+               value="true">
+         </parameter>
+      </listener>
+      
+      <listener
+            class="org.jactr.tools.itr.BufferParameterModifier"
+            hidden="false"
+            name="Buffer Parameter Modifier">
+         <description>
+            Modify buffer parameter before building the model
+         </description>
+         <parameter
+               name="BufferName"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ParameterName"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ParameterValues"
+               value=" ">
+         </parameter>
+      </listener>
+      <listener
+            class="org.jactr.tools.itr.ChunkParameterModifier"
+            hidden="false"
+            name="Chunk Parameter Modifier">
+         <description>
+            Modify chunk parameter before building the model. If the chunk's name matches the provided regular expression, that chunk will be modified
+         </description>
+         <parameter
+               name="ChunkPattern"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ParameterName"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ParameterValues"
+               value=" ">
+         </parameter>
+      </listener>
+      <listener
+            class="org.jactr.tools.itr.ProductionParameterModifier"
+            hidden="false"
+            name="Production Parameter Modifier">
+         <description>
+            Modify production parameter before building the model. If the production's name matches the provided regular expression, that production will be modified
+         </description>
+         <parameter
+               name="ProductionPattern"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ParameterName"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ParameterValues"
+               value=" ">
+         </parameter>
+      </listener>
+      <listener
+            class="org.jactr.tools.itr.ortho.OrthogonalSliceAnalyzer"
+            hidden="false"
+            name="Orthogonal Parameter Space Search">
+         <description>
+            Permits the running of orthogonal parameter space explorations. Tool takes a single parameter: a url to a configuration file.
+         </description>
+         <parameter
+               name="ConfigURL"
+               value=" ">
+         </parameter>
+      </listener>
+   </extension>
+   <extension
+         point="org.jactr.tools.tracers">
+         <tracer
+            class="org.jactr.tools.grapher.core.GeneralProbe"
+            name="GeneralProbe">
+         <parameter
+               name="ConfigFile"
+               value="org/jactr/eclipse/grapher/core/parser/sample.xml" />
+         <description>
+            Allows you to record arbirtary parameters from productions and chunks and send them back over the network or to a file.
+         </description>
+      </tracer>  
+      <tracer
+            class="org.jactr.tools.tracer.listeners.BufferTracer"
+            name="Buffer Tracer">
+         <description>
+            Routes some buffer events (add, remove, clear) in addition to limited chunk events (to track chunk changes in the buffer)
+         </description>
+      </tracer>
+      <tracer
+            class="org.jactr.tools.tracer.listeners.ProceduralModuleTracer"
+            name="Procedural Tracer">
+         <description>
+            Provides conflict resolution information to the IDE
+         </description>
+      </tracer>
+      <tracer
+            class="org.jactr.tools.tracer.listeners.VisualModuleTracer"
+            name="Visicon Tracer">
+         <description>
+            Routes limited visual events to track feature maps, attending and searching
+         </description>
+      </tracer>
+      <tracer
+            class="org.jactr.tools.tracer.listeners.LogTracer"
+            name="Log Tracer">
+         <description>
+            Routes all logging messages
+         </description>
+      </tracer>
+      <tracer
+            class="org.jactr.tools.marker.tracer.MarkerTraceListener"
+            name="Marker Tracer">
+         <description>
+            Listens for marker events and passes them through. The trace will also detect the presence of a file based sink and will write marker indices for random access.
+         </description>
+      </tracer>
+   </extension>
+   <extension
+         point="org.jactr.extensions">
+      <model-extension
+            class="org.jactr.modules.pm.visual.scene.SceneChangeExtension"
+            name="Scene Change Detector">
+         <description>
+            Detects changes to the visual scene and makes that information available as a visual buffer query
+         </description>
+      </model-extension>
+      <model-extension
+            class="org.jactr.extensions.cached.procedural.CachedProductionSystem"
+            name="Cached Procedural System">
+         <description>
+            Provides a drop-in replacement of the production instantiator that can cache failed instantiations until the production can possibly be instantiated. This can cut conflict resolution processing time by an order of magnitude (depending on the production patterns used). EnableCaching=true turns it on. ValidateInstantiations=true will verify the correctness of the cache (negating any performance improvements, but a useful test to ensure it's correctness).
+         </description>
+      </model-extension>
+   </extension>
+   <extension
+         point="org.jactr.io.astparticipants">
+      <astparticipant
+            contributingClass="org.jactr.modules.pm.visual.scene.SceneChangeExtension"
+            content="org/jactr/modules/pm/visual/scene/scene.jactr"
+            class="org.jactr.modules.pm.visual.scene.SceneChangeParticipant">
+      </astparticipant>
+   </extension>
+   <extension
+         point="org.jactr.modules">
+      <module
+            class="org.jactr.modules.general.GeneralBufferModule"
+            defaultEnabled="false"
+            name="GeneralBufferModule"
+            requiresCommonReality="false"
+            weight="10">
+         <description>
+            Provides basic named buffers to the model. The model file must provide buffer sections since AST injection cannot see parameters.
+         </description>
+      </module>
+   </extension>
+   <extension
+         point="org.jactr.tools.sinks">
+      <sink
+            class="org.jactr.tools.tracer.sinks.trace.ArchivalSink"
+            name="Archive to Directory">
+      </sink>
+      <sink
+            class="org.jactr.tools.tracer.sinks.NetworkedSink"
+            name="Send to IDE">
+      </sink>
+   </extension>
+</plugin>

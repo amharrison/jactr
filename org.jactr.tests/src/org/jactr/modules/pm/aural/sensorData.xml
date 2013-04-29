@@ -1,0 +1,49 @@
+
+<sensor name="test">
+    
+    <time value="0">
+        <add alias="tone" type="AFFERENT">
+            <boolean name="aural.isAural" value="true"/>
+            <boolean name="aural.audible" value="true"/> <!-- could be false for subvocal -->
+            <strings name="aural.type" value="tone"/> <!-- tone, digit, word, speech -->
+            <string name="aural.token" value="a"/>
+            <double name="aural.onset" value="0"/>
+        </add>
+    </time>
+    <time relative="2"> <!-- 2 seconds from the last time event -->
+        <remove alias="tone" type="AFFERENT"/> <!-- tone lasted two seconds -->
+        
+        <add alias="digit" type="AFFERENT">
+            <boolean name="aural.isAural" value="true"/>
+            <boolean name="aural.audible" value="true"/> <!-- could be false for subvocal -->
+            <strings name="aural.type" value="digit"/> <!-- tone, digit, word, speech -->
+            <string name="aural.token" value="1"/>
+            <double name="aural.onset" value="2"/>
+        </add>
+    </time>
+    <time relative="1">
+        <remove alias="digit" type="AFFERENT"/> <!-- one second duration -->        
+    </time>
+    <time relative="1">
+        <add alias="word" type="AFFERENT">
+            <boolean name="aural.isAural" value="true"/>
+            <boolean name="aural.audible" value="true"/> <!-- could be false for subvocal -->
+            <strings name="aural.type" value="word"/> <!-- tone, digit, word, speech -->
+            <string name="aural.token" value="foobar"/>
+            <double name="aural.onset" value="4"/>
+        </add>
+    </time>
+    <time relative="2">
+        <remove alias="word" type="AFFERENT"/>
+        <add alias="speech" type="AFFERENT">
+            <boolean name="aural.isAural" value="true"/>
+            <boolean name="aural.audible" value="true"/> <!-- could be false for subvocal -->
+            <strings name="aural.type" value="speech"/> <!-- tone, digit, word, speech -->
+            <string name="aural.token" value="hey you over there"/>
+            <double name="aural.onset" value="6"/>
+        </add>
+    </time>
+    <time relative="3">
+        <remove alias="speech" type="AFFERENT"/>
+    </time>
+</sensor>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.jactr.extensions">
+      <model-extension
+            class="org.jactr.tools.masterslave.master.MasterExtension"
+            name="Master Model Extension">
+         <description>
+            Provides capabilities to control slave models from within a master model.
+         </description>
+      </model-extension>
+      <model-extension
+            class="org.jactr.tools.masterslave.slave.SlaveExtension"
+            name="Slave Model Extension">
+         <description>
+            Allows a model to be executed as a slave within a master model
+         </description>
+      </model-extension>
+   </extension>
+
+</plugin>

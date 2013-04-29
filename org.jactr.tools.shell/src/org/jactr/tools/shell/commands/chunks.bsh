@@ -1,0 +1,16 @@
+
+
+
+chunks(){
+  if(this.caller.currentModel==null)
+   for(model : getModels().toArray())
+    chunks(model);
+  else
+   chunks(this.caller.currentModel);  
+}
+
+chunks(IModel model)
+{
+  for(chunk : getChunks(model).toArray())
+   print(chunk.getSymbolicChunk().getName());
+}

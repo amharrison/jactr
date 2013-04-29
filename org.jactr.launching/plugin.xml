@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+  <!--
+   source location
+   -->
+   <extension point="org.eclipse.pde.core.source">
+     <location path="."/>
+   </extension>
+   
+   <extension
+         id="application"
+         point="org.eclipse.core.runtime.applications">
+      <application>
+         <run
+               class="org.jactr.launching.Application">
+         </run>
+      </application>
+   </extension>
+  
+
+</plugin>

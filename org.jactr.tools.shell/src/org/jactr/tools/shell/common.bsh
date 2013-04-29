@@ -1,0 +1,32 @@
+import org.jactr.core.model.IModel;
+import org.jactr.core.production.IProduction;
+import org.jactr.core.chunk.IChunk;
+import org.jactr.core.chunktype.IChunkType;
+import org.jactr.core.runtime.ACTRRuntime;
+import org.jactr.io.resolver.ASTResolver;
+import org.jactr.io.generator.*;
+
+
+getModels(){
+  return ACTRRuntime.getRuntime().getModels();
+}
+
+getProductions(IModel model){
+  return model.getProceduralModule().getProductions().get();
+}
+
+getChunks(IModel model)
+{
+  return model.getDeclarativeModule().getChunks().get();
+}
+
+getChunkTypes(IModel model)
+{
+ return model.getDeclarativeModule().getChunkTypes().get();
+}
+
+generateCode(object, language){
+  ast = ASTResolver.toAST(object);
+  generator = CodeGeneratorFactory.getCodeGenerator(language);
+  return generator.generate(ast, true);
+}

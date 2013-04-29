@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actr>
+  <model name="Unit1 Addition" version="6">
+  <import url="addition.jactr"/>
+  <import url="org/jactr/tutorial/unit1/count.jactr"/>
+    <declarative-memory>
+    </declarative-memory>
+    <procedural-memory>
+    </procedural-memory>
+</model>
+</actr>

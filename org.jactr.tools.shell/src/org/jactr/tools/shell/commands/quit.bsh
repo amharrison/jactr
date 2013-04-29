@@ -1,0 +1,6 @@
+import org.jactr.tools.shell.Controller;
+
+quit(){
+  print("Allowing runtime to exit");
+  Controller.quit();
+}
