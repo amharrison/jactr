@@ -1,0 +1,69 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+<actr>
+  <model name="ErrorReferenceModel" version="5.0">
+    <declarative-memory>
+    
+    <!-- irrelevant comment -->
+      <chunk-type name="chunkTypeA" parent="chunk"> 
+        <slot name="argA" equals="nil"/>            
+      </chunk-type>
+      
+      <chunk-type name="chunkTypeB" parent="chunkTypeA">           
+        <slot name="argB" equals="nil"/>
+      </chunk-type>
+
+<!-- Errror : unknown chunk-type -->      
+      <chunk-type name="chunkTypeC" parent="chunkTypeZ"> 
+        <slot name="argC" equals="nil"/>            
+      </chunk-type>
+
+<!-- Error : redefined chunk-type -->
+      <chunk-type name="chunkTypeA" parent="chunkTypeB"> 
+        <slot name="argA" equals="nil"/>            
+      </chunk-type>
+
+      <chunk name="chunkB" type="chunkTypeA">
+       <slot name="argA" equals="1"/>
+<!-- Error : unknwon slot -->
+       <slot name="argB" equals="2"/> 
+      </chunk>
+ 
+ <!-- Error : redefined chunk -->     
+    <chunk name="chunkB" type="chunkTypeA">
+     <slot name="argA" equals="chunkC"/>
+    </chunk>
+    
+    <chunk name="chunkC" type="chunkTypeA">
+     <slot name="argA" equals="chunkB"/>
+ <!-- Error : unknown value -->    
+     <slot name="argB" equals="cheese"/>
+    </chunk>
+
+    </declarative-memory>
+    <procedural-memory>
+    
+    <production name="test1">
+     <condition>
+ <!-- Error: unknown buffer -->    
+      <match buffer="goat" type="chunkTypeA">
+       <slot name="argA" equals="=testVariable"/>
+ <!-- Error: unknown slot -->      
+       <slot name="argB" equals="chunkC"/>
+      </match>
+     </condition>
+     <action>
+ <!-- Error: unknown buffer -->    
+      <add buffer="goat" type="chunkTypeA">
+ <!-- error : unknown slot -->       
+       <slot name="argB" equals="=testVariable"/>
+      </add>
+ <!-- Error : unknown chunk/type -->     
+      <add buffer="goal" type="cheese"/>
+ <!-- should not be an error -->     
+      <add buffer="goal" chunk="=testVariable" />
+     </action>
+    </production>
+    
+    </procedural-memory>
+</model>
+</actr>
