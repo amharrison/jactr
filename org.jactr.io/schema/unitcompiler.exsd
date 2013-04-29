@@ -1,0 +1,138 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.jactr.io">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.jactr.io" id="unitcompilers" name="jACT-R UnitCompilers"/>
+      </appInfo>
+      <documentation>
+         Add a IUnitCompiler to the compile-time AST traversal. This permits the customizing and adapting of the compiler in order to take advantage of changes to the system.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <complexType>
+         <sequence>
+            <element ref="unitcompiler" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="unitcompiler">
+      <annotation>
+         <documentation>
+            Unit compilers can be added to the default model compiler to verify specific sections of the model.
+This class should extend both IUnitCompiler (or IReportableUnitCompiler) and org.eclipse.core.runtime.IExectuableExtension
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="description"/>
+         </sequence>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn="org.jactr.io.compiler.IUnitCompiler"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="defaultEnabled" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  Is this unit compiler installed by default.
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="report" type="string" use="default" value="ignore">
+            <annotation>
+               <documentation>
+                  Report level for unit compilers that extend IReportableUnitCompiler. Can be ignore, info, warn, or error.
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="description" type="string">
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         [Enter the first release in which this extension point appears.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         [Enter extension point usage example here.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="apiInfo"/>
+      </appInfo>
+      <documentation>
+         Class must implement org.jactr.io.compiler.IUnitCompiler and have a zero arg constructor.
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="implementation"/>
+      </appInfo>
+      <documentation>
+         [Enter information about supplied implementation of this extension point.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         
+      </documentation>
+   </annotation>
+
+</schema>
