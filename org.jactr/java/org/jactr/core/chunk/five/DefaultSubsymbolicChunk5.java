@@ -336,7 +336,7 @@ public class DefaultSubsymbolicChunk5 extends DefaultSubsymbolicChunk4
 
     IModel parentModel = _parentChunk.getModel();
     IDeclarativeModule5 idm = (IDeclarativeModule5) parentModel
-        .getModule(IDeclarativeModule5.class);
+        .getAdapter(IDeclarativeModule5.class);
 
     if (idm == null)
     {
