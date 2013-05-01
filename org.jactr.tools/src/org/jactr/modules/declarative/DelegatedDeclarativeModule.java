@@ -44,6 +44,12 @@ public class DelegatedDeclarativeModule implements IDeclarativeModule,
     _deferredParameters = new TreeMap<String, String>();
   }
 
+  public IDeclarativeModule getDelegate()
+  {
+    return _delegate;
+  }
+
+
   public void install(IModel model)
   {
     if (_delegate == null)
