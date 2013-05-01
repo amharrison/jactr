@@ -76,4 +76,4 @@ Bundle-ClassPath: lib/org/jactr/commons-primitives-1.0.jar,
  lib/org/jactr/commons-lang-2.5.jar,
  lib/org/jactr/commons-cli-1.2.jar,
  lib/org/jactr/commons-collections-3.2.1.jar
-Require-Bundle: org.apache.log4j;resolution:=optional
+Require-Bundle: org.apache.log4j;visibility:=reexport
