@@ -29,7 +29,6 @@ import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.IActivationBuffer;
 import org.jactr.core.buffer.event.ActivationBufferEvent;
 import org.jactr.core.buffer.event.IActivationBufferListener;
-import org.jactr.core.chunk.ChunkActivationComparator;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISubsymbolicChunk;
 import org.jactr.core.chunk.ISymbolicChunk;
@@ -66,7 +65,6 @@ import org.jactr.core.module.declarative.basic.type.NoOpChunkTypeNamer;
 import org.jactr.core.module.declarative.search.local.DefaultSearchSystem;
 import org.jactr.core.production.VariableBindings;
 import org.jactr.core.production.request.ChunkTypeRequest;
-import org.jactr.core.slot.ISlot;
 import org.jactr.core.utils.StringUtilities;
 import org.jactr.core.utils.parameter.ClassNameParameterHandler;
 import org.jactr.core.utils.parameter.IParameterized;
@@ -133,7 +131,7 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
 
   protected Map<String, IChunkType>   _allChunkTypes;
 
-  protected ChunkActivationComparator _activationSorter;
+
 
   /**
    * used to encode chunks after removal
@@ -148,7 +146,7 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
 
     _allChunks = new TreeMap<String, IChunk>();
     _allChunkTypes = new TreeMap<String, IChunkType>();
-    _activationSorter = new ChunkActivationComparator();
+
 
     _searchSystem = new DefaultSearchSystem(this);
 
@@ -251,26 +249,18 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
   }
 
   @Override
-  protected IChunk addChunkInternal(IChunk chunk)
+  protected IChunk addChunkInternal(IChunk chunk,
+      Collection<IChunk> possibleMatches)
   {
-
     IChunkType chunkType = chunk.getSymbolicChunk().getChunkType();
 
-    Collection<? extends ISlot> slots = chunk.getSymbolicChunk().getSlots();
-    /*
-     * we don't check for duplicates when a chunk has no slots these chunks are
-     * often flags for some bit of simplistic knowledge such as "new"
-     */
-    if (slots.size() != 0)
+    if(possibleMatches.size()>0)
     {
-      Collection<IChunk> matches = _searchSystem.findExact(
-          new ChunkTypeRequest(chunkType, slots), _activationSorter);
-
       /**
        * we could find an exactly matching chunk that is actually of a different
        * chunktype due to multiple inheritance.
        */
-      for (Iterator<IChunk> it = matches.iterator(); it.hasNext();)
+      for (Iterator<IChunk> it = possibleMatches.iterator(); it.hasNext();)
       {
         IChunk match = it.next();
         if (!match.getSymbolicChunk().isAStrict(chunkType))
@@ -279,15 +269,15 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
           break; // only need one that is an exact match
       }
 
-      if (matches.size() > 0)
+      if (possibleMatches.size() > 0)
       {
         if (LOGGER.isDebugEnabled())
-          LOGGER.debug("chunk " + chunk + " has yielded " + matches.size()
-              + " matches " + matches);
+          LOGGER.debug("chunk " + chunk + " has yielded " + possibleMatches.size()
+              + " matches " + possibleMatches);
 
-        return merge(matches.iterator().next(), chunk);
-      } // matches.size() == 0
-    } // slots.size() > 0
+        return merge(possibleMatches.iterator().next(), chunk);
+      }
+    }
 
     /*
      * we're here, so either we aren't checking for duplicates or there was no

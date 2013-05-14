@@ -5,6 +5,7 @@ package org.jactr.core.module.declarative.basic;
  */
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -18,6 +19,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.BufferUtilities;
 import org.jactr.core.buffer.IActivationBuffer;
+import org.jactr.core.chunk.ChunkActivationComparator;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISubsymbolicChunk;
 import org.jactr.core.chunk.ISymbolicChunk;
@@ -50,7 +52,9 @@ import org.jactr.core.module.declarative.basic.type.NoOpChunkTypeConfigurator;
 import org.jactr.core.module.declarative.basic.type.NoOpChunkTypeNamer;
 import org.jactr.core.module.declarative.event.DeclarativeModuleEvent;
 import org.jactr.core.module.declarative.event.IDeclarativeModuleListener;
+import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.runtime.ACTRRuntime;
+import org.jactr.core.slot.ISlot;
 import org.jactr.core.utils.StringUtilities;
 
 /**
@@ -69,12 +73,11 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
   /**
    * Logger definition
    */
-  static private final transient Log LOGGER                  = LogFactory
-                                                                 .getLog(AbstractDeclarativeModule.class);
+  static private final transient Log LOGGER               = LogFactory
+                                                              .getLog(AbstractDeclarativeModule.class);
 
-  static public final String         SUSPEND_DISPOSAL_KEY    = DefaultDeclarativeModule.class
-                                                                 + ".suspendDisposal";
-
+  static public final String         SUSPEND_DISPOSAL_KEY = DefaultDeclarativeModule.class
+                                                              + ".suspendDisposal";
 
   /**
    * there is a grey area between the creation of a chunk and it's use in a
@@ -154,7 +157,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
   /**
    * lock for _chunksToDispose
    */
-  private ReentrantLock                                                       _disposalLock = new ReentrantLock();
+  private ReentrantLock                                                       _disposalLock     = new ReentrantLock();
 
   private IModelListener                                                      _disposalListener;
 
@@ -163,7 +166,9 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
    */
   private List<IChunk>                                                        _deferredEncodings;
 
-  private ReentrantLock                                                       _encodingLock = new ReentrantLock();
+  private ReentrantLock                                                       _encodingLock     = new ReentrantLock();
+
+  protected ChunkActivationComparator                                         _activationSorter = new ChunkActivationComparator();
 
   public AbstractDeclarativeModule(String name)
   {
@@ -513,8 +518,8 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
   }
 
   /**
-   * add chunk to DM. merely delegates to {@link #addChunkInternal(IChunk)} on
-   * {@link #getExecutor()}
+   * add chunk to DM. performs a search for any matches, then merely delegates
+   * to {@link #addChunkInternal(IChunk, Collection)} on {@link #getExecutor()}
    * 
    * @param chunk
    * @return
@@ -529,13 +534,30 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
       return immediateReturn(chunk);
     }
 
+    ISymbolicChunk sc = chunk.getSymbolicChunk();
+    Collection<? extends ISlot> slots = sc.getSlots();
+
+    Future<Collection<IChunk>> matches = null;
+
+    /*
+     * we don't do merge searches for slotless chunks.
+     */
+    if (slots.size() == 0)
+      matches = immediateReturn((Collection<IChunk>) new LinkedList<IChunk>());
+    else
+      matches = getModel().getDeclarativeModule().findExactMatches(
+          new ChunkTypeRequest(sc.getChunkType(), slots), _activationSorter,
+          Double.NEGATIVE_INFINITY, false);
+    
+    final Future<Collection<IChunk>> fMatches = matches;
+
     return delayedFuture(new Callable<IChunk>() {
 
       public IChunk call() throws Exception
       {
         try
         {
-          IChunk rtn = addChunkInternal(chunk);
+          IChunk rtn = addChunkInternal(chunk, fMatches.get());
 
           String name = rtn.getSymbolicChunk().getName();
           if (_busyChunk == null && name.equals("busy"))
@@ -571,9 +593,13 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
    * multiply threaded, thread safety is a must.
    * 
    * @param chunkToAdd
+   * @param possibleMatches
+   *          TODO
+   * @param
    * @return
    */
-  abstract protected IChunk addChunkInternal(IChunk chunkToAdd);
+  abstract protected IChunk addChunkInternal(IChunk chunkToAdd,
+      Collection<IChunk> possibleMatches);
 
   /**
    * copy the specified chunk, by default this will also copy subsymbolics
@@ -621,7 +647,6 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
     ISymbolicChunk destinationSC = destination.getSymbolicChunk();
 
     getSymbolicChunkFactory().copy(sourceSC, destinationSC);
-
 
     if (copySubsymbolics)
     {
