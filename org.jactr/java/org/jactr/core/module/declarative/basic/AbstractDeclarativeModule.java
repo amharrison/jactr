@@ -1081,6 +1081,14 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
   protected void processPendingEncodings(FastList<IChunk> chunkContainer,
       FastList<IActivationBuffer> bufferContainer)
   {
+    /*
+     * even though we are a declarative module, we may not be THE declarative
+     * module. That is, the actual decM might be delegating to us, if so, we
+     * should use it's addChunk and not ours (even though, ours will eventually
+     * be called)
+     */
+    IDeclarativeModule decM = getModel().getDeclarativeModule();
+
     chunkContainer.clear();
     bufferContainer.clear();
 
@@ -1123,7 +1131,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
         else
         {
           BufferUtilities.getContainingBuffers(chunk, true, bufferContainer);
-          if (bufferContainer.size() == 0) addChunk(chunk);
+          if (bufferContainer.size() == 0) decM.addChunk(chunk);
         }
       }
       finally
