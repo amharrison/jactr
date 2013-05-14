@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
@@ -51,8 +52,8 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
   /**
    * Logger definition
    */
-  static private final transient Log                                           LOGGER         = LogFactory
-                                                                                                  .getLog(AbstractPerceptualMemory.class);
+  static private final transient Log                                           LOGGER           = LogFactory
+                                                                                                    .getLog(AbstractPerceptualMemory.class);
 
   private final Collection<IPerceptualEncoder>                                 _encoders;
 
@@ -65,23 +66,25 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
 
   private IFINSTFeatureMap                                                     _finstFeatureMap;
 
-  private int                                                                  _finstLimit    = 4;
+  private int                                                                  _finstLimit      = 4;
 
-  private double                                                               _finstDuration = 3;
+  private double                                                               _finstDuration   = 3;
 
-  private double                                                               _onsetDuration = 0.5;
+  private double                                                               _onsetDuration   = 0.5;
 
   private final IPerceptualModule                                              _module;
 
   private final IIndexManager                                                  _indexManager;
 
-  private final ACTREventDispatcher<IPerceptualMemory, IActivePerceptListener> _dispatcher    = new ACTREventDispatcher<IPerceptualMemory, IActivePerceptListener>();
+  private final ACTREventDispatcher<IPerceptualMemory, IActivePerceptListener> _dispatcher      = new ACTREventDispatcher<IPerceptualMemory, IActivePerceptListener>();
 
   private ACTRAgent                                                            _agent;
 
   private DelayableAfferentObjectListener                                      _agentListener;
 
   private List<PerceptualSearchResult>                                         _recentResults;
+
+  private Map<String, IChunk>                                                  _namedChunkCache = new TreeMap<String, IChunk>();
 
   @SuppressWarnings("unchecked")
   public AbstractPerceptualMemory(IPerceptualModule module,
@@ -547,7 +550,7 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
       psr.setErrorCode(getNamedChunk(IStatusBuffer.ERROR_UNKNOWN_CHUNK));
       return psr;
     }
-    
+
     /*
      * now we need to check the actual chunks that have been encoded
      */
@@ -558,8 +561,10 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
      */
     if (objectManager.getIdentifiers().size() == 0)
     {
-      if (LOGGER.isDebugEnabled()) LOGGER.debug(String.format("Nothing to match"));
-      PerceptualSearchResult psr = new PerceptualSearchResult(null, null, null, request, request);
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug(String.format("Nothing to match"));
+      PerceptualSearchResult psr = new PerceptualSearchResult(null, null, null,
+          request, request);
       psr.setErrorCode(getNamedChunk(IStatusBuffer.ERROR_NOTHING_AVAILABLE_CHUNK));
       return psr;
     }
@@ -633,11 +638,11 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
         prioritizedResults.put(template, result);
       }
     }
-    
+
     /**
      * no match
      */
-    if(prioritizedResults.size()==0)
+    if (prioritizedResults.size() == 0)
     {
       if (LOGGER.isDebugEnabled())
         LOGGER.debug(String.format("Nothing matches %s", request));
@@ -671,8 +676,8 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
                           rtn.getPerceptIdentifier()), e);
         rtn = null;
       }
-      
-    if(rtn==null)
+
+    if (rtn == null)
     {
       if (LOGGER.isDebugEnabled())
         LOGGER.debug(String.format("Nothing matches %s", request));
@@ -751,15 +756,18 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
 
   protected IChunk getNamedChunk(String name)
   {
-    IChunk rtn = null;
-    try
-    {
-      rtn = _module.getModel().getDeclarativeModule().getChunk(name).get();
-    }
-    catch (Exception e)
-    {
-      LOGGER.error(String.format("Failed to get chunk %s from model", name), e);
-    }
+    IChunk rtn = _namedChunkCache.get(name);
+    if (rtn == null)
+      try
+      {
+        rtn = _module.getModel().getDeclarativeModule().getChunk(name).get();
+        _namedChunkCache.put(name, rtn);
+      }
+      catch (Exception e)
+      {
+        LOGGER.error(String.format("Failed to get chunk %s from model", name),
+            e);
+      }
     return rtn;
   }
 
