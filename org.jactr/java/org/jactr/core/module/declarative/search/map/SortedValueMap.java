@@ -28,8 +28,8 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * extends default value map to provide sortable values
+ * 
  * @author harrison
- *
  * @param <V>
  * @param <I>
  */
@@ -49,8 +49,8 @@ public class SortedValueMap<V extends Comparable<V>, I> extends
   }
 
   /**
-   * overridden to create a sortable set to track the sorted keys, but we
-   * still use the same core map
+   * overridden to create a sortable set to track the sorted keys, but we still
+   * use the same core map
    * 
    * @see org.jactr.core.module.declarative.search.map.DefaultValueMap#instantiateCoreMap()
    */
@@ -59,14 +59,14 @@ public class SortedValueMap<V extends Comparable<V>, I> extends
   {
     _sortedValues = new TreeSet<V>();
     // return new TreeMap<V, Collection<I>>();
-    //return super.instantiateCoreMap();
-    FastMap<V, Collection<I>> rtn =  new FastMap<V, Collection<I>>();
-    //since the values will be sorted, we can assume that the hashes are not
+    // return super.instantiateCoreMap();
+    FastMap<V, Collection<I>> rtn = new FastMap<V, Collection<I>>();
+    // since the values will be sorted, we can assume that the hashes are not
     // evenly distributed
     rtn.setKeyComparator(FastComparator.REHASH);
     return rtn;
   }
-  
+
   @Override
   protected Collection<I> instantiateCoreCollection(V forValue)
   {
@@ -74,6 +74,7 @@ public class SortedValueMap<V extends Comparable<V>, I> extends
     return super.instantiateCoreCollection(forValue);
   }
 
+  @Override
   public void clear()
   {
     super.clear();
@@ -99,17 +100,40 @@ public class SortedValueMap<V extends Comparable<V>, I> extends
     try
     {
       lock.readLock().lock();
-      
-      for(V tmpValue : _sortedValues.tailSet(value))
-        if(!tmpValue.equals(value)) rtn.addAll(get(tmpValue));
 
-//      TreeMap<V, Collection<I>> coreMap = (TreeMap<V, Collection<I>>) getCoreMap();
-//
-//      Map<V, Collection<I>> tail = coreMap.tailMap(value);
-//      for (V tmpValue : tail.keySet())
-//      {
-//        if (!tmpValue.equals(value)) rtn.addAll(get(tmpValue));
-//      }
+      for (V tmpValue : _sortedValues.tailSet(value))
+        if (!tmpValue.equals(value))
+        {
+          Collection<I> get = equalTo(tmpValue);
+          rtn.addAll(get);
+          recycleCollection(get);
+        }
+
+      return rtn;
+    }
+    finally
+    {
+      lock.readLock().unlock();
+    }
+  }
+
+  @Override
+  public long greaterThanSize(V value)
+  {
+    if (value == null)
+      throw new NullPointerException("null values are not permitted as keys");
+
+    long rtn = 0;
+    ReentrantReadWriteLock lock = getLock();
+    try
+    {
+      lock.readLock().lock();
+
+      for (V tmpValue : _sortedValues.tailSet(value))
+      {
+        Collection<I> container = getCoreMap().get(tmpValue);
+        if (container != null) rtn += container.size();
+      }
       return rtn;
     }
     finally
@@ -129,15 +153,39 @@ public class SortedValueMap<V extends Comparable<V>, I> extends
     try
     {
       lock.readLock().lock();
-      
-      for(V tmpValue : _sortedValues.headSet(value))
-        rtn.addAll(get(tmpValue));
 
-//      TreeMap<V, Collection<I>> coreMap = (TreeMap<V, Collection<I>>) getCoreMap();
-//
-//      Map<V, Collection<I>> head = coreMap.headMap(value);
-//      for (Collection<I> values : head.values())
-//        if (values != null) rtn.addAll(values);
+      for (V tmpValue : _sortedValues.headSet(value))
+      {
+        Collection<I> get = equalTo(tmpValue);
+        rtn.addAll(get);
+        recycleCollection(get);
+      }
+
+      return rtn;
+    }
+    finally
+    {
+      lock.readLock().unlock();
+    }
+  }
+
+  @Override
+  public long lessThanSize(V value)
+  {
+    if (value == null)
+      throw new NullPointerException("null values are not permitted as keys");
+
+    long rtn = 0;
+    ReentrantReadWriteLock lock = getLock();
+    try
+    {
+      lock.readLock().lock();
+
+      for (V tmpValue : _sortedValues.headSet(value))
+      {
+        Collection<I> container = getCoreMap().get(tmpValue);
+        if (container != null) rtn += container.size();
+      }
       return rtn;
     }
     finally

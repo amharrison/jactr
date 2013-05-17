@@ -53,15 +53,15 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
   {
     return _map;
   }
-  
+
   protected Collection<I> instantiateReturnCollection()
   {
-    return new FastTable<I>();
+    return FastTable.newInstance();
   }
-  
+
   protected Set<I> instantiateReturnSet()
   {
-    return new FastSet<I>();
+    return FastSet.newInstance();
   }
 
   /**
@@ -71,10 +71,10 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
    */
   protected Map<V, Collection<I>> instantiateCoreMap()
   {
-    FastMap<V, Collection<I>> rtn =  new FastMap<V, Collection<I>>();
-    //rtn.setKeyComparator(FastComparator.DIRECT);
+    FastMap<V, Collection<I>> rtn = FastMap.newInstance();
+    // rtn.setKeyComparator(FastComparator.DIRECT);
     return rtn;
-    //return new HashMap<V, Collection<I>>();
+    // return new HashMap<V, Collection<I>>();
   }
 
   /**
@@ -85,8 +85,8 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
     /*
      * cant be a set since a chunk can point to this value multiple times
      */
-    return new FastList<I>();
-    //return new HashSet<I>();
+    return FastList.newInstance();
+    // return new HashSet<I>();
   }
 
   public void add(V value, I indexable)
@@ -124,10 +124,7 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
       lock.writeLock().lock();
 
       Collection<I> indexables = getCoreMap().remove(value);
-      if (indexables != null)
-      {
-        indexables.clear();
-      }
+      if (indexables != null) indexables.clear();
     }
     finally
     {
@@ -150,13 +147,24 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
     }
   }
 
-  public Collection<I> get(V value)
+  protected void recycleCollection(Collection<I> container)
+  {
+    if (container instanceof FastList)
+      FastList.recycle((FastList) container);
+    else if (container instanceof FastSet)
+      FastSet.recycle((FastSet) container);
+    else if (container instanceof FastTable)
+      FastTable.recycle((FastTable) container);
+  }
+
+  public Collection<I> equalTo(V value)
   {
     if (value == null)
       throw new NullPointerException("null values are not permitted as keys");
 
-    ReentrantReadWriteLock lock = getLock();
     Collection<I> rtn = instantiateReturnCollection();
+
+    ReentrantReadWriteLock lock = getLock();
 
     try
     {
@@ -172,8 +180,36 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
     }
   }
 
+  public long equalToSize(V value)
+  {
+    if (value == null)
+      throw new NullPointerException("null values are not permitted as keys");
+
+    ReentrantReadWriteLock lock = getLock();
+
+    try
+    {
+      lock.readLock().lock();
+
+      Collection<I> indexables = getCoreMap().get(value);
+      long rtn = 0;
+      if (indexables != null) rtn = indexables.size();
+      return rtn;
+    }
+    finally
+    {
+      lock.readLock().unlock();
+    }
+  }
+
   public Collection<I> greaterThan(V value)
       throws UnsupportedOperationException
+  {
+    throw new UnsupportedOperationException(
+        "Since natural ordering cannot be inferred, greaterThan is not implemented");
+  }
+
+  public long greaterThanSize(V value) throws UnsupportedOperationException
   {
     throw new UnsupportedOperationException(
         "Since natural ordering cannot be inferred, greaterThan is not implemented");
@@ -185,12 +221,19 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
         "Since natural ordering cannot be inferred, lessthan is not implemented");
   }
 
+  public long lessThanSize(V value) throws UnsupportedOperationException
+  {
+    throw new UnsupportedOperationException(
+        "Since natural ordering cannot be inferred, lessthan is not implemented");
+  }
+
   public Collection<I> not(V value)
   {
     if (value == null)
       throw new NullPointerException("null values are not permitted as keys");
 
     Set<I> rtn = instantiateReturnSet();
+
     ReentrantReadWriteLock lock = getLock();
     try
     {
@@ -198,9 +241,36 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
 
       Map<V, Collection<I>> coreMap = getCoreMap();
       for (V tmpValue : coreMap.keySet())
-      {
-        if (!tmpValue.equals(value)) rtn.addAll(get(tmpValue));
-      }
+        if (!tmpValue.equals(value))
+        {
+          Collection<I> get = equalTo(tmpValue);
+          rtn.addAll(get);
+          recycleCollection(get);
+        }
+      return rtn;
+    }
+    finally
+    {
+      lock.readLock().unlock();
+    }
+  }
+
+  public long notSize(V value)
+  {
+    if (value == null)
+      throw new NullPointerException("null values are not permitted as keys");
+
+    long rtn = 0;
+
+    ReentrantReadWriteLock lock = getLock();
+    try
+    {
+      lock.readLock().lock();
+
+      Map<V, Collection<I>> coreMap = getCoreMap();
+      for (Map.Entry<V, Collection<I>> entry : coreMap.entrySet())
+        if (!entry.getKey().equals(value)) rtn += entry.getValue().size();
+
       return rtn;
     }
     finally
@@ -223,8 +293,11 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
       if (indexables != null)
       {
         indexables.remove(indexable);
-        if(indexables.size()==0)
+        if (indexables.size() == 0)
+        {
           getCoreMap().remove(value);
+          recycleCollection(indexables);
+        }
       }
     }
     finally
@@ -233,7 +306,6 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
     }
   }
 
-  
   public Collection<I> all()
   {
     Set<I> rtn = instantiateReturnSet();
@@ -241,10 +313,10 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
     try
     {
       lock.readLock().lock();
-      
+
       for (Collection<I> values : getCoreMap().values())
         rtn.addAll(values);
-      
+
       return rtn;
     }
     finally
@@ -253,6 +325,10 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
     }
   }
 
-  
-  
+  public long allSize()
+  {
+    // TODO Auto-generated method stub
+    return 0;
+  }
+
 }

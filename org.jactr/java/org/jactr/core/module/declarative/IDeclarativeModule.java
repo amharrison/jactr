@@ -20,6 +20,7 @@ import java.util.concurrent.Future;
 
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunktype.IChunkType;
+import org.jactr.core.model.IModel;
 import org.jactr.core.module.IModule;
 import org.jactr.core.module.declarative.associative.IAssociativeLinkageSystem;
 import org.jactr.core.module.declarative.basic.AbstractDeclarativeModule;
@@ -33,7 +34,12 @@ import org.jactr.core.production.request.ChunkTypeRequest;
  * chunktypes all operation return values are wrapped in Future<> to better
  * support backend concurrencies.<br/>
  * Clients can implement this interface, but should consider extending
- * {@link AbstractDeclarativeModule} or {@link DefaultDeclarativeModule}
+ * {@link AbstractDeclarativeModule} or {@link DefaultDeclarativeModule}. In
+ * either case, when the module makes calls to its front facing methods, it
+ * should not assume that it is in the installed declarative memory module.
+ * Rather it should use {@link #getModel()} and
+ * {@link IModel#getDeclarativeModule()}. This permits the local decM to be
+ * wrapped by a delegating one (say to access external database stores).
  * 
  * @author developer
  * @see java.util.concurrent.Future

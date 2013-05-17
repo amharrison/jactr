@@ -55,34 +55,39 @@ public class NumericTypeValueMap<I> extends AbstractTypeValueMap<Double, I> impl
     return null;
   }
   
-  public Collection<I> get(Object value)
-  {
-    Collection<I> rtn = lessThan(value);
-    rtn.retainAll(greaterThan(value));
-    return rtn;
-  }
+  // public Collection<I> get(Object value)
+  // {
+  // Collection<I> rtn = lessThan(value);
+  // rtn.retainAll(greaterThan(value));
+  // return rtn;
+  // }
   
   /**
    * 
    */
+  @Override
   public Collection<I> lessThan(Object value) throws UnsupportedOperationException
   {
     double val = asKeyType(value) + EPSILON;
     return getValueMap().lessThan(val);
   }
   
+  @Override
   public Collection<I> greaterThan(Object value) throws UnsupportedOperationException
   {
     double val = asKeyType(value) - EPSILON;
     return getValueMap().greaterThan(val);
   }
   
+  @Override
   public Collection<I> not(Object value)
   {
     double low = asKeyType(value)-EPSILON;
     double hi = asKeyType(value)+EPSILON;
     Collection<I> rtn = getValueMap().lessThan(low);
-    rtn.addAll(getValueMap().greaterThan(hi));
+    Collection<I> gt = getValueMap().greaterThan(hi);
+    rtn.addAll(gt);
+    recycleCollection(gt);
     return rtn;
   }
 

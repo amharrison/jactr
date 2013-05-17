@@ -33,7 +33,9 @@ public interface ITypeValueMap<V, I>
 
   public void clear();
 
-  public Collection<I> get(Object value);
+  public Collection<I> equalTo(Object value);
+
+  public long equalToSize(Object value);
 
   /**
    * 
@@ -41,10 +43,19 @@ public interface ITypeValueMap<V, I>
   public Collection<I> lessThan(Object value)
       throws UnsupportedOperationException;
 
+  public long lessThanSize(Object value) throws UnsupportedOperationException;
+
   public Collection<I> greaterThan(Object value)
+      throws UnsupportedOperationException;
+
+  public long greaterThanSize(Object value)
       throws UnsupportedOperationException;
 
   public Collection<I> not(Object value);
 
+  public long notSize(Object value);
+
   public Collection<I> all();
+
+  public long allSize();
 }

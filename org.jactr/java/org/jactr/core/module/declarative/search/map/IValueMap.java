@@ -31,19 +31,29 @@ public interface IValueMap<V,I>
   
   public void clear();
   
-  public Collection<I> get(V value);
+  public Collection<I> equalTo(V value);
   
+  public long equalToSize(V value);
+
   /**
    * 
    */
   public Collection<I> lessThan(V value) throws UnsupportedOperationException;
   
+  public long lessThanSize(V value) throws UnsupportedOperationException;
+
   public Collection<I> greaterThan(V value) throws UnsupportedOperationException;
   
+  public long greaterThanSize(V value) throws UnsupportedOperationException;
+
   public Collection<I> not(V value);
   
+  public long notSize(V value);
+
   public Collection<I> all();
   
+  public long allSize();
+
 }
 
 

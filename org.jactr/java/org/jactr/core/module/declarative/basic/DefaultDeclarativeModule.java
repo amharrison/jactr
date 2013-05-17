@@ -24,6 +24,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import javolution.util.FastList;
+import javolution.util.FastSet;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.IActivationBuffer;
@@ -399,9 +402,11 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
          */
         chunk = removedChunk;
 
-        IChunkType ct = sc.getChunkType();
-        if (ct instanceof IRemovableSymbolicChunkType)
-          ((IRemovableSymbolicChunkType) ct).removeChunk(chunk);
+        ISymbolicChunkType ct = sc.getChunkType().getSymbolicChunkType();
+        IRemovableSymbolicChunkType rct = (IRemovableSymbolicChunkType) ct
+            .getAdapter(IRemovableSymbolicChunkType.class);
+
+        if (rct != null) rct.removeChunk(chunk);
 
         _searchSystem.unindex(chunk);
       }
@@ -497,7 +502,7 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
       logMessage.append(candidates).append("\n ");
     }
 
-    ArrayList<IChunk> finalChunks = new ArrayList<IChunk>();
+    FastList<IChunk> finalChunks = new FastList<IChunk>();
     /*
      * we can't be sure that the sorting used is actually relevant to us so we
      * have to zip through the entire results
@@ -544,6 +549,9 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
 
     if (logMessage != null)
       Logger.log(getModel(), Logger.Stream.DECLARATIVE, logMessage.toString());
+
+    // clean up
+    if (candidates instanceof FastSet) FastSet.recycle((FastSet) candidates);
 
     return finalChunks;
   }

@@ -17,8 +17,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
@@ -27,6 +28,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javolution.util.FastList;
+import javolution.util.FastSet;
+import javolution.util.FastTable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -133,7 +136,7 @@ public class DefaultSearchSystem implements ISearchSystem
   public Collection<IChunk> findExact(ChunkTypeRequest pattern,
       Comparator<IChunk> sortRule)
   {
-    Collection<IChunk> candidates = findExactSingle(pattern);
+    Collection<IChunk> candidates = findExactSingleThreaded(pattern);
 
     if (sortRule != null)
     {
@@ -149,9 +152,13 @@ public class DefaultSearchSystem implements ISearchSystem
     return candidates;
   }
 
-  protected Collection<IChunk> findExactPooled(ChunkTypeRequest pattern)
+  protected Collection<IChunk> findExactPooledThreads(ChunkTypeRequest pattern)
   {
-    final HashSet<IChunk> candidates = new HashSet<IChunk>();
+    /*
+     * will not work yet since this old version of fastset might not work
+     * multithreaded
+     */
+    final FastSet<IChunk> candidates = new FastSet<IChunk>();
     IChunkType chunkType = pattern.getChunkType();
     if (chunkType != null)
       candidates.addAll(chunkType.getSymbolicChunkType().getChunks());
@@ -194,11 +201,11 @@ public class DefaultSearchSystem implements ISearchSystem
           Collection<IChunk> slotCandidates = result.get();
           if (first)
           {
-            candidates.addAll(slotCandidates);
+            cleanAddAll(candidates, slotCandidates);
             first = false;
           }
           else
-            candidates.retainAll(slotCandidates);
+            cleanRetainAll(candidates, slotCandidates);
         }
 
         zeroResults = candidates.size() == 0;
@@ -217,29 +224,45 @@ public class DefaultSearchSystem implements ISearchSystem
     return candidates;
   }
 
-  protected Collection<IChunk> findExactSingle(ChunkTypeRequest pattern)
+  protected Collection<ISlot> sortPattern(Collection<? extends ISlot> slots)
+  {
+    ArrayList<ISlot> sorted = new ArrayList<ISlot>(slots);
+
+    Map<ISlot, Long> sizeMap = new HashMap<ISlot, Long>();
+    for (ISlot slot : slots)
+      sizeMap.put(slot, guessSize(slot));
+
+    Collections.sort(sorted, new PatternComparator(sizeMap));
+
+    return sorted;
+  }
+
+  protected Collection<IChunk> findExactSingleThreaded(ChunkTypeRequest pattern)
   {
     /*
      * second pass, ditch all those that don't match our chunktype
      */
-    HashSet<IChunk> candidates = new HashSet<IChunk>();
+    FastSet<IChunk> candidates = FastSet.newInstance();
     IChunkType chunkType = pattern.getChunkType();
     if (chunkType != null)
+    // this should really respect chunktype's locks..
       candidates.addAll(chunkType.getSymbolicChunkType().getChunks());
     /*
      * first things first, find all the candidates based on the content of the
      * pattern
      */
     boolean first = chunkType == null;
-    for (ISlot slot : pattern.getConditionalAndLogicalSlots())
+    for (ISlot slot : sortPattern(pattern.getConditionalAndLogicalSlots()))
     {
       if (first)
       {
-        candidates.addAll(find(slot, candidates));
+        // candidates.addAll(find(slot, candidates));
+        cleanAddAll(candidates, find(slot, candidates));
         first = false;
       }
       else
-        candidates.retainAll(find(slot, candidates));
+        cleanRetainAll(candidates, find(slot, candidates));
+      // candidates.retainAll(find(slot, candidates));
 
       if (candidates.size() == 0) break;
     }
@@ -258,7 +281,7 @@ public class DefaultSearchSystem implements ISearchSystem
     /*
      * second pass, ditch all those that don't match our chunktype
      */
-    HashSet<IChunk> candidates = new HashSet<IChunk>();
+    FastSet<IChunk> candidates = FastSet.newInstance();
     IChunkType chunkType = pattern.getChunkType();
 
     /*
@@ -302,16 +325,9 @@ public class DefaultSearchSystem implements ISearchSystem
     return candidates;
   }
 
-  /**
-   * current candidates is required in the case of NOT conditions
-   * 
-   * @param slot
-   * @param candidates
-   * @return
-   */
-  protected Collection<IChunk> find(ISlot slot, HashSet<IChunk> candidates)
+  protected long guessSize(ISlot slot)
   {
-    HashSet<IChunk> rtn = new HashSet<IChunk>();
+    long size = 0;
     if (slot instanceof IConditionalSlot)
     {
       IConditionalSlot conditionalSlot = (IConditionalSlot) slot;
@@ -319,34 +335,27 @@ public class DefaultSearchSystem implements ISearchSystem
       {
         case IConditionalSlot.EQUALS:
           if (slot.getName().equals(ISlot.ISA))
-            rtn.addAll(((IChunkType) slot.getValue()).getSymbolicChunkType()
-                .getChunks());
+            size += ((IChunkType) slot.getValue()).getSymbolicChunkType()
+                .getNumberOfChunks();
           else
-            rtn.addAll(equals(conditionalSlot));
+            size = guessEqualsSize(conditionalSlot);
           break;
         case IConditionalSlot.GREATER_THAN:
-          rtn.addAll(greaterThan(conditionalSlot));
+          size = guessGreaterThanSize(conditionalSlot);
           break;
         case IConditionalSlot.GREATER_THAN_EQUALS:
-          rtn.addAll(greaterThan(conditionalSlot));
-          rtn.addAll(equals(conditionalSlot));
+          size = guessGreaterThanSize(conditionalSlot);
+          size += guessEqualsSize(conditionalSlot);
           break;
         case IConditionalSlot.LESS_THAN:
-          rtn.addAll(lessThan(conditionalSlot));
+          size = guessLessThanSize(conditionalSlot);
           break;
         case IConditionalSlot.LESS_THAN_EQUALS:
-          rtn.addAll(lessThan(conditionalSlot));
-          rtn.addAll(equals(conditionalSlot));
+          size = guessLessThanSize(conditionalSlot);
+          size += guessEqualsSize(conditionalSlot);
           break;
         case IConditionalSlot.NOT_EQUALS:
-          if (slot.getName().equals(ISlot.ISA))
-          {
-            rtn.addAll(candidates);
-            rtn.removeAll(((IChunkType) slot.getValue()).getSymbolicChunkType()
-                .getChunks());
-          }
-          else
-            rtn.addAll(not(conditionalSlot));
+          size = guessNotSize(conditionalSlot);
           break;
         case IConditionalSlot.WITHIN:
         default:
@@ -364,16 +373,97 @@ public class DefaultSearchSystem implements ISearchSystem
       switch (logicalSlot.getOperator())
       {
         case ILogicalSlot.AND:
-          rtn.addAll(find(children.getFirst(), candidates));
-          rtn.retainAll(find(children.getLast(), candidates));
-          break;
         case ILogicalSlot.OR:
-          rtn.addAll(find(children.getFirst(), candidates));
-          rtn.addAll(find(children.getLast(), candidates));
+          size = guessSize(children.getFirst());
+          size += guessSize(children.getLast());
           break;
         case ILogicalSlot.NOT:
-          rtn.addAll(candidates);
-          rtn.removeAll(find(children.getFirst(), candidates));
+          size = guessSize(children.getFirst());
+      }
+
+      FastList.recycle(children);
+    }
+    else
+      LOGGER.error("Ignoring slot " + slot
+          + " because it's neither conditional nor logical");
+
+
+    return size;
+  }
+
+  /**
+   * current candidates is required in the case of NOT conditions
+   * 
+   * @param slot
+   * @param candidates
+   * @return
+   */
+  protected Collection<IChunk> find(ISlot slot, Set<IChunk> candidates)
+  {
+    FastSet<IChunk> rtn = FastSet.newInstance();
+    if (slot instanceof IConditionalSlot)
+    {
+      IConditionalSlot conditionalSlot = (IConditionalSlot) slot;
+      switch (conditionalSlot.getCondition())
+      {
+        case IConditionalSlot.EQUALS:
+          if (slot.getName().equals(ISlot.ISA))
+            rtn.addAll(((IChunkType) slot.getValue()).getSymbolicChunkType()
+                .getChunks());
+          else
+            cleanAddAll(rtn, equals(conditionalSlot));
+          break;
+        case IConditionalSlot.GREATER_THAN:
+          cleanAddAll(rtn, greaterThan(conditionalSlot));
+          break;
+        case IConditionalSlot.GREATER_THAN_EQUALS:
+          cleanAddAll(rtn, greaterThan(conditionalSlot));
+          cleanAddAll(rtn, equals(conditionalSlot));
+          break;
+        case IConditionalSlot.LESS_THAN:
+          cleanAddAll(rtn, lessThan(conditionalSlot));
+          break;
+        case IConditionalSlot.LESS_THAN_EQUALS:
+          cleanAddAll(rtn, lessThan(conditionalSlot));
+          cleanAddAll(rtn, equals(conditionalSlot));
+          break;
+        case IConditionalSlot.NOT_EQUALS:
+          if (slot.getName().equals(ISlot.ISA))
+          {
+            cleanAddAll(rtn, candidates);
+            cleanRemoveAll(rtn, ((IChunkType) slot.getValue())
+                .getSymbolicChunkType()
+                .getChunks());
+          }
+          else
+            cleanAddAll(rtn, not(conditionalSlot));
+          break;
+        case IConditionalSlot.WITHIN:
+        default:
+          if (LOGGER.isWarnEnabled())
+            LOGGER.warn("No clue what to do with this search condition "
+                + conditionalSlot);
+      }
+    }
+    else if (slot instanceof ILogicalSlot)
+    {
+      ILogicalSlot logicalSlot = (ILogicalSlot) slot;
+      FastList<ISlot> children = FastList.newInstance();
+      logicalSlot.getSlots(children);
+
+      switch (logicalSlot.getOperator())
+      {
+        case ILogicalSlot.AND:
+          cleanAddAll(rtn, find(children.getFirst(), candidates));
+          cleanRetainAll(rtn, find(children.getLast(), candidates));
+          break;
+        case ILogicalSlot.OR:
+          cleanAddAll(rtn, find(children.getFirst(), candidates));
+          cleanAddAll(rtn, find(children.getLast(), candidates));
+          break;
+        case ILogicalSlot.NOT:
+          cleanAddAll(rtn, candidates);
+          cleanRemoveAll(rtn, find(children.getFirst(), candidates));
       }
 
       FastList.recycle(children);
@@ -391,12 +481,47 @@ public class DefaultSearchSystem implements ISearchSystem
     return rtn;
   }
 
+  /**
+   * wrappers for the set logic so that we can easily clean up of the temporary
+   * collections
+   * 
+   * @param rtnSet
+   * @param candidates
+   */
+  protected void cleanAddAll(Set<IChunk> rtnSet, Collection<IChunk> candidates)
+  {
+    rtnSet.addAll(candidates);
+    recycleCollection(candidates);
+  }
+
+  protected void cleanRetainAll(Set<IChunk> rtnSet,
+      Collection<IChunk> candidates)
+  {
+    rtnSet.retainAll(candidates);
+    recycleCollection(candidates);
+  }
+
+  protected void cleanRemoveAll(Set<IChunk> rtnSet,
+      Collection<IChunk> candidates)
+  {
+    rtnSet.removeAll(candidates);
+    recycleCollection(candidates);
+  }
+
   protected Collection<IChunk> equals(ISlot slot)
   {
     ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
         slot.getName(), slot.getValue(), false);
-    if (typeValueMap != null) return typeValueMap.get(slot.getValue());
+    if (typeValueMap != null) return typeValueMap.equalTo(slot.getValue());
     return Collections.EMPTY_LIST;
+  }
+
+  protected long guessEqualsSize(ISlot slot)
+  {
+    ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
+        slot.getName(), slot.getValue(), false);
+    if (typeValueMap != null) return typeValueMap.equalToSize(slot.getValue());
+    return 0;
   }
 
   protected Collection<IChunk> lessThan(ISlot slot)
@@ -416,6 +541,24 @@ public class DefaultSearchSystem implements ISearchSystem
     return Collections.EMPTY_LIST;
   }
 
+  protected long guessLessThanSize(ISlot slot)
+  {
+    ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
+        slot.getName(), slot.getValue(), false);
+    if (typeValueMap != null)
+      try
+      {
+        return typeValueMap.lessThanSize(slot.getValue());
+      }
+      catch (UnsupportedOperationException uoe)
+      {
+        if (LOGGER.isDebugEnabled())
+          LOGGER.debug(slot.getValue() + " does not have natural ordering");
+      }
+    return 0;
+  }
+
+
   protected Collection<IChunk> greaterThan(ISlot slot)
   {
     ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
@@ -434,6 +577,35 @@ public class DefaultSearchSystem implements ISearchSystem
     return Collections.EMPTY_LIST;
   }
 
+  protected long guessGreaterThanSize(ISlot slot)
+  {
+    ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
+        slot.getName(), slot.getValue(), false);
+    if (typeValueMap != null)
+      try
+      {
+        return typeValueMap.greaterThanSize(slot.getValue());
+      }
+      catch (UnsupportedOperationException uoe)
+      {
+        if (LOGGER.isDebugEnabled())
+          LOGGER.debug(slot.getValue() + " does not have natural ordering");
+      }
+
+    return 0;
+  }
+
+  @SuppressWarnings("rawtypes")
+  protected void recycleCollection(Collection<?> collection)
+  {
+    if (collection instanceof FastList)
+      FastList.recycle((FastList) collection);
+    else if (collection instanceof FastSet)
+      FastSet.recycle((FastSet) collection);
+    else if (collection instanceof FastTable)
+      FastTable.recycle((FastTable) collection);
+  }
+
   protected Collection<IChunk> not(ISlot slot)
   {
     /*
@@ -441,11 +613,16 @@ public class DefaultSearchSystem implements ISearchSystem
      * are, but also all the other type value maps.all() we'll start with the
      * obvious part first
      */
-    HashSet<IChunk> rtn = new HashSet<IChunk>();
+    FastSet<IChunk> rtn = FastSet.newInstance();
     ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
         slot.getName(), slot.getValue(), false);
 
-    if (typeValueMap != null) rtn.addAll(typeValueMap.not(slot.getValue()));
+    Collection<IChunk> container = Collections.EMPTY_LIST;
+
+    if (typeValueMap != null) container = typeValueMap.not(slot.getValue());
+    rtn.addAll(container);
+
+    recycleCollection(container);
 
     // now let's snag all the rest
     try
@@ -453,7 +630,41 @@ public class DefaultSearchSystem implements ISearchSystem
       getLock().readLock().lock();
       for (ITypeValueMap<?, IChunk> tvm : _slotMap.get(slot.getName()
           .toLowerCase()))
-        if (tvm != typeValueMap && tvm != null) rtn.addAll(tvm.all());
+        if (tvm != typeValueMap && tvm != null)
+        {
+          container = tvm.all();
+          rtn.addAll(container);
+          recycleCollection(container);
+        }
+      return rtn;
+    }
+    finally
+    {
+      getLock().readLock().unlock();
+    }
+  }
+
+  protected long guessNotSize(ISlot slot)
+  {
+    /*
+     * return values are not only what the approriate typevalue map say they
+     * are, but also all the other type value maps.all() we'll start with the
+     * obvious part first
+     */
+    long rtn = 0;
+
+    ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
+        slot.getName(), slot.getValue(), false);
+
+    if (typeValueMap != null) rtn += typeValueMap.notSize(slot.getValue());
+
+    // now let's snag all the rest
+    try
+    {
+      getLock().readLock().lock();
+      for (ITypeValueMap<?, IChunk> tvm : _slotMap.get(slot.getName()
+          .toLowerCase()))
+        if (tvm != typeValueMap && tvm != null) rtn += tvm.allSize();
       return rtn;
     }
     finally
@@ -550,7 +761,8 @@ public class DefaultSearchSystem implements ISearchSystem
           if (tvm.isValueRelevant(value))
           {
             typeValueMap = tvm;
-            continue;
+            // continue; //good job :-p
+            break;
           }
 
         /*
@@ -583,7 +795,8 @@ public class DefaultSearchSystem implements ISearchSystem
             if (tvm.isValueRelevant(value))
             {
               typeValueMap = tvm;
-              continue;
+              // continue; //once again.. ?
+              break;
             }
             else if (LOGGER.isDebugEnabled())
               LOGGER.debug(tvm + " is irrelevant to " + value);
