@@ -17,6 +17,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.TreeSet;
 
+import javolution.util.FastList;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
@@ -70,7 +72,7 @@ public class BasicSymbolicChunkType extends NotifyingSlotContainer implements
   public BasicSymbolicChunkType()
   {
     _children = new TreeSet<IChunkType>();
-    _chunks = new ArrayList<IChunk>();
+    _chunks = new FastList<IChunk>(); // was array list, behold perf improvments
     _supertypeParents = new ArrayList<IChunkType>(2);
     ++TOTAL_COUNT;
   }
@@ -396,8 +398,7 @@ public class BasicSymbolicChunkType extends NotifyingSlotContainer implements
 
   public Object getAdapter(Class adapterClass)
   {
-    for (Class cl : getClass().getClasses())
-      if (cl.equals(adapterClass)) return this;
+    if (adapterClass.isAssignableFrom(getClass())) return this;
 
     return null;
   }
