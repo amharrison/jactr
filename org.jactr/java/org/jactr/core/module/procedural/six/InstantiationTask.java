@@ -50,10 +50,12 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
 
   private final IRandomModule           _randomModule;
 
+  private final IModel                  _model;
+
   private final double                  _expectedUtilityNoise;
 
   public InstantiationTask(Collection<IProduction> productions,
-      IProductionInstantiator instantiator, IRandomModule random,
+      IProductionInstantiator instantiator, IModel model, IRandomModule random,
       double utilityNoise)
   {
     _productionsToInstantiate = FastList.newInstance();
@@ -61,11 +63,11 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
     _instantiator = instantiator;
     _randomModule = random;
     _expectedUtilityNoise = utilityNoise;
+    _model = model;
   }
 
   public Collection<IInstantiation> call() throws Exception
   {
-    IModel model = _randomModule.getModel();
     List<IInstantiation> keepers = new ArrayList<IInstantiation>();
 
     StringBuilder message = new StringBuilder();
@@ -102,7 +104,7 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
 
           p.setExpectedUtility(utility + noise);
 
-          if (LOGGER.isDebugEnabled() || Logger.hasLoggers(model))
+          if (LOGGER.isDebugEnabled() || Logger.hasLoggers(_model))
           {
             message.delete(0, message.length());
             message.append("Instantiated ").append(production)
@@ -112,8 +114,8 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
 
             String msg = message.toString();
             if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
-            if (Logger.hasLoggers(model))
-              Logger.log(model, Logger.Stream.PROCEDURAL, msg);
+            if (Logger.hasLoggers(_model))
+              Logger.log(_model, Logger.Stream.PROCEDURAL, msg);
           }
 
           keepers.add(instantiation);
@@ -122,11 +124,11 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
       catch (CannotInstantiateException cie)
       {
 
-        if (LOGGER.isDebugEnabled() || Logger.hasLoggers(model))
+        if (LOGGER.isDebugEnabled() || Logger.hasLoggers(_model))
         {
           String msg = cie.getMessage();
           LOGGER.debug(msg);
-          Logger.log(model, Logger.Stream.PROCEDURAL, msg);
+          Logger.log(_model, Logger.Stream.PROCEDURAL, msg);
         }
       }
 
@@ -143,12 +145,11 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
   private Collection<VariableBindings> computeProvisionalBindings(
       IProduction production)
   {
-    IModel model = _randomModule.getModel();
     Collection<VariableBindings> returnedProvisionalBindings = new ArrayList<VariableBindings>();
     Collection<VariableBindings> provisionalBindings = new ArrayList<VariableBindings>();
 
     VariableBindings initialBinding = new VariableBindings();
-    initialBinding.bind("=model", model);
+    initialBinding.bind("=model", _model);
     provisionalBindings.add(initialBinding);
 
     /*
@@ -160,7 +161,7 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
       if (condition instanceof IBufferCondition
           && !(condition instanceof QueryCondition))
       {
-        IActivationBuffer buffer = model
+        IActivationBuffer buffer = _model
             .getActivationBuffer(((IBufferCondition) condition).getBufferName());
 
         Collection<IChunk> sourceChunks = buffer.getSourceChunks();

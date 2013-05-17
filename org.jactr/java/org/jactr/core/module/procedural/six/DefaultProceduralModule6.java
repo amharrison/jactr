@@ -680,9 +680,8 @@ public class DefaultProceduralModule6 extends AbstractModule implements
         int start = i * minimumBlockSize;
         int end = Math.min(i * minimumBlockSize + minimumBlockSize, size);
         InstantiationTask it = new InstantiationTask(
-            working.subList(start, end),
-            getProductionInstantiator(), _randomModule,
-            getExpectedUtilityNoise());
+            working.subList(start, end), getProductionInstantiator(),
+            getModel(), _randomModule, getExpectedUtilityNoise());
 
         ecs.submit(it);
       }
@@ -707,7 +706,7 @@ public class DefaultProceduralModule6 extends AbstractModule implements
       try
       {
         InstantiationTask it = new InstantiationTask(productions,
-            getProductionInstantiator(), _randomModule,
+            getProductionInstantiator(), getModel(), _randomModule,
             getExpectedUtilityNoise());
         keepers.addAll(it.call());
       }
