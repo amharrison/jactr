@@ -244,14 +244,14 @@ public class DefaultSearchSystem implements ISearchSystem
      */
     FastSet<IChunk> candidates = FastSet.newInstance();
     IChunkType chunkType = pattern.getChunkType();
-    if (chunkType != null)
-    // this should really respect chunktype's locks..
-      candidates.addAll(chunkType.getSymbolicChunkType().getChunks());
+
     /*
      * first things first, find all the candidates based on the content of the
-     * pattern
+     * pattern. We sort the slots based on the estimated size of the returned
+     * set, then execute them. This lets us keep our candidate size down, which
+     * reduces the time cost of retainAll operations.
      */
-    boolean first = chunkType == null;
+    boolean first = candidates.size() == 0;
     for (ISlot slot : sortPattern(pattern.getConditionalAndLogicalSlots()))
     {
       if (first)
@@ -266,6 +266,19 @@ public class DefaultSearchSystem implements ISearchSystem
 
       if (candidates.size() == 0) break;
     }
+
+    /**
+     * now, we can either grab all the chunks of type and do a set retainAll,
+     * or.. I can iterate testing for the appropriate chunktype. for the most
+     * accurate comparison in performance I should probably use set logic first.<br/>
+     * <br/>
+     * Set logic resulted in a 20x speed up. <br/>
+     * Using an iterator, we could save a ton on memory allocations, except that
+     * default IChunkType.getChunks() returns an unmodifiable wrapper, not copy.
+     * Might as well leave this as set logic until getChunks is a copy operator
+     */
+    if (candidates.size() != 0 && chunkType != null)
+      candidates.retainAll(chunkType.getSymbolicChunkType().getChunks());
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("First pass candidates for " + pattern + " chunks: "
@@ -387,7 +400,6 @@ public class DefaultSearchSystem implements ISearchSystem
       LOGGER.error("Ignoring slot " + slot
           + " because it's neither conditional nor logical");
 
-
     return size;
   }
 
@@ -432,8 +444,7 @@ public class DefaultSearchSystem implements ISearchSystem
           {
             cleanAddAll(rtn, candidates);
             cleanRemoveAll(rtn, ((IChunkType) slot.getValue())
-                .getSymbolicChunkType()
-                .getChunks());
+                .getSymbolicChunkType().getChunks());
           }
           else
             cleanAddAll(rtn, not(conditionalSlot));
@@ -557,7 +568,6 @@ public class DefaultSearchSystem implements ISearchSystem
       }
     return 0;
   }
-
 
   protected Collection<IChunk> greaterThan(ISlot slot)
   {

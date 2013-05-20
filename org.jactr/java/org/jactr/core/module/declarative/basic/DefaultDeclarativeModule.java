@@ -573,7 +573,6 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
       logMessage.append(candidates).append("\n ");
     }
 
-    getModel();
 
     /*
      * we can't be sure that the sorting used is actually relevant to us so we
