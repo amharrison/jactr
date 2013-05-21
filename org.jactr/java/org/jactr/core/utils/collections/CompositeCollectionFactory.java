@@ -6,27 +6,27 @@ package org.jactr.core.utils.collections;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import org.apache.commons.collections.set.CompositeSet;
+import org.apache.commons.collections.collection.CompositeCollection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.utils.recyclable.AbstractThreadLocalRecyclableFactory;
 import org.jactr.core.utils.recyclable.RecyclableFactory;
 
-public class CompositeSetFactory
+public class CompositeCollectionFactory
 {
   /**
    * Logger definition
    */
   static private final transient Log             LOGGER   = LogFactory
-                                                              .getLog(CompositeSetFactory.class);
+                                                              .getLog(CompositeCollectionFactory.class);
 
-  static private RecyclableFactory<CompositeSet> _factory = new AbstractThreadLocalRecyclableFactory<CompositeSet>() {
+  static private RecyclableFactory<CompositeCollection> _factory = new AbstractThreadLocalRecyclableFactory<CompositeCollection>() {
 
                                                             @SuppressWarnings({
       "unchecked", "rawtypes"                              })
                                                             @Override
                                                             protected void cleanUp(
-                                                                CompositeSet obj)
+                                                                       CompositeCollection obj)
                                                             {
                                                               for (Object set : obj
                                                                   .getCollections())
@@ -39,20 +39,20 @@ public class CompositeSetFactory
                                                             }
 
                                                             @Override
-                                                            protected CompositeSet instantiate(
+                                                                   protected CompositeCollection instantiate(
                                                                 Object... params)
                                                             {
-                                                              return new CompositeSet();
+                                                                     return new CompositeCollection();
                                                             }
 
                                                           };
 
-  static public CompositeSet newInstance()
+  static public CompositeCollection newInstance()
   {
     return _factory.newInstance();
   }
 
-  static public void recycle(CompositeSet set)
+  static public void recycle(CompositeCollection set)
   {
     _factory.recycle(set);
   }

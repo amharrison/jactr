@@ -22,7 +22,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javolution.util.FastComparator;
 import javolution.util.FastMap;
 
-import org.apache.commons.collections.set.CompositeSet;
+import org.apache.commons.collections.collection.CompositeCollection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -96,7 +96,7 @@ public class SortedValueMap<V extends Comparable<V>, I> extends
     if (value == null)
       throw new NullPointerException("null values are not permitted as keys");
 
-    CompositeSet rtn = instantiateReturnSet();
+    CompositeCollection rtn = instantiateReturnSet();
     ReentrantReadWriteLock lock = getLock();
     try
     {
@@ -151,7 +151,7 @@ public class SortedValueMap<V extends Comparable<V>, I> extends
     if (value == null)
       throw new NullPointerException("null values are not permitted as keys");
 
-    CompositeSet rtn = instantiateReturnSet();
+    CompositeCollection rtn = instantiateReturnSet();
     ReentrantReadWriteLock lock = getLock();
     try
     {

@@ -23,9 +23,10 @@ import javolution.util.FastMap;
 import javolution.util.FastSet;
 import javolution.util.FastTable;
 
-import org.apache.commons.collections.set.CompositeSet;
+import org.apache.commons.collections.collection.CompositeCollection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jactr.core.utils.collections.CompositeCollectionFactory;
 
 public class DefaultValueMap<V, I> implements IValueMap<V, I>
 {
@@ -60,9 +61,9 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
   // return FastTable.newInstance();
   // }
 
-  protected CompositeSet instantiateReturnSet()
+  protected CompositeCollection instantiateReturnSet()
   {
-    return new CompositeSet();
+    return CompositeCollectionFactory.newInstance();
   }
 
   /**
@@ -235,7 +236,7 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
     if (value == null)
       throw new NullPointerException("null values are not permitted as keys");
 
-    CompositeSet rtn = instantiateReturnSet();
+    CompositeCollection rtn = instantiateReturnSet();
 
     ReentrantReadWriteLock lock = getLock();
     try
@@ -314,7 +315,7 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
   @SuppressWarnings("unchecked")
   public Collection<I> all()
   {
-    CompositeSet rtn = instantiateReturnSet();
+    CompositeCollection rtn = instantiateReturnSet();
     ReentrantReadWriteLock lock = getLock();
     try
     {

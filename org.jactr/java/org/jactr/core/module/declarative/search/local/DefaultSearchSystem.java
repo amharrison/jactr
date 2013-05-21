@@ -32,6 +32,7 @@ import javolution.util.FastList;
 import javolution.util.FastSet;
 import javolution.util.FastTable;
 
+import org.apache.commons.collections.collection.CompositeCollection;
 import org.apache.commons.collections.set.CompositeSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,6 +53,7 @@ import org.jactr.core.slot.IConditionalSlot;
 import org.jactr.core.slot.ILogicalSlot;
 import org.jactr.core.slot.ISlot;
 import org.jactr.core.utils.collections.ChunkNameComparator;
+import org.jactr.core.utils.collections.CompositeCollectionFactory;
 import org.jactr.core.utils.collections.CompositeSetFactory;
 import org.jactr.core.utils.collections.SkipListSetFactory;
 
@@ -424,7 +426,8 @@ public class DefaultSearchSystem implements ISearchSystem
    */
   protected Collection<IChunk> find(ISlot slot, Set<IChunk> candidates)
   {
-    Set<IChunk> rtn = SkipListSetFactory.newInstance(_chunkNameComparator);
+    // Set<IChunk> rtn = SkipListSetFactory.newInstance(_chunkNameComparator);
+    Collection<IChunk> rtn = CompositeCollectionFactory.newInstance();
     if (slot instanceof IConditionalSlot)
     {
       IConditionalSlot conditionalSlot = (IConditionalSlot) slot;
@@ -454,6 +457,12 @@ public class DefaultSearchSystem implements ISearchSystem
         case IConditionalSlot.NOT_EQUALS:
           if (slot.getName().equals(ISlot.ISA))
           {
+            // don't use this guy, it won't work. if we use retainAll/removeAll
+            // we need the skip list set.
+            CompositeCollectionFactory.recycle((CompositeCollection) rtn);
+
+            rtn = SkipListSetFactory.newInstance(_chunkNameComparator);
+
             cleanAddAll(rtn, candidates);
             cleanRemoveAll(rtn, ((IChunkType) slot.getValue())
                 .getSymbolicChunkType().getChunks());
@@ -477,6 +486,12 @@ public class DefaultSearchSystem implements ISearchSystem
       switch (logicalSlot.getOperator())
       {
         case ILogicalSlot.AND:
+          // don't use this guy, it won't work. if we use retainAll/removeAll
+          // we need the skip list set.
+          CompositeCollectionFactory.recycle((CompositeCollection) rtn);
+
+          rtn = SkipListSetFactory.newInstance(_chunkNameComparator);
+
           cleanAddAll(rtn, find(children.getFirst(), candidates));
           cleanRetainAll(rtn, find(children.getLast(), candidates));
           break;
@@ -485,6 +500,12 @@ public class DefaultSearchSystem implements ISearchSystem
           cleanAddAll(rtn, find(children.getLast(), candidates));
           break;
         case ILogicalSlot.NOT:
+          // don't use this guy, it won't work. if we use retainAll/removeAll
+          // we need the skip list set.
+          CompositeCollectionFactory.recycle((CompositeCollection) rtn);
+
+          rtn = SkipListSetFactory.newInstance(_chunkNameComparator);
+
           cleanAddAll(rtn, candidates);
           cleanRemoveAll(rtn, find(children.getFirst(), candidates));
       }
@@ -511,20 +532,24 @@ public class DefaultSearchSystem implements ISearchSystem
    * @param rtnSet
    * @param candidates
    */
-  protected void cleanAddAll(Set<IChunk> rtnSet, Collection<IChunk> candidates)
+  protected void cleanAddAll(Collection<IChunk> rtnSet,
+      Collection<IChunk> candidates)
   {
-    rtnSet.addAll(candidates);
+    if (rtnSet instanceof CompositeCollection)
+      ((CompositeCollection) rtnSet).addComposited(candidates);
+    else
+      rtnSet.addAll(candidates);
     recycleCollection(candidates);
   }
 
-  protected void cleanRetainAll(Set<IChunk> rtnSet,
+  protected void cleanRetainAll(Collection<IChunk> rtnSet,
       Collection<IChunk> candidates)
   {
     rtnSet.retainAll(candidates);
     recycleCollection(candidates);
   }
 
-  protected void cleanRemoveAll(Set<IChunk> rtnSet,
+  protected void cleanRemoveAll(Collection<IChunk> rtnSet,
       Collection<IChunk> candidates)
   {
     rtnSet.removeAll(candidates);
@@ -620,12 +645,13 @@ public class DefaultSearchSystem implements ISearchSystem
   @SuppressWarnings({ "rawtypes", "unchecked" })
   protected void recycleCollection(Collection<?> collection)
   {
-    if (collection instanceof CompositeSet)
+    if (collection instanceof CompositeCollection)
+      CompositeCollectionFactory.recycle((CompositeCollection) collection);
+    else if (collection instanceof CompositeSet)
       CompositeSetFactory.recycle((CompositeSet) collection);
     else if (collection instanceof ConcurrentSkipListSet)
       SkipListSetFactory.recycle((ConcurrentSkipListSet) collection);
-    else
-    if (collection instanceof FastList)
+    else if (collection instanceof FastList)
       FastList.recycle((FastList) collection);
     else if (collection instanceof FastSet)
       FastSet.recycle((FastSet) collection);
@@ -641,7 +667,7 @@ public class DefaultSearchSystem implements ISearchSystem
      * are, but also all the other type value maps.all() we'll start with the
      * obvious part first
      */
-    CompositeSet rtn = CompositeSetFactory.newInstance();
+    CompositeCollection rtn = CompositeCollectionFactory.newInstance();
     ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
         slot.getName(), slot.getValue(), false);
 
