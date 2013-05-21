@@ -57,6 +57,46 @@ import org.jactr.core.utils.collections.CompositeCollectionFactory;
 import org.jactr.core.utils.collections.CompositeSetFactory;
 import org.jactr.core.utils.collections.SkipListSetFactory;
 
+
+/**
+ * basic, but memory intensive inverted index of encoded chunks and their values.
+ * 
+ * At the top level we store a map, keyed on slotName, that contains a collection
+ * of ITypeValueMap<?, Chunk>'s. These are maps for each unique <i>Type</i> of information
+ * that can be stored (currently: null, string, boolean, number, chunk, chunktype, production, buffer).
+ * These <i>typed</i> value maps contains, for each unique value encountered, a collection of chunks that
+ * reference the value. Some value maps are sorted (string, number, boolean) the rest are not. <br/>
+ * The various search commands perform boolean set operations based on the contents of a particular value map.<br/>
+ * <br/>
+ * Current optimizations include:
+ * <ul>
+ *  <li>individual slot queries are sorted before execution, allowing minimum candidate set traversals</li>
+ * <li>recycled collections, sets and maps to minimize garbage generation</li>
+ * <li>log(n) collections, sets and maps. </li>
+ * </ul>
+ * <br/>
+ * Current performance characteristics:
+ *  <ul>
+ *  <li> merge check searches : near constant runtime for primary case (unique chunk), otherwise it is a function, f(#slots, averageFan)</li>
+ *  <li> search time is <i>weakly</i> related to the number of search features (slots in query)</li>
+ * <li> search time is <i>weakly</i> related to the size of DM </li>
+ * <li> search time is <i>fundamentally</i> related to the query values' fans (i.e. # of chunks that reference that value)</li>
+ * </ul>
+ * <br/>
+ * <b>Possible improvements</b>: instead of keying off of slotName, we could key off of chunkTypeName.slotName, where chunkTypeNAme
+ * is the set of all the chunk's parent types (including special: <i>ALL</i>), OR, for queries, the chunkTypeName of the requested type, or
+ * ALL, if no type is provided. This only needs to be the addition of getKeyName(IChunkType, String), make all calls like
+ * <code>
+ *   ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
+        slot.getName(), slot.getValue(), false);
+ * </code>
+ * be
+ * <code>
+ *   ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
+        getKeyName(chunkType, slot), slot.getValue(), false);
+ * </code>
+ * Next, the indexing functions need to move up the chunktype hierarchy, doing what it does now over each type (and ALL)
+ */ 
 public class DefaultSearchSystem implements ISearchSystem
 {
   /**
