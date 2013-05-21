@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -31,6 +32,7 @@ import javolution.util.FastList;
 import javolution.util.FastSet;
 import javolution.util.FastTable;
 
+import org.apache.commons.collections.set.CompositeSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.IActivationBuffer;
@@ -49,16 +51,19 @@ import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.IConditionalSlot;
 import org.jactr.core.slot.ILogicalSlot;
 import org.jactr.core.slot.ISlot;
+import org.jactr.core.utils.collections.ChunkNameComparator;
+import org.jactr.core.utils.collections.CompositeSetFactory;
+import org.jactr.core.utils.collections.SkipListSetFactory;
 
 public class DefaultSearchSystem implements ISearchSystem
 {
   /**
    * logger definition
    */
-  static public final Log                                   LOGGER = LogFactory
-                                                                       .getLog(DefaultSearchSystem.class);
+  static public final Log                                   LOGGER               = LogFactory
+                                                                                     .getLog(DefaultSearchSystem.class);
 
-  private ReentrantReadWriteLock                            _lock  = new ReentrantReadWriteLock();
+  private ReentrantReadWriteLock                            _lock                = new ReentrantReadWriteLock();
 
   // private ACTREventDispatcher<IDeclarativeModule,ISearchListener>
   // _eventDispatcher;
@@ -66,6 +71,8 @@ public class DefaultSearchSystem implements ISearchSystem
   private Map<String, Collection<ITypeValueMap<?, IChunk>>> _slotMap;
 
   private IDeclarativeModule                                _module;
+
+  private ChunkNameComparator                               _chunkNameComparator = new ChunkNameComparator();
 
   public DefaultSearchSystem(IDeclarativeModule module)
   {
@@ -242,9 +249,12 @@ public class DefaultSearchSystem implements ISearchSystem
     /*
      * second pass, ditch all those that don't match our chunktype
      */
-    FastSet<IChunk> candidates = FastSet.newInstance();
+    Set<IChunk> candidates = SkipListSetFactory
+        .newInstance(_chunkNameComparator);
     IChunkType chunkType = pattern.getChunkType();
 
+    Collection<ISlot> sortedSlots = sortPattern(pattern
+        .getConditionalAndLogicalSlots());
     /*
      * first things first, find all the candidates based on the content of the
      * pattern. We sort the slots based on the estimated size of the returned
@@ -252,7 +262,7 @@ public class DefaultSearchSystem implements ISearchSystem
      * reduces the time cost of retainAll operations.
      */
     boolean first = candidates.size() == 0;
-    for (ISlot slot : sortPattern(pattern.getConditionalAndLogicalSlots()))
+    for (ISlot slot : sortedSlots)
     {
       if (first)
       {
@@ -272,12 +282,14 @@ public class DefaultSearchSystem implements ISearchSystem
      * or.. I can iterate testing for the appropriate chunktype. for the most
      * accurate comparison in performance I should probably use set logic first.<br/>
      * <br/>
-     * Set logic resulted in a 20x speed up. <br/>
+     * Set logic resulted in a 20x speed up for during adding. <br/>
      * Using an iterator, we could save a ton on memory allocations, except that
      * default IChunkType.getChunks() returns an unmodifiable wrapper, not copy.
      * Might as well leave this as set logic until getChunks is a copy operator
      */
-    if (candidates.size() != 0 && chunkType != null)
+    if (sortedSlots.size() == 0)
+      candidates.addAll(chunkType.getSymbolicChunkType().getChunks());
+    else if (candidates.size() != 0 && chunkType != null)
       candidates.retainAll(chunkType.getSymbolicChunkType().getChunks());
 
     if (LOGGER.isDebugEnabled())
@@ -412,7 +424,7 @@ public class DefaultSearchSystem implements ISearchSystem
    */
   protected Collection<IChunk> find(ISlot slot, Set<IChunk> candidates)
   {
-    FastSet<IChunk> rtn = FastSet.newInstance();
+    Set<IChunk> rtn = SkipListSetFactory.newInstance(_chunkNameComparator);
     if (slot instanceof IConditionalSlot)
     {
       IConditionalSlot conditionalSlot = (IConditionalSlot) slot;
@@ -605,9 +617,14 @@ public class DefaultSearchSystem implements ISearchSystem
     return 0;
   }
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   protected void recycleCollection(Collection<?> collection)
   {
+    if (collection instanceof CompositeSet)
+      CompositeSetFactory.recycle((CompositeSet) collection);
+    else if (collection instanceof ConcurrentSkipListSet)
+      SkipListSetFactory.recycle((ConcurrentSkipListSet) collection);
+    else
     if (collection instanceof FastList)
       FastList.recycle((FastList) collection);
     else if (collection instanceof FastSet)
@@ -616,6 +633,7 @@ public class DefaultSearchSystem implements ISearchSystem
       FastTable.recycle((FastTable) collection);
   }
 
+  @SuppressWarnings("unchecked")
   protected Collection<IChunk> not(ISlot slot)
   {
     /*
@@ -623,14 +641,14 @@ public class DefaultSearchSystem implements ISearchSystem
      * are, but also all the other type value maps.all() we'll start with the
      * obvious part first
      */
-    FastSet<IChunk> rtn = FastSet.newInstance();
+    CompositeSet rtn = CompositeSetFactory.newInstance();
     ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
         slot.getName(), slot.getValue(), false);
 
     Collection<IChunk> container = Collections.EMPTY_LIST;
 
     if (typeValueMap != null) container = typeValueMap.not(slot.getValue());
-    rtn.addAll(container);
+    rtn.addComposited(container);
 
     recycleCollection(container);
 
@@ -643,8 +661,9 @@ public class DefaultSearchSystem implements ISearchSystem
         if (tvm != typeValueMap && tvm != null)
         {
           container = tvm.all();
-          rtn.addAll(container);
-          recycleCollection(container);
+          rtn.addComposited(container);
+          // rtn.addAll(container);
+          // recycleCollection(container);
         }
       return rtn;
     }

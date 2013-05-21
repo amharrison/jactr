@@ -15,7 +15,6 @@ package org.jactr.core.module.declarative.search.map;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -23,6 +22,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javolution.util.FastComparator;
 import javolution.util.FastMap;
 
+import org.apache.commons.collections.set.CompositeSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -89,13 +89,14 @@ public class SortedValueMap<V extends Comparable<V>, I> extends
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Collection<I> greaterThan(V value)
   {
     if (value == null)
       throw new NullPointerException("null values are not permitted as keys");
 
-    Set<I> rtn = instantiateReturnSet();
+    CompositeSet rtn = instantiateReturnSet();
     ReentrantReadWriteLock lock = getLock();
     try
     {
@@ -105,8 +106,9 @@ public class SortedValueMap<V extends Comparable<V>, I> extends
         if (!tmpValue.equals(value))
         {
           Collection<I> get = equalTo(tmpValue);
-          rtn.addAll(get);
-          recycleCollection(get);
+          rtn.addComposited(get);
+
+          // recycleCollection(get);
         }
 
       return rtn;
@@ -142,13 +144,14 @@ public class SortedValueMap<V extends Comparable<V>, I> extends
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Collection<I> lessThan(V value)
   {
     if (value == null)
       throw new NullPointerException("null values are not permitted as keys");
 
-    Set<I> rtn = instantiateReturnSet();
+    CompositeSet rtn = instantiateReturnSet();
     ReentrantReadWriteLock lock = getLock();
     try
     {
@@ -157,8 +160,9 @@ public class SortedValueMap<V extends Comparable<V>, I> extends
       for (V tmpValue : _sortedValues.headSet(value))
       {
         Collection<I> get = equalTo(tmpValue);
-        rtn.addAll(get);
-        recycleCollection(get);
+        rtn.addComposited(get);
+        // rtn.addAll(get);
+        // recycleCollection(get);
       }
 
       return rtn;

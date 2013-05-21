@@ -24,6 +24,7 @@ public abstract class AbstractTypeValueMap<V, I> implements ITypeValueMap<V, I>
 
   abstract public V asKeyType(Object value);
 
+  @SuppressWarnings("rawtypes")
   protected void recycleCollection(Collection<I> container)
   {
     if (container instanceof FastList)

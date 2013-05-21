@@ -16,8 +16,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.TreeSet;
-
-import javolution.util.FastSet;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,6 +29,7 @@ import org.jactr.core.module.declarative.IDeclarativeModule;
 import org.jactr.core.slot.IMutableSlot;
 import org.jactr.core.slot.ISlot;
 import org.jactr.core.slot.NotifyingSlotContainer;
+import org.jactr.core.utils.collections.ChunkNameComparator;
 
 /**
  * default impl. All slots and parenting must be resolved before the given
@@ -72,7 +72,9 @@ public class BasicSymbolicChunkType extends NotifyingSlotContainer implements
   public BasicSymbolicChunkType()
   {
     _children = new TreeSet<IChunkType>();
-    _chunks = new FastSet<IChunk>(); // was array list, behold perf improvments
+    // _chunks = new FastSet<IChunk>(); // was array list, behold perf
+    // improvments
+    _chunks = new ConcurrentSkipListSet<IChunk>(new ChunkNameComparator());
     _supertypeParents = new ArrayList<IChunkType>(2);
     ++TOTAL_COUNT;
   }

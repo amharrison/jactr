@@ -14,8 +14,8 @@
 package org.jactr.core.module.declarative.search.map;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javolution.util.FastList;
@@ -23,6 +23,7 @@ import javolution.util.FastMap;
 import javolution.util.FastSet;
 import javolution.util.FastTable;
 
+import org.apache.commons.collections.set.CompositeSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -54,14 +55,14 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
     return _map;
   }
 
-  protected Collection<I> instantiateReturnCollection()
-  {
-    return FastTable.newInstance();
-  }
+  // protected Collection<I> instantiateReturnCollection()
+  // {
+  // return FastTable.newInstance();
+  // }
 
-  protected Set<I> instantiateReturnSet()
+  protected CompositeSet instantiateReturnSet()
   {
-    return FastSet.newInstance();
+    return new CompositeSet();
   }
 
   /**
@@ -147,6 +148,7 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
     }
   }
 
+  @SuppressWarnings("rawtypes")
   protected void recycleCollection(Collection<I> container)
   {
     if (container instanceof FastList)
@@ -162,8 +164,6 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
     if (value == null)
       throw new NullPointerException("null values are not permitted as keys");
 
-    Collection<I> rtn = instantiateReturnCollection();
-
     ReentrantReadWriteLock lock = getLock();
 
     try
@@ -171,8 +171,10 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
       lock.readLock().lock();
 
       Collection<I> indexables = getCoreMap().get(value);
-      if (indexables != null) rtn.addAll(indexables);
-      return rtn;
+      if (indexables != null)
+        return Collections.unmodifiableCollection(indexables);
+
+      return Collections.EMPTY_LIST;
     }
     finally
     {
@@ -227,12 +229,13 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
         "Since natural ordering cannot be inferred, lessthan is not implemented");
   }
 
+  @SuppressWarnings("unchecked")
   public Collection<I> not(V value)
   {
     if (value == null)
       throw new NullPointerException("null values are not permitted as keys");
 
-    Set<I> rtn = instantiateReturnSet();
+    CompositeSet rtn = instantiateReturnSet();
 
     ReentrantReadWriteLock lock = getLock();
     try
@@ -244,8 +247,10 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
         if (!tmpValue.equals(value))
         {
           Collection<I> get = equalTo(tmpValue);
-          rtn.addAll(get);
-          recycleCollection(get);
+          rtn.addComposited(get);
+
+          // no longer a copy, no need to recycle
+          // recycleCollection(get);
         }
       return rtn;
     }
@@ -306,16 +311,17 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
     }
   }
 
+  @SuppressWarnings("unchecked")
   public Collection<I> all()
   {
-    Set<I> rtn = instantiateReturnSet();
+    CompositeSet rtn = instantiateReturnSet();
     ReentrantReadWriteLock lock = getLock();
     try
     {
       lock.readLock().lock();
 
       for (Collection<I> values : getCoreMap().values())
-        rtn.addAll(values);
+        rtn.addComposited(values);
 
       return rtn;
     }
@@ -327,8 +333,21 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
 
   public long allSize()
   {
-    // TODO Auto-generated method stub
-    return 0;
+    ReentrantReadWriteLock lock = getLock();
+    long rtn = 0;
+    try
+    {
+      lock.readLock().lock();
+
+      for (Collection<I> values : getCoreMap().values())
+        rtn += values.size();
+
+      return rtn;
+    }
+    finally
+    {
+      lock.readLock().unlock();
+    }
   }
 
 }
