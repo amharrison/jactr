@@ -40,7 +40,7 @@ Export-Package: org.antlr,
 Eclipse-BuddyPolicy: registered 
 Eclipse-RegisterBuddy: org.jactr, org.commonreality, org.apache.log4j
 Require-Bundle: org.jactr,
- org.jactr.support;visibility:=reexport,
+ org.jactr.support,
  org.eclipse.core.runtime,
  org.commonreality
 Bundle-ClassPath: .,
