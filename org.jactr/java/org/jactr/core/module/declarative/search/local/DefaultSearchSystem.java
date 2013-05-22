@@ -356,7 +356,10 @@ public class DefaultSearchSystem implements ISearchSystem
        (naive) ways. 1) iterate over candidates, calling chunksOfType.contains. That
        would be I(candidateSet.size) * S(log(chunksOfType.size)). Or 2) iterate over
        chunksOfType, callings candidateSet.contains(). That would be I(chunksOfType.size)
-       * S(log(candidateSet.size). Either way, iteration is the best.
+       * S(log(candidateSet.size). 
+       
+       So, if  chunksOfType.size * log(candidateSet.size) is less than candidateSet.size, we can use
+       implementation 2. Otherwise, iterate.
        
        Using the upcoming FastXCollections with retainAll predicate operations could allow this to be done
        quickly. Assuming the FastXCollections show better performance than current.
