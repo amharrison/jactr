@@ -332,8 +332,63 @@ public class DefaultSearchSystem implements ISearchSystem
     if (sortedSlots.size() == 0)
       candidates.addAll(chunkType.getSymbolicChunkType().getChunks());
     else if (candidates.size() != 0 && chunkType != null)
-      candidates.retainAll(chunkType.getSymbolicChunkType().getChunks());
+    {
+            
+    /**
+       intelligently choosing which method to use (iteration or set operation)
+       could be a viable performance enhancement.
+       candidates is a log(n) container for add, remove, contains. The default
+       implementation of the getChunks() method returns an unmodifiable wrapped
+       log(n) container. 
+    
+       A) candidate.retainAll(chunksOfType); //set operation
+       
+       versus
+       
+       B) while(candidateItr.hasNext())
+           {
+            IChunk chunk = candidateItr.next();
+            if(!chunk.isA(chunkType))
+             candidateItr.remove();
+           }
 
+       B's performance is I(candidateSet.size). A could be implemented in one of two 
+       (naive) ways. 1) iterate over candidates, calling chunksOfType.contains. That
+       would be I(candidateSet.size) * S(log(chunksOfType.size)). Or 2) iterate over
+       chunksOfType, callings candidateSet.contains(). That would be I(chunksOfType.size)
+       * S(log(candidateSet.size). Either way, iteration is the best.
+       
+       Using the upcoming FastXCollections with retainAll predicate operations could allow this to be done
+       quickly. Assuming the FastXCollections show better performance than current.
+       
+       
+       Additionally, if we are going to iterate over this anyway, why not perform the sorting
+       too? That is pull down the comparator for findExact.  
+    */
+     // boolean useIteration = true;
+     // if(useIteration)
+     // {
+     //    Comparator<IChunk> comparator = _chunkNameComparator;
+     //    if(chunkSorter!=null)
+     //      comparator = chunkSorter;
+     //    
+     //    SortedSet<IChunk> sorted = SkipListSetFactory.newInstance(comparator);
+     //
+     //    Iterator<IChunk> candidateItr = candidates.iterator();
+     //    while(candidateItr.hasNext())
+     //    {
+     //       IChunk chunk = candidateItr.next();
+     //       if(chunk.isA(chunkType))
+     //          sorted.add(chunk);
+     //   }
+     
+     //   recycleCollection(candidates);
+     //   candidates = sorted;
+     // }
+     // else
+      candidates.retainAll(chunkType.getSymbolicChunkType().getChunks());
+      
+    }
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("First pass candidates for " + pattern + " chunks: "
           + candidates);
