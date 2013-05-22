@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
@@ -42,6 +43,8 @@ import org.jactr.core.chunktype.IChunkType;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.module.declarative.IDeclarativeModule;
 import org.jactr.core.module.declarative.search.ISearchSystem;
+import org.jactr.core.module.declarative.search.filter.AcceptAllFilter;
+import org.jactr.core.module.declarative.search.filter.IChunkFilter;
 import org.jactr.core.module.declarative.search.map.BooleanTypeValueMap;
 import org.jactr.core.module.declarative.search.map.ITypeValueMap;
 import org.jactr.core.module.declarative.search.map.NullTypeValueMap;
@@ -57,46 +60,44 @@ import org.jactr.core.utils.collections.CompositeCollectionFactory;
 import org.jactr.core.utils.collections.CompositeSetFactory;
 import org.jactr.core.utils.collections.SkipListSetFactory;
 
-
 /**
- * basic, but memory intensive inverted index of encoded chunks and their values.
- * 
- * At the top level we store a map, keyed on slotName, that contains a collection
- * of ITypeValueMap<?, Chunk>'s. These are maps for each unique <i>Type</i> of information
- * that can be stored (currently: null, string, boolean, number, chunk, chunktype, production, buffer).
- * These <i>typed</i> value maps contains, for each unique value encountered, a collection of chunks that
- * reference the value. Some value maps are sorted (string, number, boolean) the rest are not. <br/>
- * The various search commands perform boolean set operations based on the contents of a particular value map.<br/>
- * <br/>
+ * basic, but memory intensive inverted index of encoded chunks and their
+ * values. At the top level we store a map, keyed on chunkType.slotName, that
+ * contains a collection of ITypeValueMap<?, Chunk>'s. These are maps for each
+ * unique <i>Type</i> of information that can be stored (currently: null,
+ * string, boolean, number, chunk, chunktype, production, buffer). These
+ * <i>typed</i> value maps contains, for each unique value encountered, a
+ * collection of chunks that reference the value. Some value maps are sorted
+ * (string, number, boolean) the rest are not. <br/>
+ * The various search commands perform boolean set operations based on the
+ * contents of a particular value map.<br/>
+ * The chunkType.slotName key on indexing generates unique keys for all of a
+ * chunk's parent types, including the special (*). On the query side, we just
+ * generate the key for the request's unique chunktype (or * if null). <br/>
  * Current optimizations include:
  * <ul>
- *  <li>individual slot queries are sorted before execution, allowing minimum candidate set traversals</li>
+ * <li>individual slot queries are sorted before execution, allowing minimum
+ * candidate set traversals</li>
  * <li>recycled collections, sets and maps to minimize garbage generation</li>
- * <li>log(n) collections, sets and maps. </li>
+ * <li>log(n) collections, sets and maps.</li>
+ * <li>sorting, filtering, and type verification are implemented as a single
+ * candidate iteration</li>
  * </ul>
  * <br/>
  * Current performance characteristics:
- *  <ul>
- *  <li> merge check searches : near constant runtime for primary case (unique chunk), otherwise it is a function, f(#slots, averageFan)</li>
- *  <li> search time is <i>weakly</i> related to the number of search features (slots in query)</li>
- * <li> search time is <i>weakly</i> related to the size of DM </li>
- * <li> search time is <i>fundamentally</i> related to the query values' fans (i.e. # of chunks that reference that value)</li>
+ * <ul>
+ * <li>merge check searches : near constant runtime for primary case (unique
+ * chunk), otherwise it is a function, f(#slots, averageFan)</li>
+ * <li>search time is <i>weakly</i> related to the number of search features
+ * (slots in query)</li>
+ * <li>search time is <i>weakly</i> related to the size of DM</li>
+ * <li>search time is <i>fundamentally</i> related to the query values' fans
+ * (i.e. # of chunks that reference that value)</li>
+ * <li>search time is <i>weakly</i> associated with the number of chunks of the
+ * queried type (log(N))</li>
  * </ul>
  * <br/>
- * <b>Possible improvements</b>: instead of keying off of slotName, we could key off of chunkTypeName.slotName, where chunkTypeNAme
- * is the set of all the chunk's parent types (including special: <i>ALL</i>), OR, for queries, the chunkTypeName of the requested type, or
- * ALL, if no type is provided. This only needs to be the addition of getKeyName(IChunkType, String), make all calls like
- * <code>
- *   ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
-        slot.getName(), slot.getValue(), false);
- * </code>
- * be
- * <code>
- *   ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
-        getKeyName(chunkType, slot), slot.getValue(), false);
- * </code>
- * Next, the indexing functions need to move up the chunktype hierarchy, doing what it does now over each type (and ALL)
- */ 
+ */
 public class DefaultSearchSystem implements ISearchSystem
 {
   /**
@@ -122,6 +123,7 @@ public class DefaultSearchSystem implements ISearchSystem
     // _eventDispatcher = new ACTREventDispatcher<IDeclarativeModule,
     // ISearchListener>();
     _module = module;
+
   }
 
   public void clear()
@@ -180,23 +182,13 @@ public class DefaultSearchSystem implements ISearchSystem
    * this implementation fails fast
    * 
    * @see org.jactr.core.module.declarative.search.ISearchSystem#findExact(ChunkTypeRequest,
-   *      java.util.Comparator)
+   *      java.util.Comparator, IChunkFilter)
    */
-  public Collection<IChunk> findExact(ChunkTypeRequest pattern,
-      Comparator<IChunk> sortRule)
+  public SortedSet<IChunk> findExact(ChunkTypeRequest pattern,
+      Comparator<IChunk> sortRule, IChunkFilter filter)
   {
-    Collection<IChunk> candidates = findExactSingleThreaded(pattern);
-
-    if (sortRule != null)
-    {
-      /*
-       * finally, we sort them
-       */
-      TreeSet<IChunk> sortedResults = new TreeSet<IChunk>(sortRule);
-      sortedResults.addAll(candidates);
-
-      return sortedResults;
-    }
+    SortedSet<IChunk> candidates = findExactSingleThreaded(pattern, sortRule,
+        filter);
 
     return candidates;
   }
@@ -208,7 +200,7 @@ public class DefaultSearchSystem implements ISearchSystem
      * multithreaded
      */
     final FastSet<IChunk> candidates = new FastSet<IChunk>();
-    IChunkType chunkType = pattern.getChunkType();
+    final IChunkType chunkType = pattern.getChunkType();
     if (chunkType != null)
       candidates.addAll(chunkType.getSymbolicChunkType().getChunks());
 
@@ -225,7 +217,7 @@ public class DefaultSearchSystem implements ISearchSystem
       results.add(pool.submit(new Callable<Collection<IChunk>>() {
         public Collection<IChunk> call() throws Exception
         {
-          return find(fSlot, candidates);
+          return find(chunkType, fSlot, candidates);
         }
 
       }));
@@ -273,29 +265,32 @@ public class DefaultSearchSystem implements ISearchSystem
     return candidates;
   }
 
-  protected Collection<ISlot> sortPattern(Collection<? extends ISlot> slots)
+  protected Collection<ISlot> sortPattern(IChunkType chunkType,
+      Collection<? extends ISlot> slots)
   {
     ArrayList<ISlot> sorted = new ArrayList<ISlot>(slots);
 
     Map<ISlot, Long> sizeMap = new HashMap<ISlot, Long>();
     for (ISlot slot : slots)
-      sizeMap.put(slot, guessSize(slot));
+      sizeMap.put(slot, guessSize(chunkType, slot));
 
     Collections.sort(sorted, new PatternComparator(sizeMap));
 
     return sorted;
   }
 
-  protected Collection<IChunk> findExactSingleThreaded(ChunkTypeRequest pattern)
+  protected SortedSet<IChunk> findExactSingleThreaded(ChunkTypeRequest pattern,
+      Comparator<IChunk> sortRule, IChunkFilter filter)
   {
     /*
      * second pass, ditch all those that don't match our chunktype
      */
-    Set<IChunk> candidates = SkipListSetFactory
+    SortedSet<IChunk> candidates = SkipListSetFactory
         .newInstance(_chunkNameComparator);
     IChunkType chunkType = pattern.getChunkType();
 
-    Collection<ISlot> sortedSlots = sortPattern(pattern
+    Collection<ISlot> sortedSlots = sortPattern(chunkType,
+        pattern
         .getConditionalAndLogicalSlots());
     /*
      * first things first, find all the candidates based on the content of the
@@ -309,88 +304,59 @@ public class DefaultSearchSystem implements ISearchSystem
       if (first)
       {
         // candidates.addAll(find(slot, candidates));
-        cleanAddAll(candidates, find(slot, candidates));
+        cleanAddAll(candidates, find(chunkType, slot, candidates));
         first = false;
       }
       else
-        cleanRetainAll(candidates, find(slot, candidates));
+        cleanRetainAll(candidates, find(chunkType, slot, candidates));
       // candidates.retainAll(find(slot, candidates));
 
       if (candidates.size() == 0) break;
     }
 
     /**
-     * now, we can either grab all the chunks of type and do a set retainAll,
-     * or.. I can iterate testing for the appropriate chunktype. for the most
-     * accurate comparison in performance I should probably use set logic first.<br/>
-     * <br/>
-     * Set logic resulted in a 20x speed up for during adding. <br/>
-     * Using an iterator, we could save a ton on memory allocations, except that
-     * default IChunkType.getChunks() returns an unmodifiable wrapper, not copy.
-     * Might as well leave this as set logic until getChunks is a copy operator
+     * if there are no slots, we need all the chunks of the type
      */
     if (sortedSlots.size() == 0)
-      candidates.addAll(chunkType.getSymbolicChunkType().getChunks());
-    else if (candidates.size() != 0 && chunkType != null)
-    {
-            
-    /**
-       intelligently choosing which method to use (iteration or set operation)
-       could be a viable performance enhancement.
-       candidates is a log(n) container for add, remove, contains. The default
-       implementation of the getChunks() method returns an unmodifiable wrapped
-       log(n) container. 
-    
-       A) candidate.retainAll(chunksOfType); //set operation
-       
-       versus
-       
-       B) while(candidateItr.hasNext())
-           {
-            IChunk chunk = candidateItr.next();
-            if(!chunk.isA(chunkType))
-             candidateItr.remove();
-           }
+      if (chunkType != null)
+        candidates.addAll(chunkType.getSymbolicChunkType().getChunks());
+      else
+        try
+        {
+          candidates.addAll(_module.getChunks().get());
+        }
+        catch (Exception e)
+        {
+          LOGGER.error("Failed to fetch all chunks for null chunktype search ",
+              e);
+        }
 
-       B's performance is I(candidateSet.size). A could be implemented in one of two 
-       (naive) ways. 1) iterate over candidates, calling chunksOfType.contains. That
-       would be I(candidateSet.size) * S(log(chunksOfType.size)). Or 2) iterate over
-       chunksOfType, callings candidateSet.contains(). That would be I(chunksOfType.size)
-       * S(log(candidateSet.size). 
-       
-       So, if  chunksOfType.size * log(candidateSet.size) is less than candidateSet.size, we can use
-       implementation 2. Otherwise, iterate.
-       
-       Using the upcoming FastXCollections with retainAll predicate operations could allow this to be done
-       quickly. Assuming the FastXCollections show better performance than current.
-       
-       
-       Additionally, if we are going to iterate over this anyway, why not perform the sorting
-       too? That is pull down the comparator for findExact.  
-    */
-     // boolean useIteration = true;
-     // if(useIteration)
-     // {
-     //    Comparator<IChunk> comparator = _chunkNameComparator;
-     //    if(chunkSorter!=null)
-     //      comparator = chunkSorter;
-     //    
-     //    SortedSet<IChunk> sorted = SkipListSetFactory.newInstance(comparator);
-     //
-     //    Iterator<IChunk> candidateItr = candidates.iterator();
-     //    while(candidateItr.hasNext())
-     //    {
-     //       IChunk chunk = candidateItr.next();
-     //       if(chunk.isA(chunkType))
-     //          sorted.add(chunk);
-     //   }
-     
-     //   recycleCollection(candidates);
-     //   candidates = sorted;
-     // }
-     // else
-      candidates.retainAll(chunkType.getSymbolicChunkType().getChunks());
-      
+    if (candidates.size() != 0)
+    {
+      /*
+       * we now need to deal with those that are actually the correct chunk
+       * type. Iteration over the candidates doing an isA() test would be
+       * O(candidates.size). candidates.retainAll(chunksOfType) is either
+       * O(candidates.size)*O(log(chunksOfType.size) or
+       * O(chunksOfType.size)*O(log(candidates.size)). Until the Fast
+       * collections come out with their predicate iterators, we will just
+       * iterate raw. And use the opportunity to filter and sort.
+       */
+      Comparator<IChunk> comparator = _chunkNameComparator;
+      if (sortRule != null) comparator = sortRule;
+
+      IChunkFilter chunkFilter = filter == null ? new AcceptAllFilter()
+          : filter;
+
+      SortedSet<IChunk> returnCandidates = SkipListSetFactory
+          .newInstance(comparator);
+
+      for (IChunk candidate : candidates)
+        if (chunkType == null || candidate.isA(chunkType))
+          if (chunkFilter.accept(candidate)) returnCandidates.add(candidate);
+
+      recycleCollection(candidates);
+      candidates = returnCandidates;
     }
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("First pass candidates for " + pattern + " chunks: "
@@ -399,58 +365,66 @@ public class DefaultSearchSystem implements ISearchSystem
     return candidates;
   }
 
-  public Collection<IChunk> findFuzzy(ChunkTypeRequest pattern,
-      Comparator<IChunk> sortRule)
+  public SortedSet<IChunk> findFuzzy(ChunkTypeRequest pattern,
+      Comparator<IChunk> sortRule, IChunkFilter filter)
   {
 
     /*
      * second pass, ditch all those that don't match our chunktype
      */
-    FastSet<IChunk> candidates = FastSet.newInstance();
+    Collection<IChunk> candidates = null;
+    SortedSet<IChunk> returnCandidates = null;
     IChunkType chunkType = pattern.getChunkType();
 
-    /*
-     * old code used slot values if any were provided. If not, it would grab
-     * every chunk of the given type. This would reduce the set of candidates if
-     * there was only one slot specified (the candidate set would include just
-     * those that equaled the specified slot). In reality, we should just grab
-     * EVERY chunk of the type, regardless of the pattern
-     */
-    // boolean noSlots = true;
-    // for (IConditionalSlot slot : pattern.getConditionalSlots())
-    // {
-    // noSlots = false;
-    // Collection<IChunk> containers = find(slot);
-    // if (chunkType == null)
-    // candidates.addAll(containers);
-    // else
-    // for (IChunk candidate : containers)
-    // if (candidate.isA(chunkType)) candidates.add(candidate);
-    // }
-    //
-    // if (noSlots && chunkType != null)
-    // candidates.addAll(chunkType.getSymbolicChunkType().getChunks());
     if (chunkType != null)
-      candidates.addAll(chunkType.getSymbolicChunkType().getChunks());
+      candidates = chunkType.getSymbolicChunkType().getChunks();
+    else
+      try
+      {
+        candidates = _module.getChunks().get();
+      }
+      catch (Exception e)
+      {
+        LOGGER
+            .error("Failed to fetch all chunks for null chunktype search ", e);
+      }
+
+    if (candidates.size() != 0)
+    {
+      /*
+       * we now need to deal with those that are actually the correct chunk
+       * type. Iteration over the candidates doing an isA() test would be
+       * O(candidates.size). candidates.retainAll(chunksOfType) is either
+       * O(candidates.size)*O(log(chunksOfType.size) or
+       * O(chunksOfType.size)*O(log(candidates.size)). Until the Fast
+       * collections come out with their predicate iterators, we will just
+       * iterate raw. And use the opportunity to filter and sort.
+       */
+      Comparator<IChunk> comparator = _chunkNameComparator;
+      if (sortRule != null) comparator = sortRule;
+
+      IChunkFilter chunkFilter = filter == null ? new AcceptAllFilter()
+          : filter;
+
+      returnCandidates = SkipListSetFactory.newInstance(comparator);
+
+      for (IChunk candidate : candidates)
+        if (chunkType == null || candidate.isA(chunkType))
+          if (chunkFilter.accept(candidate)) returnCandidates.add(candidate);
+
+      recycleCollection(candidates);
+    }
+    else
+      returnCandidates = new TreeSet<IChunk>();
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("First pass candidates for " + pattern + " chunks: "
-          + candidates);
+          + returnCandidates);
 
-    if (sortRule != null)
-    {
-      /*
-       * finally, we sort them
-       */
-      TreeSet<IChunk> sortedResults = new TreeSet<IChunk>(sortRule);
-      sortedResults.addAll(candidates);
-
-      return sortedResults;
-    }
-    return candidates;
+    return returnCandidates;
   }
 
-  protected long guessSize(ISlot slot)
+  protected long guessSize(IChunkType type, ISlot slot)
   {
     long size = 0;
     if (slot instanceof IConditionalSlot)
@@ -463,24 +437,24 @@ public class DefaultSearchSystem implements ISearchSystem
             size += ((IChunkType) slot.getValue()).getSymbolicChunkType()
                 .getNumberOfChunks();
           else
-            size = guessEqualsSize(conditionalSlot);
+            size = guessEqualsSize(type, conditionalSlot);
           break;
         case IConditionalSlot.GREATER_THAN:
-          size = guessGreaterThanSize(conditionalSlot);
+          size = guessGreaterThanSize(type, conditionalSlot);
           break;
         case IConditionalSlot.GREATER_THAN_EQUALS:
-          size = guessGreaterThanSize(conditionalSlot);
-          size += guessEqualsSize(conditionalSlot);
+          size = guessGreaterThanSize(type, conditionalSlot);
+          size += guessEqualsSize(type, conditionalSlot);
           break;
         case IConditionalSlot.LESS_THAN:
-          size = guessLessThanSize(conditionalSlot);
+          size = guessLessThanSize(type, conditionalSlot);
           break;
         case IConditionalSlot.LESS_THAN_EQUALS:
-          size = guessLessThanSize(conditionalSlot);
-          size += guessEqualsSize(conditionalSlot);
+          size = guessLessThanSize(type, conditionalSlot);
+          size += guessEqualsSize(type, conditionalSlot);
           break;
         case IConditionalSlot.NOT_EQUALS:
-          size = guessNotSize(conditionalSlot);
+          size = guessNotSize(type, conditionalSlot);
           break;
         case IConditionalSlot.WITHIN:
         default:
@@ -499,11 +473,11 @@ public class DefaultSearchSystem implements ISearchSystem
       {
         case ILogicalSlot.AND:
         case ILogicalSlot.OR:
-          size = guessSize(children.getFirst());
-          size += guessSize(children.getLast());
+          size = guessSize(type, children.getFirst());
+          size += guessSize(type, children.getLast());
           break;
         case ILogicalSlot.NOT:
-          size = guessSize(children.getFirst());
+          size = guessSize(type, children.getFirst());
       }
 
       FastList.recycle(children);
@@ -522,7 +496,8 @@ public class DefaultSearchSystem implements ISearchSystem
    * @param candidates
    * @return
    */
-  protected Collection<IChunk> find(ISlot slot, Set<IChunk> candidates)
+  protected Collection<IChunk> find(IChunkType type, ISlot slot,
+      Set<IChunk> candidates)
   {
     // Set<IChunk> rtn = SkipListSetFactory.newInstance(_chunkNameComparator);
     Collection<IChunk> rtn = CompositeCollectionFactory.newInstance();
@@ -536,21 +511,21 @@ public class DefaultSearchSystem implements ISearchSystem
             rtn.addAll(((IChunkType) slot.getValue()).getSymbolicChunkType()
                 .getChunks());
           else
-            cleanAddAll(rtn, equals(conditionalSlot));
+            cleanAddAll(rtn, equals(type, conditionalSlot));
           break;
         case IConditionalSlot.GREATER_THAN:
-          cleanAddAll(rtn, greaterThan(conditionalSlot));
+          cleanAddAll(rtn, greaterThan(type, conditionalSlot));
           break;
         case IConditionalSlot.GREATER_THAN_EQUALS:
-          cleanAddAll(rtn, greaterThan(conditionalSlot));
-          cleanAddAll(rtn, equals(conditionalSlot));
+          cleanAddAll(rtn, greaterThan(type, conditionalSlot));
+          cleanAddAll(rtn, equals(type, conditionalSlot));
           break;
         case IConditionalSlot.LESS_THAN:
-          cleanAddAll(rtn, lessThan(conditionalSlot));
+          cleanAddAll(rtn, lessThan(type, conditionalSlot));
           break;
         case IConditionalSlot.LESS_THAN_EQUALS:
-          cleanAddAll(rtn, lessThan(conditionalSlot));
-          cleanAddAll(rtn, equals(conditionalSlot));
+          cleanAddAll(rtn, lessThan(type, conditionalSlot));
+          cleanAddAll(rtn, equals(type, conditionalSlot));
           break;
         case IConditionalSlot.NOT_EQUALS:
           if (slot.getName().equals(ISlot.ISA))
@@ -566,7 +541,7 @@ public class DefaultSearchSystem implements ISearchSystem
                 .getSymbolicChunkType().getChunks());
           }
           else
-            cleanAddAll(rtn, not(conditionalSlot));
+            cleanAddAll(rtn, not(type, conditionalSlot));
           break;
         case IConditionalSlot.WITHIN:
         default:
@@ -590,12 +565,12 @@ public class DefaultSearchSystem implements ISearchSystem
 
           rtn = SkipListSetFactory.newInstance(_chunkNameComparator);
 
-          cleanAddAll(rtn, find(children.getFirst(), candidates));
-          cleanRetainAll(rtn, find(children.getLast(), candidates));
+          cleanAddAll(rtn, find(type, children.getFirst(), candidates));
+          cleanRetainAll(rtn, find(type, children.getLast(), candidates));
           break;
         case ILogicalSlot.OR:
-          cleanAddAll(rtn, find(children.getFirst(), candidates));
-          cleanAddAll(rtn, find(children.getLast(), candidates));
+          cleanAddAll(rtn, find(type, children.getFirst(), candidates));
+          cleanAddAll(rtn, find(type, children.getLast(), candidates));
           break;
         case ILogicalSlot.NOT:
           // don't use this guy, it won't work. if we use retainAll/removeAll
@@ -605,7 +580,7 @@ public class DefaultSearchSystem implements ISearchSystem
           rtn = SkipListSetFactory.newInstance(_chunkNameComparator);
 
           cleanAddAll(rtn, candidates);
-          cleanRemoveAll(rtn, find(children.getFirst(), candidates));
+          cleanRemoveAll(rtn, find(type, children.getFirst(), candidates));
       }
 
       FastList.recycle(children);
@@ -654,26 +629,26 @@ public class DefaultSearchSystem implements ISearchSystem
     recycleCollection(candidates);
   }
 
-  protected Collection<IChunk> equals(ISlot slot)
+  protected Collection<IChunk> equals(IChunkType type, ISlot slot)
   {
     ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
-        slot.getName(), slot.getValue(), false);
+        getKey(type, slot.getName()), slot.getValue(), false);
     if (typeValueMap != null) return typeValueMap.equalTo(slot.getValue());
     return Collections.EMPTY_LIST;
   }
 
-  protected long guessEqualsSize(ISlot slot)
+  protected long guessEqualsSize(IChunkType type, ISlot slot)
   {
     ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
-        slot.getName(), slot.getValue(), false);
+        getKey(type, slot.getName()), slot.getValue(), false);
     if (typeValueMap != null) return typeValueMap.equalToSize(slot.getValue());
     return 0;
   }
 
-  protected Collection<IChunk> lessThan(ISlot slot)
+  protected Collection<IChunk> lessThan(IChunkType type, ISlot slot)
   {
     ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
-        slot.getName(), slot.getValue(), false);
+        getKey(type, slot.getName()), slot.getValue(), false);
     if (typeValueMap != null)
       try
       {
@@ -687,10 +662,10 @@ public class DefaultSearchSystem implements ISearchSystem
     return Collections.EMPTY_LIST;
   }
 
-  protected long guessLessThanSize(ISlot slot)
+  protected long guessLessThanSize(IChunkType type, ISlot slot)
   {
     ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
-        slot.getName(), slot.getValue(), false);
+        getKey(type, slot.getName()), slot.getValue(), false);
     if (typeValueMap != null)
       try
       {
@@ -704,10 +679,10 @@ public class DefaultSearchSystem implements ISearchSystem
     return 0;
   }
 
-  protected Collection<IChunk> greaterThan(ISlot slot)
+  protected Collection<IChunk> greaterThan(IChunkType type, ISlot slot)
   {
     ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
-        slot.getName(), slot.getValue(), false);
+        getKey(type, slot.getName()), slot.getValue(), false);
     if (typeValueMap != null)
       try
       {
@@ -722,10 +697,10 @@ public class DefaultSearchSystem implements ISearchSystem
     return Collections.EMPTY_LIST;
   }
 
-  protected long guessGreaterThanSize(ISlot slot)
+  protected long guessGreaterThanSize(IChunkType type, ISlot slot)
   {
     ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
-        slot.getName(), slot.getValue(), false);
+        getKey(type, slot.getName()), slot.getValue(), false);
     if (typeValueMap != null)
       try
       {
@@ -758,7 +733,7 @@ public class DefaultSearchSystem implements ISearchSystem
   }
 
   @SuppressWarnings("unchecked")
-  protected Collection<IChunk> not(ISlot slot)
+  protected Collection<IChunk> not(IChunkType type, ISlot slot)
   {
     /*
      * return values are not only what the approriate typevalue map say they
@@ -766,8 +741,9 @@ public class DefaultSearchSystem implements ISearchSystem
      * obvious part first
      */
     CompositeCollection rtn = CompositeCollectionFactory.newInstance();
-    ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
-        slot.getName(), slot.getValue(), false);
+    String key = getKey(type, slot.getName());
+    ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(key,
+        slot.getValue(), false);
 
     Collection<IChunk> container = Collections.EMPTY_LIST;
 
@@ -780,8 +756,7 @@ public class DefaultSearchSystem implements ISearchSystem
     try
     {
       getLock().readLock().lock();
-      for (ITypeValueMap<?, IChunk> tvm : _slotMap.get(slot.getName()
-          .toLowerCase()))
+      for (ITypeValueMap<?, IChunk> tvm : _slotMap.get(key))
         if (tvm != typeValueMap && tvm != null)
         {
           container = tvm.all();
@@ -797,7 +772,7 @@ public class DefaultSearchSystem implements ISearchSystem
     }
   }
 
-  protected long guessNotSize(ISlot slot)
+  protected long guessNotSize(IChunkType type, ISlot slot)
   {
     /*
      * return values are not only what the approriate typevalue map say they
@@ -805,9 +780,10 @@ public class DefaultSearchSystem implements ISearchSystem
      * obvious part first
      */
     long rtn = 0;
-
+    String key = getKey(type, slot.getName());
     ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
-        slot.getName(), slot.getValue(), false);
+key,
+        slot.getValue(), false);
 
     if (typeValueMap != null) rtn += typeValueMap.notSize(slot.getValue());
 
@@ -815,8 +791,7 @@ public class DefaultSearchSystem implements ISearchSystem
     try
     {
       getLock().readLock().lock();
-      for (ITypeValueMap<?, IChunk> tvm : _slotMap.get(slot.getName()
-          .toLowerCase()))
+      for (ITypeValueMap<?, IChunk> tvm : _slotMap.get(key))
         if (tvm != typeValueMap && tvm != null) rtn += tvm.allSize();
       return rtn;
     }
@@ -824,6 +799,24 @@ public class DefaultSearchSystem implements ISearchSystem
     {
       getLock().readLock().unlock();
     }
+  }
+
+  protected String getKey(IChunkType chunkType, String slotName)
+  {
+    return String.format("%s.%s",
+        chunkType == null ? "*" : chunkType.getSymbolicChunkType().getName(),
+        slotName).toLowerCase();
+  }
+
+  protected Set<String> getKeys(IChunkType chunkType, String slotName)
+  {
+    TreeSet<String> rtn = new TreeSet<String>();
+    rtn.add(getKey(chunkType, slotName));
+    if (chunkType != null)
+      for (IChunkType parent : chunkType.getSymbolicChunkType().getParents())
+        rtn.addAll(getKeys(parent, slotName));
+
+    return rtn;
   }
 
   public void index(IChunk chunk)
@@ -861,9 +854,13 @@ public class DefaultSearchSystem implements ISearchSystem
   {
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("Unindexing " + chunk + "." + slotName + "=" + value);
-    ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(slotName,
-        value, false);
-    if (typeValueMap != null) typeValueMap.remove(value, chunk);
+
+    for (String key : getKeys(chunk.getSymbolicChunk().getChunkType(), slotName))
+    {
+      ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(key,
+          value, false);
+      if (typeValueMap != null) typeValueMap.remove(value, chunk);
+    }
   }
 
   protected void addIndexing(IChunk chunk, String slotName, Object value)
@@ -871,11 +868,13 @@ public class DefaultSearchSystem implements ISearchSystem
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("Indexing " + chunk + "." + slotName + "=" + value);
 
-    ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(slotName,
-        value, true);
-
-    // this is possible if we can't index the data type
-    if (typeValueMap != null) typeValueMap.add(value, chunk);
+    for (String key : getKeys(chunk.getSymbolicChunk().getChunkType(), slotName))
+    {
+      ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(key,
+          value, true);
+      // this is possible if we can't index the data type
+      if (typeValueMap != null) typeValueMap.add(value, chunk);
+    }
   }
 
   /**
@@ -883,14 +882,15 @@ public class DefaultSearchSystem implements ISearchSystem
    * lock will be acquired and if no map exists, it will be created based on the
    * value passed
    * 
-   * @param slotName
+   * @param typeSlotNameIndexKey
    * @param create
    * @return
    */
-  protected ITypeValueMap<?, IChunk> getSlotNameTypeValueMap(String slotName,
+  protected ITypeValueMap<?, IChunk> getSlotNameTypeValueMap(
+      String typeSlotNameIndexKey,
       Object value, boolean create)
   {
-    slotName = slotName.toLowerCase();
+    typeSlotNameIndexKey = typeSlotNameIndexKey.toLowerCase();
     ReentrantReadWriteLock lock = getLock();
     Collection<ITypeValueMap<?, IChunk>> typeValueMaps = null;
     ITypeValueMap<?, IChunk> typeValueMap = null;
@@ -898,15 +898,15 @@ public class DefaultSearchSystem implements ISearchSystem
       try
       {
         lock.writeLock().lock();
-        typeValueMaps = _slotMap.get(slotName);
+        typeValueMaps = _slotMap.get(typeSlotNameIndexKey);
         if (typeValueMaps == null)
         {
           if (LOGGER.isDebugEnabled())
-            LOGGER.debug("slot " + slotName
+            LOGGER.debug("slot " + typeSlotNameIndexKey
                 + " has no type value map collection, creating");
           // create
           typeValueMaps = instantiateTypeValueMapCollection();
-          _slotMap.put(slotName, typeValueMaps);
+          _slotMap.put(typeSlotNameIndexKey, typeValueMaps);
 
         }
 
@@ -941,7 +941,7 @@ public class DefaultSearchSystem implements ISearchSystem
       try
       {
         lock.readLock().lock();
-        typeValueMaps = _slotMap.get(slotName);
+        typeValueMaps = _slotMap.get(typeSlotNameIndexKey);
         if (typeValueMaps != null)
         {
           for (ITypeValueMap<?, IChunk> tvm : typeValueMaps)
@@ -956,11 +956,12 @@ public class DefaultSearchSystem implements ISearchSystem
 
           if (typeValueMap == null)
             if (LOGGER.isDebugEnabled())
-              LOGGER.debug("No type value map was found for " + slotName
+              LOGGER.debug("No type value map was found for "
+                  + typeSlotNameIndexKey
                   + ", returning");
         }
         else if (LOGGER.isDebugEnabled())
-          LOGGER.debug("slot " + slotName
+          LOGGER.debug("slot " + typeSlotNameIndexKey
               + " has no type value map collection, returning");
       }
       finally
@@ -969,7 +970,8 @@ public class DefaultSearchSystem implements ISearchSystem
       }
 
     if (LOGGER.isDebugEnabled())
-      LOGGER.debug("Returning " + typeValueMap + " for " + slotName + "="
+      LOGGER.debug("Returning " + typeValueMap + " for " + typeSlotNameIndexKey
+          + "="
           + value);
     return typeValueMap;
   }

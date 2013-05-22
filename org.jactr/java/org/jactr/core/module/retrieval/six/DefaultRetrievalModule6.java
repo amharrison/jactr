@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
@@ -34,6 +35,7 @@ import org.jactr.core.module.AbstractModule;
 import org.jactr.core.module.IllegalModuleStateException;
 import org.jactr.core.module.declarative.IDeclarativeModule;
 import org.jactr.core.module.declarative.four.IDeclarativeModule4;
+import org.jactr.core.module.declarative.search.filter.AcceptAllFilter;
 import org.jactr.core.module.retrieval.IRetrievalModule;
 import org.jactr.core.module.retrieval.buffer.DefaultRetrievalBuffer6;
 import org.jactr.core.module.retrieval.event.IRetrievalModuleListener;
@@ -44,6 +46,7 @@ import org.jactr.core.module.retrieval.time.IRetrievalTimeEquation;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.IConditionalSlot;
 import org.jactr.core.slot.ISlot;
+import org.jactr.core.utils.collections.SkipListSetFactory;
 import org.jactr.core.utils.parameter.IParameterized;
 import org.jactr.core.utils.parameter.ParameterHandler;
 
@@ -142,6 +145,7 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
     return false;
   }
 
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   protected IChunk retrieveChunkInternal(IDeclarativeModule dm,
       ChunkTypeRequest pattern) throws ExecutionException, InterruptedException
   {
@@ -150,10 +154,7 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
     fireInitiated(pattern);
 
     for (IConditionalSlot cSlot : pattern.getConditionalSlots())
-      if (cSlot.getName().equals(RECENTLY_RETRIEVED_SLOT))
-      {
-        break;
-      }
+      if (cSlot.getName().equals(RECENTLY_RETRIEVED_SLOT)) break;
 
     ChunkTypeRequest cleanedPattern = cleanPattern(pattern);
 
@@ -167,15 +168,19 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
 
       _activationSorter.setChunkTypeRequest(cleanedPattern);
       fromDM = dm.findPartialMatches(cleanedPattern, _activationSorter,
-          getRetrievalThreshold(), false);
+          new AcceptAllFilter());
     }
     else
       fromDM = dm.findExactMatches(cleanedPattern, _activationSorter,
-          getRetrievalThreshold(), false);
+          new AcceptAllFilter());
 
     Collection<IChunk> results = fromDM.get();
     IChunk retrievalResult = selectRetrieval(results, dm.getErrorChunk(),
         pattern, cleanedPattern);
+
+    // now we can recycle the collection
+    if (results instanceof ConcurrentSkipListSet)
+      SkipListSetFactory.recycle((ConcurrentSkipListSet) results);
 
     fireCompleted(pattern, retrievalResult, getRetrievalTimeEquation()
         .computeRetrievalTime(retrievalResult, cleanedPattern));

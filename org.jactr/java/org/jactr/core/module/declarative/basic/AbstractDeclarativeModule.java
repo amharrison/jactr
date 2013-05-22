@@ -52,6 +52,7 @@ import org.jactr.core.module.declarative.basic.type.NoOpChunkTypeConfigurator;
 import org.jactr.core.module.declarative.basic.type.NoOpChunkTypeNamer;
 import org.jactr.core.module.declarative.event.DeclarativeModuleEvent;
 import org.jactr.core.module.declarative.event.IDeclarativeModuleListener;
+import org.jactr.core.module.declarative.search.filter.IChunkFilter;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.slot.ISlot;
@@ -545,9 +546,26 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
     if (slots.size() == 0)
       matches = immediateReturn((Collection<IChunk>) new LinkedList<IChunk>());
     else
+    {
+      final IChunkType parentType = chunk.getSymbolicChunk().getChunkType();
       matches = getModel().getDeclarativeModule().findExactMatches(
           new ChunkTypeRequest(sc.getChunkType(), slots), _activationSorter,
-          Double.NEGATIVE_INFINITY, false);
+          new IChunkFilter() {
+
+            /*
+             * for the merge test, we need to do an isAStrict test.
+             * (non-Javadoc)
+             * @see
+             * org.jactr.core.module.declarative.search.filter.IChunkFilter#
+             * accept(org.jactr.core.chunk.IChunk)
+             */
+            public boolean accept(IChunk chunkToFilter)
+            {
+              return chunkToFilter.isAStrict(parentType);
+            }
+
+          });
+    }
     
     final Future<Collection<IChunk>> fMatches = matches;
 

@@ -17,15 +17,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javolution.util.FastList;
-import javolution.util.FastSet;
+import javolution.text.TextBuilder;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,9 +33,7 @@ import org.jactr.core.buffer.IActivationBuffer;
 import org.jactr.core.buffer.event.ActivationBufferEvent;
 import org.jactr.core.buffer.event.IActivationBufferListener;
 import org.jactr.core.chunk.IChunk;
-import org.jactr.core.chunk.ISubsymbolicChunk;
 import org.jactr.core.chunk.ISymbolicChunk;
-import org.jactr.core.chunk.five.ISubsymbolicChunk5;
 import org.jactr.core.chunktype.IChunkType;
 import org.jactr.core.chunktype.IRemovableSymbolicChunkType;
 import org.jactr.core.chunktype.ISymbolicChunkType;
@@ -65,10 +63,12 @@ import org.jactr.core.module.declarative.basic.type.ISubsymbolicChunkTypeFactory
 import org.jactr.core.module.declarative.basic.type.ISymbolicChunkTypeFactory;
 import org.jactr.core.module.declarative.basic.type.NoOpChunkTypeConfigurator;
 import org.jactr.core.module.declarative.basic.type.NoOpChunkTypeNamer;
+import org.jactr.core.module.declarative.search.filter.IChunkFilter;
+import org.jactr.core.module.declarative.search.filter.ILoggedChunkFilter;
 import org.jactr.core.module.declarative.search.local.DefaultSearchSystem;
-import org.jactr.core.production.VariableBindings;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.utils.StringUtilities;
+import org.jactr.core.utils.collections.SkipListSetFactory;
 import org.jactr.core.utils.parameter.ClassNameParameterHandler;
 import org.jactr.core.utils.parameter.IParameterized;
 import org.jactr.core.utils.parameter.ParameterHandler;
@@ -134,8 +134,6 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
 
   protected Map<String, IChunkType>   _allChunkTypes;
 
-
-
   /**
    * used to encode chunks after removal
    */
@@ -149,7 +147,6 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
 
     _allChunks = new TreeMap<String, IChunk>();
     _allChunkTypes = new TreeMap<String, IChunkType>();
-
 
     _searchSystem = new DefaultSearchSystem(this);
 
@@ -251,43 +248,31 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
     super.dispose();
   }
 
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   protected IChunk addChunkInternal(IChunk chunk,
       Collection<IChunk> possibleMatches)
   {
-    IChunkType chunkType = chunk.getSymbolicChunk().getChunkType();
-
-    if(possibleMatches.size()>0)
+    if (possibleMatches.size() > 0)
     {
-      /**
-       * we could find an exactly matching chunk that is actually of a different
-       * chunktype due to multiple inheritance.
-       */
-      for (Iterator<IChunk> it = possibleMatches.iterator(); it.hasNext();)
-      {
-        IChunk match = it.next();
-        if (!match.getSymbolicChunk().isAStrict(chunkType))
-          it.remove();
-        else
-          break; // only need one that is an exact match
-      }
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug("chunk " + chunk + " has yielded "
+            + possibleMatches.size() + " matches " + possibleMatches);
 
-      if (possibleMatches.size() > 0)
-      {
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug("chunk " + chunk + " has yielded " + possibleMatches.size()
-              + " matches " + possibleMatches);
+      if (possibleMatches.size() > 1)
+        if (LOGGER.isWarnEnabled())
+          LOGGER.warn(String.format(
+              "Found multiple identical chunks to %s : %s", chunk,
+              possibleMatches));
 
-        return merge(possibleMatches.iterator().next(), chunk);
-      }
+      IChunk mergeInto = possibleMatches.iterator().next();
+
+      if (possibleMatches instanceof ConcurrentSkipListSet)
+        SkipListSetFactory.recycle((ConcurrentSkipListSet) possibleMatches);
+
+      return merge(mergeInto, chunk);
     }
 
-    /*
-     * we're here, so either we aren't checking for duplicates or there was no
-     * matching chunk
-     */
-
-    // double now = ACTRRuntime.getRuntime().getClock(getModel()).getTime();
     double now = getModel().getAge();
 
     boolean added = false;
@@ -486,165 +471,187 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
 
   protected Collection<IChunk> findExactMatchesInternal(
       ChunkTypeRequest pattern, final Comparator<IChunk> sorter,
-      double activationThreshold, boolean bestOne)
+      IChunkFilter filter)
   {
-    Collection<IChunk> candidates = _searchSystem.findExact(pattern, sorter);
+    SortedSet<IChunk> candidates = _searchSystem.findExact(pattern, sorter,
+        null);
+
+    TextBuilder logMessage = null;
+
+    if (filter instanceof ILoggedChunkFilter)
+      logMessage = ((ILoggedChunkFilter) filter).getMessageBuilder();
+    else
+      logMessage = new TextBuilder();
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("find exact matches (" + pattern + ") evaluating "
           + candidates.size() + " candidates");
 
-    StringBuilder logMessage = null;
+    if (Logger.hasLoggers(getModel()))
+      logMessage.insert(0,
+          String.format("Evaluating exact matches : %s \n", candidates));
+
+    // FastList<IChunk> finalChunks = new FastList<IChunk>();
+    // /*
+    // * we can't be sure that the sorting used is actually relevant to us so we
+    // * have to zip through the entire results
+    // */
+    // double highestActivation = Double.NEGATIVE_INFINITY;
+    // IChunk bestChunk = null;
+    // for (IChunk chunk : candidates)
+    // {
+    // /*
+    // * snag the activation and see if this is the highest chunk so far
+    // */
+    // double tmpAct = chunk.getSubsymbolicChunk().getActivation();
+    // double base = chunk.getSubsymbolicChunk().getBaseLevelActivation();
+    // double spread = chunk.getSubsymbolicChunk().getSpreadingActivation();
+    // if (tmpAct > highestActivation)
+    // {
+    // bestChunk = chunk;
+    // highestActivation = tmpAct;
+    // if (logMessage != null)
+    // logMessage.append(String.format(
+    // "%s has highest activation (%.2f=%.2f+%.2f)\n", bestChunk,
+    // tmpAct, base, spread));
+    // }
+    // else if (logMessage != null)
+    // logMessage.append(String.format(
+    // "%s doesn't have the highest activation (%.2f=%.2f+%.2f)\n", chunk,
+    // tmpAct, base, spread));
+    //
+    // /*
+    // * if we are selecting the best one only, don't add it to the list
+    // */
+    // if (!bestOne && tmpAct >= activationThreshold) finalChunks.add(chunk);
+    // }
+    //
+    // /*
+    // * here's the best one, assuming we only want one
+    // */
+    // if (bestOne && bestChunk != null
+    // && highestActivation >= activationThreshold)
+    // finalChunks.add(bestChunk);
+
+    // if (LOGGER.isDebugEnabled())
+    // LOGGER.debug("find exact matches returning " + finalChunks);
 
     if (Logger.hasLoggers(getModel()))
-    {
-      logMessage = new StringBuilder("Evaluating exact search matches ");
-      logMessage.append(candidates).append("\n ");
-    }
-
-    FastList<IChunk> finalChunks = new FastList<IChunk>();
-    /*
-     * we can't be sure that the sorting used is actually relevant to us so we
-     * have to zip through the entire results
-     */
-    double highestActivation = Double.NEGATIVE_INFINITY;
-    IChunk bestChunk = null;
-    for (IChunk chunk : candidates)
-    {
-      /*
-       * snag the activation and see if this is the highest chunk so far
-       */
-      double tmpAct = chunk.getSubsymbolicChunk().getActivation();
-      double base = chunk.getSubsymbolicChunk().getBaseLevelActivation();
-      double spread = chunk.getSubsymbolicChunk().getSpreadingActivation();
-      if (tmpAct > highestActivation)
-      {
-        bestChunk = chunk;
-        highestActivation = tmpAct;
-        if (logMessage != null)
-          logMessage.append(String.format(
-              "%s has highest activation (%.2f=%.2f+%.2f)\n", bestChunk,
-              tmpAct, base, spread));
-      }
-      else if (logMessage != null)
-        logMessage.append(String.format(
-            "%s doesn't have the highest activation (%.2f=%.2f+%.2f)\n", chunk,
-            tmpAct, base, spread));
-
-      /*
-       * if we are selecting the best one only, don't add it to the list
-       */
-      if (!bestOne && tmpAct >= activationThreshold) finalChunks.add(chunk);
-    }
-
-    /*
-     * here's the best one, assuming we only want one
-     */
-    if (bestOne && bestChunk != null
-        && highestActivation >= activationThreshold)
-      finalChunks.add(bestChunk);
-
-    if (LOGGER.isDebugEnabled())
-      LOGGER.debug("find exact matches returning " + finalChunks);
-
-    if (logMessage != null)
       Logger.log(getModel(), Logger.Stream.DECLARATIVE, logMessage.toString());
 
     // clean up
-    if (candidates instanceof FastSet) FastSet.recycle((FastSet) candidates);
+    // if (candidates instanceof FastSet) FastSet.recycle((FastSet) candidates);
 
-    return finalChunks;
+    logMessage.delete(0, logMessage.length());
+
+    return candidates;
   }
 
   protected Collection<IChunk> findPartialMatchesInternal(
-      ChunkTypeRequest pattern, Comparator<IChunk> sorter,
-      double activationThreshold, boolean bestOne)
+      ChunkTypeRequest pattern, Comparator<IChunk> sorter, IChunkFilter filter)
   {
-    Collection<IChunk> candidates = _searchSystem.findFuzzy(pattern, sorter);
+    SortedSet<IChunk> candidates = _searchSystem.findFuzzy(pattern, sorter,
+        null);
+
+    TextBuilder logMessage = null;
+
+    if (filter instanceof ILoggedChunkFilter)
+      logMessage = ((ILoggedChunkFilter) filter).getMessageBuilder();
+    else
+      logMessage = new TextBuilder();
 
     if (LOGGER.isDebugEnabled())
-      LOGGER.debug("find partial matches evaluating " + candidates.size()
-          + " candidates");
-    ArrayList<IChunk> finalChunks = new ArrayList<IChunk>();
-    StringBuilder logMessage = null;
+      LOGGER.debug("find partial matches (" + pattern + ") evaluating "
+          + candidates.size() + " candidates");
+
     if (Logger.hasLoggers(getModel()))
-    {
-      logMessage = new StringBuilder("Evaluating partial search matches ");
-      logMessage.append(candidates).append("\n ");
-    }
+      logMessage.insert(0,
+          String.format("Evaluating partial matches : %s \n", candidates));
 
+    // if (LOGGER.isDebugEnabled())
+    // LOGGER.debug("find partial matches evaluating " + candidates.size()
+    // + " candidates");
+    // ArrayList<IChunk> finalChunks = new ArrayList<IChunk>();
+    // StringBuilder logMessage = null;
+    // if (Logger.hasLoggers(getModel()))
+    // {
+    // logMessage = new StringBuilder("Evaluating partial search matches ");
+    // logMessage.append(candidates).append("\n ");
+    // }
+    //
+    // /*
+    // * we can't be sure that the sorting used is actually relevant to us so we
+    // * have to zip through the entire results
+    // */
+    // double highestActivation = Double.NEGATIVE_INFINITY;
+    // IChunk bestChunk = null;
+    // for (IChunk chunk : candidates)
+    // {
+    // ISubsymbolicChunk ssc = chunk.getSubsymbolicChunk();
+    // int matches = pattern.countMatches(chunk, new VariableBindings());
+    // if (matches < 1)
+    // {
+    // if (logMessage != null)
+    // logMessage.append(String.format(
+    // "rejecting %s, there is no overlap with retrieval pattern %s\n",
+    // chunk, pattern));
+    //
+    // continue;
+    // }
+    //
+    // /*
+    // * snag the activation and see if this is the highest chunk so far we need
+    // * to use the pattern to evaluate mismatch with activation
+    // */
+    // double tmpAct = ssc.getActivation();
+    // double maxAct = tmpAct;
+    //
+    // ISubsymbolicChunk5 ssc5 = (ISubsymbolicChunk5) ssc
+    // .getAdapter(ISubsymbolicChunk5.class);
+    // if (ssc5 != null) tmpAct = ssc5.getActivation(pattern);
+    //
+    // double base = ssc.getBaseLevelActivation();
+    // double spread = ssc.getSpreadingActivation();
+    // double delta = maxAct - tmpAct;
+    //
+    // if (tmpAct > highestActivation)
+    // {
+    // bestChunk = chunk;
+    // highestActivation = tmpAct;
+    // if (logMessage != null)
+    // logMessage.append(String.format(
+    // "%s has highest activation (%.2f=%.2f+%.2f [%.2f discount])\n",
+    // bestChunk, tmpAct, base, spread, delta));
+    // }
+    // else if (logMessage != null)
+    // logMessage
+    // .append(String
+    // .format(
+    // "%s doesn't have the highest activation (%.2f=%.2f+%.2f [%.2f discount])\n",
+    // chunk, tmpAct, base, spread, delta));
+    //
+    // /*
+    // * if we are selecting the best one only, don't add it to the list
+    // */
+    // if (!bestOne && tmpAct >= activationThreshold) finalChunks.add(chunk);
+    // }
+    //
+    // /*
+    // * here's the best one, assuming we only want one
+    // */
+    // if (bestOne && bestChunk != null
+    // && highestActivation >= activationThreshold)
+    // finalChunks.add(bestChunk);
+    //
+    // if (LOGGER.isDebugEnabled())
+    // LOGGER.debug("find partial matches returning " + finalChunks);
 
-    /*
-     * we can't be sure that the sorting used is actually relevant to us so we
-     * have to zip through the entire results
-     */
-    double highestActivation = Double.NEGATIVE_INFINITY;
-    IChunk bestChunk = null;
-    for (IChunk chunk : candidates)
-    {
-      ISubsymbolicChunk ssc = chunk.getSubsymbolicChunk();
-      int matches = pattern.countMatches(chunk, new VariableBindings());
-      if (matches < 1)
-      {
-        if (logMessage != null)
-          logMessage.append(String.format(
-              "rejecting %s, there is no overlap with retrieval pattern %s\n",
-              chunk, pattern));
-
-        continue;
-      }
-
-      /*
-       * snag the activation and see if this is the highest chunk so far we need
-       * to use the pattern to evaluate mismatch with activation
-       */
-      double tmpAct = ssc.getActivation();
-      double maxAct = tmpAct;
-
-      ISubsymbolicChunk5 ssc5 = (ISubsymbolicChunk5) ssc
-          .getAdapter(ISubsymbolicChunk5.class);
-      if (ssc5 != null) tmpAct = ssc5.getActivation(pattern);
-
-      double base = ssc.getBaseLevelActivation();
-      double spread = ssc.getSpreadingActivation();
-      double delta = maxAct - tmpAct;
-
-      if (tmpAct > highestActivation)
-      {
-        bestChunk = chunk;
-        highestActivation = tmpAct;
-        if (logMessage != null)
-          logMessage.append(String.format(
-              "%s has highest activation (%.2f=%.2f+%.2f [%.2f discount])\n",
-              bestChunk, tmpAct, base, spread, delta));
-      }
-      else if (logMessage != null)
-        logMessage
-            .append(String
-                .format(
-                    "%s doesn't have the highest activation (%.2f=%.2f+%.2f [%.2f discount])\n",
-                    chunk, tmpAct, base, spread, delta));
-
-      /*
-       * if we are selecting the best one only, don't add it to the list
-       */
-      if (!bestOne && tmpAct >= activationThreshold) finalChunks.add(chunk);
-    }
-
-    /*
-     * here's the best one, assuming we only want one
-     */
-    if (bestOne && bestChunk != null
-        && highestActivation >= activationThreshold)
-      finalChunks.add(bestChunk);
-
-    if (LOGGER.isDebugEnabled())
-      LOGGER.debug("find partial matches returning " + finalChunks);
-
-    if (logMessage != null)
+    if (Logger.hasLoggers(getModel()))
       Logger.log(getModel(), Logger.Stream.DECLARATIVE, logMessage.toString());
 
-    return finalChunks;
+    logMessage.delete(0, logMessage.length());
+
+    return candidates;
   }
 
   @Override
@@ -708,18 +715,17 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
 
   /**
    * @see org.jactr.core.module.declarative.IDeclarativeModule#findExactMatches(ChunkTypeRequest,
-   *      java.util.Comparator, double, boolean)
+   *      java.util.Comparator, IChunkFilter)
    */
   public Future<Collection<IChunk>> findExactMatches(
       final ChunkTypeRequest request, final Comparator<IChunk> sorter,
-      final double activationThreshold, final boolean bestOne)
+      final IChunkFilter filter)
   {
     return delayedFuture(new Callable<Collection<IChunk>>() {
 
       public Collection<IChunk> call() throws Exception
       {
-        return findExactMatchesInternal(request, sorter, activationThreshold,
-            bestOne);
+        return findExactMatchesInternal(request, sorter, filter);
       }
 
     }, getExecutor());
@@ -727,18 +733,17 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
 
   /**
    * @see org.jactr.core.module.declarative.IDeclarativeModule#findPartialMatches(ChunkTypeRequest,
-   *      java.util.Comparator, double, boolean)
+   *      java.util.Comparator, IChunkFilter)
    */
   public Future<Collection<IChunk>> findPartialMatches(
       final ChunkTypeRequest request, final Comparator<IChunk> sorter,
-      final double activationThreshold, final boolean bestOne)
+      final IChunkFilter filter)
   {
     return delayedFuture(new Callable<Collection<IChunk>>() {
 
       public Collection<IChunk> call() throws Exception
       {
-        return findPartialMatchesInternal(request, sorter, activationThreshold,
-            bestOne);
+        return findPartialMatchesInternal(request, sorter, filter);
       }
 
     }, getExecutor());

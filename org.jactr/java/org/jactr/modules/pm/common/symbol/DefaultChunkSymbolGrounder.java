@@ -18,6 +18,7 @@ import org.jactr.core.chunk.ChunkActivationComparator;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunktype.IChunkType;
 import org.jactr.core.module.declarative.IDeclarativeModule;
+import org.jactr.core.module.declarative.search.filter.AcceptAllFilter;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.DefaultConditionalSlot;
 import org.jactr.core.slot.IConditionalSlot;
@@ -114,7 +115,7 @@ public class DefaultChunkSymbolGrounder implements ISymbolGrounder
         IConditionalSlot.EQUALS, symbol));
 
     Collection<IChunk> candidates = declarativeModule.findExactMatches(request,
-        _activationSorter, Double.NEGATIVE_INFINITY, true).get();
+        _activationSorter, new AcceptAllFilter()).get();
 
 
     if (candidates.size() == 0)

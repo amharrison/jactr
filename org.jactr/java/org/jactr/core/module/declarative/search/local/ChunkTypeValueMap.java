@@ -52,6 +52,11 @@ public class ChunkTypeValueMap<I> extends AbstractTypeValueMap<IChunk, I>
                   .format(
                       "%s has not been encoded. Indexing could get wonky if it ends up merged. Suggest encoding first.",
                       chunk));
+      /**
+       * we can fix this, when needed, by adding a listener to unencoded chunks.
+       * On encode, we reindex. On merge, we merge the collections, etc. The one
+       * problem is that we may not be able to get at the original chunk key..
+       */
       return chunk;
     }
 

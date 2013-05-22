@@ -26,6 +26,7 @@ import org.jactr.core.module.declarative.associative.IAssociativeLinkageSystem;
 import org.jactr.core.module.declarative.basic.AbstractDeclarativeModule;
 import org.jactr.core.module.declarative.basic.DefaultDeclarativeModule;
 import org.jactr.core.module.declarative.event.IDeclarativeModuleListener;
+import org.jactr.core.module.declarative.search.filter.IChunkFilter;
 import org.jactr.core.production.request.ChunkTypeRequest;
 
 /**
@@ -181,14 +182,13 @@ public interface IDeclarativeModule extends IModule
    * 
    * @param request
    * @param sorter
-   *            may be null
-   * @param activationThreshold
-   * @param bestOne
-   *            find only best one
+   *          sort order, may be null
+   * @param filter
+   *          filter function, may be null
    * @return
    */
   public Future<Collection<IChunk>> findExactMatches(ChunkTypeRequest request,
-      Comparator<IChunk> sorter, double activationThreshold, boolean bestOne);
+      Comparator<IChunk> sorter, IChunkFilter filter);
 
   /**
    * search DM for all the chunks that partially match
@@ -196,13 +196,11 @@ public interface IDeclarativeModule extends IModule
    * @param request
    * @param sorter
    *            may be null
-   * @param activationThreshold
-   * @param bestOne
-   *            true if you only want the best one chunk
+   * @param filter TODO
    * @return
    */
   public Future<Collection<IChunk>> findPartialMatches(ChunkTypeRequest request,
-      Comparator<IChunk> sorter, double activationThreshold, boolean bestOne);
+      Comparator<IChunk> sorter, IChunkFilter filter);
 
   /**
    * snag the busy chunk.<br>
