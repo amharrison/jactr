@@ -20,6 +20,7 @@ import org.jactr.core.module.IllegalModuleStateException;
 import org.jactr.core.module.declarative.IDeclarativeModule;
 import org.jactr.core.module.declarative.associative.IAssociativeLinkageSystem;
 import org.jactr.core.module.declarative.event.IDeclarativeModuleListener;
+import org.jactr.core.module.declarative.search.filter.IChunkFilter;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.utils.parameter.IParameterized;
 import org.jactr.core.utils.parameter.ParameterHandler;
@@ -239,18 +240,16 @@ public class DelegatedDeclarativeModule implements IDeclarativeModule,
   }
 
   public Future<Collection<IChunk>> findExactMatches(ChunkTypeRequest request,
-      Comparator<IChunk> sorter, double activationThreshold, boolean bestOne)
+      Comparator<IChunk> sorter, IChunkFilter filter)
   {
-    return _delegate.findExactMatches(request, sorter, activationThreshold,
-        bestOne);
+    return _delegate.findExactMatches(request, sorter, filter);
   }
 
   public Future<Collection<IChunk>> findPartialMatches(
       ChunkTypeRequest request, Comparator<IChunk> sorter,
-      double activationThreshold, boolean bestOne)
+      IChunkFilter filter)
   {
-    return _delegate.findPartialMatches(request, sorter, activationThreshold,
-        bestOne);
+    return _delegate.findPartialMatches(request, sorter, filter);
   }
 
   public IChunk getBusyChunk()
