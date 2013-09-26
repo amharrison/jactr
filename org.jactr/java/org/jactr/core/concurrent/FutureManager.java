@@ -6,7 +6,6 @@ package org.jactr.core.concurrent;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,7 +18,7 @@ public class FutureManager<K, C>
   static private final transient Log   LOGGER = LogFactory
                                                   .getLog(FutureManager.class);
 
-  final private ConcurrentMap<K, ManagedFuture<C>> _map;
+  final private ConcurrentMap<K, ListenableFuture<C>> _map;
 
   final private Runnable                           _noop  = new Runnable() {
 
@@ -32,7 +31,7 @@ public class FutureManager<K, C>
 
   public FutureManager()
   {
-    _map = new ConcurrentHashMap<K, ManagedFuture<C>>();
+    _map = new ConcurrentHashMap<K, ListenableFuture<C>>();
   }
   
   public boolean hasFuture(K key)
@@ -54,8 +53,8 @@ public class FutureManager<K, C>
    */
   public Future<C> acquireOrGet(K key)
   {
-    ManagedFuture<C> future = newFuture();
-    ManagedFuture<C> originalFuture = _map.putIfAbsent(key, future);
+    ListenableFuture<C> future = newFuture();
+    ListenableFuture<C> originalFuture = _map.putIfAbsent(key, future);
     if (originalFuture != null) return originalFuture;
     return future;
   }
@@ -69,7 +68,7 @@ public class FutureManager<K, C>
    */
   public Future<C> release(K key, C result)
   {
-    ManagedFuture<C> future = _map.remove(key);
+    ListenableFuture<C> future = _map.remove(key);
     if (future != null) future.set(result, null);
     return future;
   }
@@ -83,7 +82,7 @@ public class FutureManager<K, C>
    */
   public Future<C> release(K key, Throwable exception)
   {
-    ManagedFuture<C> future = _map.remove(key);
+    ListenableFuture<C> future = _map.remove(key);
     if (future != null) future.set(null, exception);
     return future;
   }
@@ -93,30 +92,8 @@ public class FutureManager<K, C>
    * 
    * @return
    */
-  protected ManagedFuture<C> newFuture()
+  protected ListenableFuture<C> newFuture()
   {
-    return new ManagedFuture<C>(_noop);
-  }
-
-
-  static public class ManagedFuture<C> extends FutureTask<C>
-  {
-    public ManagedFuture(Runnable runner)
-    {
-      super(runner, null);
-    }
-
-    /**
-     * set the result or exception on this future, releasing any blocking
-     * {@link #get()} calls
-     * 
-     * @param result
-     * @param thrown
-     */
-    public void set(C result, Throwable thrown)
-    {
-      if (thrown != null) setException(thrown);
-      set(result);
-    }
+    return new ListenableFuture<C>(_noop);
   }
 }
