@@ -6,6 +6,8 @@ package org.jactr.core.utils.collections;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import javolution.util.FastSet;
+
 import org.apache.commons.collections.set.CompositeSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,6 +37,12 @@ public class CompositeSetFactory
                                                                 if (set instanceof ConcurrentSkipListSet)
                                                                   SkipListSetFactory
                                                                       .recycle((ConcurrentSkipListSet) set);
+                                                                else if (set instanceof CompositeSet)
+                                                                  CompositeSetFactory
+                                                                      .recycle((CompositeSet) set);
+                                                                else if (set instanceof FastSet)
+                                                                  FastSetFactory
+                                                                      .recycle((FastSet) set);
                                                               }
                                                             }
 
