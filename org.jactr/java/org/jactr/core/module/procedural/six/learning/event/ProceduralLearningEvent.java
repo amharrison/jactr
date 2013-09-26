@@ -13,16 +13,27 @@ public class ProceduralLearningEvent
     AbstractACTREvent<IProceduralLearningModule6, IProceduralLearningModule6Listener>
 {
 
-
   static public enum Type {
-    REWARDED
+    START_REWARDING, REWARDED, END_REWARDING
   };
 
-  final private Type _type;
-  final private double _reward;
+  final private Type        _type;
+
+  final private double      _reward;
+
   final private IProduction _production;
 
-  public ProceduralLearningEvent(IProceduralLearningModule6 source, IProduction production, double reward)
+  public ProceduralLearningEvent(IProceduralLearningModule6 source, Type type)
+  {
+    super(source, ACTRRuntime.getRuntime().getClock(source.getModel())
+        .getTime());
+    _type = type;
+    _production = null;
+    _reward = Double.NaN;
+  }
+
+  public ProceduralLearningEvent(IProceduralLearningModule6 source,
+      IProduction production, double reward)
   {
     super(source, ACTRRuntime.getRuntime().getClock(source.getModel())
         .getTime());
@@ -39,6 +50,12 @@ public class ProceduralLearningEvent
       case REWARDED:
         listener.rewarded(this);
         break;
+      case START_REWARDING:
+        listener.startReward(this);
+        break;
+      case END_REWARDING:
+        listener.stopReward(this);
+        break;
     }
   }
 
@@ -46,12 +63,12 @@ public class ProceduralLearningEvent
   {
     return _type;
   }
-  
+
   public IProduction getProduction()
   {
     return _production;
   }
-  
+
   public double getReward()
   {
     return _reward;

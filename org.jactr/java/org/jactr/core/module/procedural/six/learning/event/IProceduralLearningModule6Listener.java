@@ -13,4 +13,13 @@ public interface IProceduralLearningModule6Listener extends EventListener
    * @param event
    */
   public void rewarded(ProceduralLearningEvent event);
+
+  public void startReward(ProceduralLearningEvent event);
+
+  /**
+   * called after all the rewards have been processed
+   * 
+   * @param event
+   */
+  public void stopReward(ProceduralLearningEvent event);
 }

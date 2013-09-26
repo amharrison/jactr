@@ -60,8 +60,8 @@ public class DefaultProceduralLearningModule6 extends AbstractModule implements
 {
   static public final String                                                                  INCLUDE_BUFFERS_PARAM         = "IncludeBuffers";
 
-  static final public String PRODUCTION_COMPILER_PARAM = "ProductionCompiler";
-	
+  static final public String                                                                  PRODUCTION_COMPILER_PARAM     = "ProductionCompiler";
+
   /**
    * logger definition
    */
@@ -117,7 +117,8 @@ public class DefaultProceduralLearningModule6 extends AbstractModule implements
   public void setProductionCompilationEnabled(boolean enabled)
   {
     _productionCompilationEnabled = enabled;
-    if(enabled = true && _productionCompiler == null) _productionCompiler = new DefaultProductionCompiler6();
+    if (enabled = true && _productionCompiler == null)
+      _productionCompiler = new DefaultProductionCompiler6();
   }
 
   public double getParameterLearning()
@@ -201,8 +202,8 @@ public class DefaultProceduralLearningModule6 extends AbstractModule implements
       {
         IInstantiation instantiation = (IInstantiation) pme.getProduction();
 
-        DefaultProceduralLearningModule6.this.productionFired(instantiation
-            .getProduction(), pme.getSimulationTime());
+        DefaultProceduralLearningModule6.this.productionFired(
+            instantiation.getProduction(), pme.getSimulationTime());
 
         if (isProductionCompilationEnabled())
         {
@@ -239,14 +240,7 @@ public class DefaultProceduralLearningModule6 extends AbstractModule implements
       double reward = ((ISubsymbolicProduction6) production
           .getSubsymbolicProduction()).getReward();
 
-      if (!Double.isNaN(reward))
-      {
-        reward(reward);
-
-        if (_dispatcher.hasListeners())
-          _dispatcher
-              .fire(new ProceduralLearningEvent(this, production, reward));
-      }
+      if (!Double.isNaN(reward)) reward(reward);
     }
   }
 
@@ -297,49 +291,62 @@ public class DefaultProceduralLearningModule6 extends AbstractModule implements
     double now = model.getAge();
     IExpectedUtilityEquation equation = getExpectedUtilityEquation();
 
-    for (Map.Entry<Double, IProduction> entry : _firedProductions.entrySet())
+    if (_dispatcher.hasListeners())
+      _dispatcher.fire(new ProceduralLearningEvent(this,
+          ProceduralLearningEvent.Type.START_REWARDING));
+    try
     {
-      double discountedReward = initialReward - (now - entry.getKey());
-      IProduction p = entry.getValue();
 
-      if (!shouldInclude(p))
+      for (Map.Entry<Double, IProduction> entry : _firedProductions.entrySet())
       {
+        double discountedReward = initialReward - (now - entry.getKey());
+        IProduction p = entry.getValue();
+
+        if (!shouldInclude(p))
+        {
+          if (log)
+          {
+            String msg = String.format(
+                "Excluding %s from rewarding since it doesn't reference %s", p,
+                _includeBuffers);
+            if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
+            if (Logger.hasLoggers(model))
+              Logger.log(model, Logger.Stream.PROCEDURAL, msg);
+          }
+          continue;
+        }
+
+        ISubsymbolicProduction6 ssp = (ISubsymbolicProduction6) p
+            .getSubsymbolicProduction();
+
+        double utility = equation.computeExpectedUtility(p, model,
+            discountedReward);
+
+        if (!(Double.isNaN(utility) || Double.isInfinite(utility)))
+          ssp.setExpectedUtility(utility);
+
         if (log)
         {
-          String msg = String.format(
-              "Excluding %s from rewarding since it doesn't reference %s", p,
-              _includeBuffers);
+          String msg = "Discounted reward for " + p + " to " + discountedReward
+              + " for a learned utility of " + utility;
           if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
           if (Logger.hasLoggers(model))
             Logger.log(model, Logger.Stream.PROCEDURAL, msg);
         }
-        continue;
+
+        if (_dispatcher.hasListeners())
+          _dispatcher.fire(new ProceduralLearningEvent(this, p,
+              discountedReward));
       }
-
-      ISubsymbolicProduction6 ssp = (ISubsymbolicProduction6) p
-          .getSubsymbolicProduction();
-
-      double utility = equation.computeExpectedUtility(p, model,
-          discountedReward);
-
-      if (!(Double.isNaN(utility) || Double.isInfinite(utility)))
-        ssp.setExpectedUtility(utility);
-
-      if (log)
-      {
-        String msg = "Discounted reward for " + p + " to " + discountedReward
-            + " for a learned utility of " + utility;
-        if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
-        if (Logger.hasLoggers(model))
-          Logger.log(model, Logger.Stream.PROCEDURAL, msg);
-      }
-
-      if (_dispatcher.hasListeners())
-        _dispatcher
-            .fire(new ProceduralLearningEvent(this, p, discountedReward));
     }
+    finally
+    {
+      if (_dispatcher.hasListeners())
+        _dispatcher.fire(new ProceduralLearningEvent(this,
+            ProceduralLearningEvent.Type.END_REWARDING));
 
-    _firedProductions.clear();
+      _firedProductions.clear();
+    }
   }
 
   private boolean shouldInclude(IProduction production)
@@ -408,18 +415,19 @@ public class DefaultProceduralLearningModule6 extends AbstractModule implements
               value));
         setExpectedUtilityEquation(new DefaultExpectedUtilityEquation());
       }
-      else if (PRODUCTION_COMPILER_PARAM.equalsIgnoreCase(key))
-	      try
-	      {
-	    	  setProductionCompiler((IProductionCompiler) ParameterHandler.classInstance().coerce(value).newInstance());
-	      }
-	      catch (Exception e)
-	      {
-	        if (LOGGER.isWarnEnabled())
-	          LOGGER.warn(String.format("Could not instantiate %s, using default",
-	              value));
-	        setProductionCompiler(new DefaultProductionCompiler6());
-	      }
+    else if (PRODUCTION_COMPILER_PARAM.equalsIgnoreCase(key))
+      try
+      {
+        setProductionCompiler((IProductionCompiler) ParameterHandler
+            .classInstance().coerce(value).newInstance());
+      }
+      catch (Exception e)
+      {
+        if (LOGGER.isWarnEnabled())
+          LOGGER.warn(String.format("Could not instantiate %s, using default",
+              value));
+        setProductionCompiler(new DefaultProductionCompiler6());
+      }
     else if (PARAMETER_LEARNING_RATE.equalsIgnoreCase(key))
       setParameterLearning(ParameterHandler.numberInstance().coerce(value)
           .doubleValue());

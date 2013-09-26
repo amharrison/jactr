@@ -182,4 +182,16 @@ public class UtilityNoiseLearningExtension implements IExtension,
     if (isAdaptiveUtilityNoiseEnabled()) adjustUtilityNoise(event.getReward());
   }
 
+  public void startReward(ProceduralLearningEvent event)
+  {
+    // TODO Auto-generated method stub
+
+  }
+
+  public void stopReward(ProceduralLearningEvent event)
+  {
+    // TODO Auto-generated method stub
+
+  }
+
 }
