@@ -56,6 +56,8 @@ public class ChunkTypeValueMap<I> extends AbstractTypeValueMap<IChunk, I>
        * we can fix this, when needed, by adding a listener to unencoded chunks.
        * On encode, we reindex. On merge, we merge the collections, etc. The one
        * problem is that we may not be able to get at the original chunk key..
+       * we also need to listen for chunk/type remove to update the index
+       * correctly.
        */
       return chunk;
     }

@@ -123,7 +123,6 @@ public class DefaultSearchSystem implements ISearchSystem
     // _eventDispatcher = new ACTREventDispatcher<IDeclarativeModule,
     // ISearchListener>();
     _module = module;
-
   }
 
   public void clear()
@@ -290,8 +289,7 @@ public class DefaultSearchSystem implements ISearchSystem
     IChunkType chunkType = pattern.getChunkType();
 
     Collection<ISlot> sortedSlots = sortPattern(chunkType,
-        pattern
-        .getConditionalAndLogicalSlots());
+        pattern.getConditionalAndLogicalSlots());
     /*
      * first things first, find all the candidates based on the content of the
      * pattern. We sort the slots based on the estimated size of the returned
@@ -781,8 +779,7 @@ public class DefaultSearchSystem implements ISearchSystem
      */
     long rtn = 0;
     String key = getKey(type, slot.getName());
-    ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(
-key,
+    ITypeValueMap<?, IChunk> typeValueMap = getSlotNameTypeValueMap(key,
         slot.getValue(), false);
 
     if (typeValueMap != null) rtn += typeValueMap.notSize(slot.getValue());
@@ -811,10 +808,15 @@ key,
   protected Set<String> getKeys(IChunkType chunkType, String slotName)
   {
     TreeSet<String> rtn = new TreeSet<String>();
-    rtn.add(getKey(chunkType, slotName));
+    rtn.add(getKey(chunkType, slotName)); // handles *. and chunkType.*
+
+    /*
+     * and only for parent types if they have the slot.
+     */
     if (chunkType != null)
       for (IChunkType parent : chunkType.getSymbolicChunkType().getParents())
-        rtn.addAll(getKeys(parent, slotName));
+        if (parent.getSymbolicChunkType().getSlot(slotName) != null)
+          rtn.addAll(getKeys(parent, slotName));
 
     return rtn;
   }
@@ -861,6 +863,11 @@ key,
           value, false);
       if (typeValueMap != null) typeValueMap.remove(value, chunk);
     }
+
+    /*
+     * now, what about all those maps that contain chunk as a value?
+     */
+
   }
 
   protected void addIndexing(IChunk chunk, String slotName, Object value)
@@ -887,8 +894,7 @@ key,
    * @return
    */
   protected ITypeValueMap<?, IChunk> getSlotNameTypeValueMap(
-      String typeSlotNameIndexKey,
-      Object value, boolean create)
+      String typeSlotNameIndexKey, Object value, boolean create)
   {
     typeSlotNameIndexKey = typeSlotNameIndexKey.toLowerCase();
     ReentrantReadWriteLock lock = getLock();
@@ -957,8 +963,7 @@ key,
           if (typeValueMap == null)
             if (LOGGER.isDebugEnabled())
               LOGGER.debug("No type value map was found for "
-                  + typeSlotNameIndexKey
-                  + ", returning");
+                  + typeSlotNameIndexKey + ", returning");
         }
         else if (LOGGER.isDebugEnabled())
           LOGGER.debug("slot " + typeSlotNameIndexKey
@@ -971,8 +976,7 @@ key,
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("Returning " + typeValueMap + " for " + typeSlotNameIndexKey
-          + "="
-          + value);
+          + "=" + value);
     return typeValueMap;
   }
 

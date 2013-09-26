@@ -141,6 +141,10 @@ public class DeclarativeModuleEvent extends
       case CHUNK_ADDED:
         listener.chunkAdded(this);
         break;
+      case CHUNK_REMOVED:
+        if (listener instanceof IDeclarativeModuleListener2)
+          ((IDeclarativeModuleListener2) listener).chunkRemoved(this);
+        break;
       case CHUNKS_MERGED:
         listener.chunksMerged(this);
         break;
@@ -152,6 +156,10 @@ public class DeclarativeModuleEvent extends
         break;
       case CHUNK_TYPE_ADDED:
         listener.chunkTypeAdded(this);
+        break;
+      case CHUNK_TYPE_REMOVED:
+        if (listener instanceof IDeclarativeModuleListener2)
+          ((IDeclarativeModuleListener2) listener).chunkTypeRemoved(this);
         break;
       case CHUNK_TYPES_MERGED:
         listener.chunkTypesMerged(this);

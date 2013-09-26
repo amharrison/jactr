@@ -290,6 +290,11 @@ public interface IDeclarativeModule extends IModule
    */
   public IChunk getUnrequestedChunk();
 
+  /**
+   * force all pending deferred operations to execute (dispose, encode, etc)
+   */
+  public void flush();
+
   public void addListener(IDeclarativeModuleListener listener, Executor executor);
 
 

@@ -183,21 +183,26 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
       @Override
       public void cycleStarted(ModelEvent event)
       {
-        processPendingEncodingAndDisposals();
+        flush();
       }
 
       @Override
       public void cycleStopped(ModelEvent event)
       {
-        processPendingEncodingAndDisposals();
+        flush();
       }
 
       @Override
       public void modelStopped(ModelEvent event)
       {
-        processPendingEncodingAndDisposals();
+        flush();
       }
     };
+  }
+
+  public void flush()
+  {
+    processPendingEncodingAndDisposals();
   }
 
   @Override
