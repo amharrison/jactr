@@ -65,6 +65,12 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
   public DefaultSubsymbolicChunk4()
   {
     super();
+
+    /*
+     * the use of hashMap here is a problem if we get into the very large scale.
+     * But concurrent skip map might not be much better. plus, we still need to
+     * handle the encoding/merging of the associated chunks correctly..
+     */
     _jAssociations = new HashMap<IChunk, IAssociativeLink>();
     _iAssociations = new HashMap<IChunk, IAssociativeLink>();
   }
