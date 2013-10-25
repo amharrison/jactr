@@ -154,6 +154,7 @@ public class Link4 extends AbstractAssociativeLink
     dirty();
   }
   
+
   public void setFNICJ(double FNiCj)
   {
     _fnicj = FNiCj;

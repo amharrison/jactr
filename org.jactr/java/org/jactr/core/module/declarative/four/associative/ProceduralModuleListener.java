@@ -124,7 +124,7 @@ public class ProceduralModuleListener extends ProceduralModuleListenerAdaptor
       ISubsymbolicChunk4 sscMatched = (ISubsymbolicChunk4) matchedChunk
           .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
 
-      sscMatched.incrementTimesNeeded();
+      sscMatched.incrementTimesNeeded(1);
 
       /**
        * and in 4.0 the goal defines the context
@@ -143,7 +143,7 @@ public class ProceduralModuleListener extends ProceduralModuleListenerAdaptor
             IChunk jChunk = (IChunk) slot.getValue();
             ISubsymbolicChunk4 sscJ = (ISubsymbolicChunk4) jChunk
                 .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
-            sscJ.incrementTimesInContext();
+            sscJ.incrementTimesInContext(1);
 
             /*
              * if J is in the context and there is a link between J and another

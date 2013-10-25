@@ -92,7 +92,7 @@ public interface ISubsymbolicChunk extends
    * @param needed
    *            The new timesNeeded value
    */
-  public void setTimesNeeded(int needed);
+  public void setTimesNeeded(double needed);
 
   /**
    * Return the number of times that this chunk has been needed in a buffer
@@ -100,12 +100,13 @@ public interface ISubsymbolicChunk extends
    * 
    * @return The timesNeeded value
    */
-  public int getTimesNeeded();
+  public double getTimesNeeded();
 
   /**
    * Description of the Method
+   * @param value TODO
    */
-  public void incrementTimesNeeded();
+  public void incrementTimesNeeded(double value);
 
   /**
    * Set number of times this chunk has been a slot value of a chunk in the goal
@@ -114,7 +115,7 @@ public interface ISubsymbolicChunk extends
    * @param context
    *            The new timesInContext value
    */
-  public void setTimesInContext(int context);
+  public void setTimesInContext(double context);
 
   /**
    * Get the number of times this chunk has been a slot value of a chunk in the
@@ -122,12 +123,13 @@ public interface ISubsymbolicChunk extends
    * 
    * @return The timesInContext value
    */
-  public int getTimesInContext();
+  public double getTimesInContext();
 
   /**
    * Description of the Method
+   * @param value TODO
    */
-  public void incrementTimesInContext();
+  public void incrementTimesInContext(double value);
 
   /**
    * The org.jactr.misc.ReferenceList class maintains an optimized list of

@@ -94,8 +94,12 @@ public class ChunkListener extends ChunkListenerAdaptor
     
     if (LOGGER.isDebugEnabled())
       {
-       LOGGER.debug(String.format("Master %s(N:%d, C:%d)", master, master.getSubsymbolicChunk().getTimesNeeded(), master.getSubsymbolicChunk().getTimesInContext()));
-       LOGGER.debug(String.format("Mergee %s(N:%d, C:%d)", self, self.getSubsymbolicChunk().getTimesNeeded(), self.getSubsymbolicChunk().getTimesInContext()));
+      LOGGER.debug(String.format("Master %s(N:%d, C:%.2f)", master, master
+          .getSubsymbolicChunk().getTimesNeeded(), master.getSubsymbolicChunk()
+          .getTimesInContext()));
+      LOGGER.debug(String.format("Mergee %s(N:%d, C:%.2f)", self, self
+          .getSubsymbolicChunk().getTimesNeeded(), self.getSubsymbolicChunk()
+          .getTimesInContext()));
       }
 
     if (selfCopiedFrom != null && selfCopiedFrom.equals(master)
@@ -171,18 +175,13 @@ public class ChunkListener extends ChunkListenerAdaptor
       if (LOGGER.isDebugEnabled())
         LOGGER.debug(String.format(
             "%s has a self link %s. %s into master self link %s", copy, link,
-            (absorb ? "Absorbing" : "Merging"), mLink));
+            absorb ? "Absorbing" : "Merging", mLink));
 
-      if (absorb)
-      {
-        // if copy was a literally subsymbolic copy, it will
-        // have the original values of mLink, so we just swap them entirely
-        mLink.setFNICJ(link.getFNICJ());
-      }
+      if (absorb) // if copy was a literally subsymbolic copy, it will
+      // have the original values of mLink, so we just swap them entirely
+      mLink.setFNICJ(link.getFNICJ());
       else
-      {
         mLink.setFNICJ(mLink.getFNICJ() + link.getFNICJ());
-      }
       
       if (LOGGER.isDebugEnabled())
         LOGGER.debug(String.format("Master self link now : %s", mLink));
@@ -279,7 +278,10 @@ public class ChunkListener extends ChunkListenerAdaptor
       if (masterLink != null)
       {
         if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format("Master(N:%d, C:%d) is already linked to %s(N:%d, C:%d) via %s",
+          LOGGER
+              .debug(String
+                  .format(
+                      "Master(N:%d, C:%.2f) is already linked to %s(N:%d, C:%.2f) via %s",
               masterSSC.getTimesNeeded(), masterSSC.getTimesInContext(), otherChunk, otherSSC.getTimesNeeded(), otherSSC.getTimesInContext(), masterLink));
 
         if (absorbLinks)
@@ -369,10 +371,7 @@ public class ChunkListener extends ChunkListenerAdaptor
     masterSSC.setTimesNeeded(selfSSC.getTimesNeeded());
     
     
-    if (LOGGER.isDebugEnabled())
-    {
-     LOGGER.debug(String.format("Master %s(N:%d, C:%d)", master, master.getSubsymbolicChunk().getTimesNeeded(), master.getSubsymbolicChunk().getTimesInContext()));
-    }
+    if (LOGGER.isDebugEnabled()) LOGGER.debug(String.format("Master %s(N:%d, C:%d)", master, master.getSubsymbolicChunk().getTimesNeeded(), master.getSubsymbolicChunk().getTimesInContext()));
 
     double[] correction = processSelfLinks(master, copy, true);
 
@@ -413,9 +412,9 @@ public class ChunkListener extends ChunkListenerAdaptor
     
     
     if (LOGGER.isDebugEnabled())
-    {
-     LOGGER.debug(String.format("Master %s(N:%d, C:%d)", master, master.getSubsymbolicChunk().getTimesNeeded(), master.getSubsymbolicChunk().getTimesInContext()));
-    }
+      LOGGER.debug(String.format("Master %s(N:%d, C:%.2f)", master, master
+          .getSubsymbolicChunk().getTimesNeeded(), master.getSubsymbolicChunk()
+          .getTimesInContext()));
 
     double[] correction = processSelfLinks(master, identical, false);
     // process master-J

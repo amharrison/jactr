@@ -60,9 +60,9 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
 
   protected double                         _totalActivation;
 
-  protected int                            _timesInContext;
+  protected double                         _timesInContext;
 
-  protected int                            _timesNeeded;
+  protected double                         _timesNeeded;
 
   protected double                         _lastActivationComputationTime = -1;
 
@@ -213,7 +213,7 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
     }
   }
 
-  public int getTimesInContext()
+  public double getTimesInContext()
   {
     Lock l = readLock();
     try
@@ -227,7 +227,7 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
     }
   }
 
-  public int getTimesNeeded()
+  public double getTimesNeeded()
   {
     Lock l = readLock();
     try
@@ -241,14 +241,14 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
     }
   }
 
-  public void incrementTimesInContext()
+  public void incrementTimesInContext(double value)
   {
-    setTimesInContext(getTimesInContext() + 1);
+    setTimesInContext(getTimesInContext() + value);
   }
 
-  public void incrementTimesNeeded()
+  public void incrementTimesNeeded(double value)
   {
-    setTimesNeeded(getTimesNeeded() + 1);
+    setTimesNeeded(getTimesNeeded() + value);
   }
 
   public void setActivation(double act)
@@ -374,9 +374,9 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
 
   }
 
-  public void setTimesInContext(int context)
+  public void setTimesInContext(double context)
   {
-    int old = 0;
+    double old = 0;
     Lock l = writeLock();
     try
     {
@@ -396,10 +396,10 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
           context));
   }
 
-  public void setTimesNeeded(int needed)
+  public void setTimesNeeded(double needed)
   {
     Lock l = writeLock();
-    int old = 0;
+    double old = 0;
     try
     {
       l.lock();
@@ -492,10 +492,11 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
       setCreationTime(ParameterHandler.numberInstance().coerce(value)
           .doubleValue());
     else if (TIMES_NEEDED.equalsIgnoreCase(key))
-      setTimesNeeded(ParameterHandler.numberInstance().coerce(value).intValue());
+      setTimesNeeded(ParameterHandler.numberInstance().coerce(value)
+          .doubleValue());
     else if (TIMES_IN_CONTEXT.equalsIgnoreCase(key))
       setTimesInContext(ParameterHandler.numberInstance().coerce(value)
-          .intValue());
+          .doubleValue());
     else if (REFERENCE_COUNT.equalsIgnoreCase(key))
     {
       long referenceCount = ParameterHandler.numberInstance().coerce(value)
