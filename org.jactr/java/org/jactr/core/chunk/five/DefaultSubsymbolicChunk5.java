@@ -67,6 +67,8 @@ public class DefaultSubsymbolicChunk5 extends DefaultSubsymbolicChunk4
   protected transient SoftReference<ChunkTypeRequest> _lastPattern          = new SoftReference<ChunkTypeRequest>(
                                                                                 null);
 
+  static private boolean                              _warnedSimilarity     = false;
+
   public DefaultSubsymbolicChunk5()
   {
     super();
@@ -336,10 +338,12 @@ public class DefaultSubsymbolicChunk5 extends DefaultSubsymbolicChunk4
 
     IModel parentModel = _parentChunk.getModel();
     IDeclarativeModule5 idm = (IDeclarativeModule5) parentModel
+        .getDeclarativeModule()
         .getAdapter(IDeclarativeModule5.class);
 
-    if (idm == null)
+    if (idm == null && !_warnedSimilarity)
     {
+      _warnedSimilarity = true;
       if (LOGGER.isWarnEnabled())
         LOGGER.warn("parent model does not support similarities");
       return 0;
