@@ -60,9 +60,10 @@ public class PartialMatchActivationFilter implements ILoggedChunkFilter
     int matches = _request.countMatches(chunk, new VariableBindings());
     if (matches < 1)
     {
-      _message.append(String.format(
-          "rejecting %s, there is no overlap with retrieval pattern %s\n",
-          chunk, _request));
+      if (_message != null)
+        _message.append(String.format(
+            "rejecting %s, there is no overlap with retrieval pattern %s\n",
+            chunk, _request));
 
       return false;
     }
@@ -76,28 +77,29 @@ public class PartialMatchActivationFilter implements ILoggedChunkFilter
 
     ISubsymbolicChunk5 ssc5 = (ISubsymbolicChunk5) ssc
         .getAdapter(ISubsymbolicChunk5.class);
+
     if (ssc5 != null) tmpAct = ssc5.getActivation(_request);
 
     double discount = totalActivation - tmpAct;
 
     boolean acceptChunk = tmpAct >= _activationThreshold;
 
-    if (_log)
-      if (totalActivation > _highestActivationYet)
-      {
-        _bestChunkYet = chunk;
-        _highestActivationYet = totalActivation;
+    if (totalActivation > _highestActivationYet)
+    {
+      _bestChunkYet = chunk;
+      _highestActivationYet = totalActivation;
 
+      if (_message != null)
         _message.append(String.format(
-            "%s has highest activation (%.2f=%.2f+%.2f [%.2f discount])\n",
+            "%s is best candidate yet (%.2f=%.2f+%.2f [%.2f discount])\n",
             _bestChunkYet, tmpAct, base, spread, discount));
-      }
-      else
-        _message
-            .append(String
-                .format(
-                    "%s doesn't have the highest activation (%.2f=%.2f+%.2f [%.2f discount])\n",
-                    chunk, tmpAct, base, spread, discount));
+    }
+    else if (_message != null)
+      _message
+          .append(String
+              .format(
+                  "%s doesn't have the highest activation (%.2f=%.2f+%.2f [%.2f discount])\n",
+                  chunk, tmpAct, base, spread, discount));
 
     return acceptChunk;
   }

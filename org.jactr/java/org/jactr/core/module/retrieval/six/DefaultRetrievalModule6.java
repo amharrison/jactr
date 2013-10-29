@@ -35,7 +35,10 @@ import org.jactr.core.module.AbstractModule;
 import org.jactr.core.module.IllegalModuleStateException;
 import org.jactr.core.module.declarative.IDeclarativeModule;
 import org.jactr.core.module.declarative.four.IDeclarativeModule4;
-import org.jactr.core.module.declarative.search.filter.AcceptAllFilter;
+import org.jactr.core.module.declarative.search.filter.ActivationFilter;
+import org.jactr.core.module.declarative.search.filter.IChunkFilter;
+import org.jactr.core.module.declarative.search.filter.ILoggedChunkFilter;
+import org.jactr.core.module.declarative.search.filter.PartialMatchActivationFilter;
 import org.jactr.core.module.retrieval.IRetrievalModule;
 import org.jactr.core.module.retrieval.buffer.DefaultRetrievalBuffer6;
 import org.jactr.core.module.retrieval.event.IRetrievalModuleListener;
@@ -153,12 +156,14 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
 
     fireInitiated(pattern);
 
-    for (IConditionalSlot cSlot : pattern.getConditionalSlots())
-      if (cSlot.getName().equals(RECENTLY_RETRIEVED_SLOT)) break;
+    // this must be vestigial code, but from when?
+    // for (IConditionalSlot cSlot : pattern.getConditionalSlots())
+    // if (cSlot.getName().equals(RECENTLY_RETRIEVED_SLOT)) break;
 
     ChunkTypeRequest cleanedPattern = cleanPattern(pattern);
 
     _activationSorter.setChunkTypeRequest(null);
+    IChunkFilter filter = null;
     if (isPartialMatchingEnabled(dm))
     {
       /**
@@ -167,14 +172,26 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
        */
 
       _activationSorter.setChunkTypeRequest(cleanedPattern);
-      fromDM = dm.findPartialMatches(cleanedPattern, _activationSorter,
-          new AcceptAllFilter());
+      filter = new PartialMatchActivationFilter(cleanedPattern,
+          _retrievalThreshold, true);
+      fromDM = dm.findPartialMatches(cleanedPattern, _activationSorter, filter);
     }
     else
-      fromDM = dm.findExactMatches(cleanedPattern, _activationSorter,
-          new AcceptAllFilter());
+    {
+      filter = new ActivationFilter(_retrievalThreshold, true);
+      fromDM = dm.findExactMatches(cleanedPattern, _activationSorter, filter);
+    }
 
     Collection<IChunk> results = fromDM.get();
+
+    /*
+     * snag the message from the filter.
+     */
+    if (filter instanceof ILoggedChunkFilter)
+      if (Logger.hasLoggers(getModel()))
+        Logger.log(getModel(), Logger.Stream.RETRIEVAL,
+            ((ILoggedChunkFilter) filter).getMessageBuilder().toString());
+
     IChunk retrievalResult = selectRetrieval(results, dm.getErrorChunk(),
         pattern, cleanedPattern);
 

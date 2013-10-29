@@ -550,8 +550,12 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
   protected Collection<IChunk> findPartialMatchesInternal(
       ChunkTypeRequest pattern, Comparator<IChunk> sorter, IChunkFilter filter)
   {
+
+    if (LOGGER.isDebugEnabled())
+      LOGGER.debug("find partial matches (" + pattern + ")");
+
     SortedSet<IChunk> candidates = _searchSystem.findFuzzy(pattern, sorter,
-        null);
+        filter);
 
     TextBuilder logMessage = null;
 
@@ -559,10 +563,6 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
       logMessage = ((ILoggedChunkFilter) filter).getMessageBuilder();
     else
       logMessage = new TextBuilder();
-
-    if (LOGGER.isDebugEnabled())
-      LOGGER.debug("find partial matches (" + pattern + ") evaluating "
-          + candidates.size() + " candidates");
 
     if (Logger.hasLoggers(getModel()))
       logMessage.insert(0,

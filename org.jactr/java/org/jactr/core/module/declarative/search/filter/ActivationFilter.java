@@ -56,20 +56,20 @@ public class ActivationFilter implements IChunkFilter, ILoggedChunkFilter
 
     boolean acceptChunk = totalActivation >= _activationThreshold;
 
-    if (_log)
-      if (totalActivation > _highestActivationYet)
-      {
-        _bestChunkYet = chunk;
-        _highestActivationYet = totalActivation;
+    if (totalActivation > _highestActivationYet)
+    {
+      _bestChunkYet = chunk;
+      _highestActivationYet = totalActivation;
 
+      if (_message != null)
         _message.append(String.format(
             "%s has highest activation (%.2f=%.2f+%.2f)\n", _bestChunkYet,
             totalActivation, base, spread));
-      }
-      else
-        _message.append(String.format(
-            "%s doesn't have the highest activation (%.2f=%.2f+%.2f)\n", chunk,
-            totalActivation, base, spread));
+    }
+    else if (_message != null)
+      _message.append(String.format(
+          "%s doesn't have the highest activation (%.2f=%.2f+%.2f)\n", chunk,
+          totalActivation, base, spread));
 
     return acceptChunk;
   }
