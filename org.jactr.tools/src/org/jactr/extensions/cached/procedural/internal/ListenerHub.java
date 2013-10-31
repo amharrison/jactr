@@ -20,8 +20,6 @@ import org.jactr.core.slot.INotifyingSlotContainer;
 import org.jactr.extensions.cached.procedural.listeners.BufferListener;
 import org.jactr.extensions.cached.procedural.listeners.SlotListener;
 
-import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
-
 /**
  * central point for the listeners used to track the buffers and the chunk
  * contents.
@@ -50,6 +48,13 @@ public class ListenerHub
   {
     _model = model;
     _modelListener = new ModelListenerAdaptor() {
+
+      @Override
+      public void bufferInstalled(ModelEvent me)
+      {
+        _bufferListeners.put(me.getBuffer().getName().toLowerCase(),
+            new BufferListener(me.getBuffer()));
+      }
       /*
        * at the end of each cycle, check the slot listeners for any that are
        * unused, and clear (non-Javadoc)
@@ -57,6 +62,7 @@ public class ListenerHub
        * org.jactr.core.model.event.ModelListenerAdaptor#cycleStopped(org.jactr
        * .core.model.event.ModelEvent)
        */
+      @Override
       public void cycleStopped(ModelEvent me)
       {
         checkForEmptyListeners();
@@ -154,6 +160,7 @@ public class ListenerHub
                 "Slot listener for %s is empty, removing",
                 listener.getContainer()));
 
+          // do cleanup outside of lock?
           listener.dispose();
           listeners.remove();
         }

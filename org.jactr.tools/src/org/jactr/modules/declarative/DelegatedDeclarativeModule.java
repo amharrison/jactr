@@ -302,4 +302,10 @@ public class DelegatedDeclarativeModule implements IDeclarativeModule,
     _delegate.removeListener(listener);
   }
 
+  public void flush()
+  {
+    _delegate.flush();
+
+  }
+
 }

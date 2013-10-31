@@ -4,9 +4,6 @@ package org.jactr.extensions.cached.procedural.listeners;
  * default logging
  */
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
 
 import javolution.util.FastList;
 
@@ -15,10 +12,6 @@ import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.IActivationBuffer;
 import org.jactr.core.buffer.event.ActivationBufferEvent;
 import org.jactr.core.buffer.event.ActivationBufferListenerAdaptor;
-import org.jactr.core.chunk.IChunk;
-import org.jactr.core.chunk.event.ChunkEvent;
-import org.jactr.core.chunk.event.ChunkListenerAdaptor;
-import org.jactr.core.chunk.event.IChunkListener;
 import org.jactr.extensions.cached.procedural.invalidators.IInvalidator;
 
 public class BufferListener extends ActivationBufferListenerAdaptor
@@ -56,21 +49,25 @@ public class BufferListener extends ActivationBufferListenerAdaptor
     return _buffer;
   }
 
+  @Override
   public void sourceChunkAdded(ActivationBufferEvent abe)
   {
     invalidateAll();
   }
 
+  @Override
   public void sourceChunkRemoved(ActivationBufferEvent abe)
   {
     invalidateAll();
   }
 
+  @Override
   public void sourceChunksCleared(ActivationBufferEvent abe)
   {
     invalidateAll();
   }
 
+  @Override
   public void statusSlotChanged(ActivationBufferEvent abe)
   {
     /*
@@ -79,30 +76,42 @@ public class BufferListener extends ActivationBufferListenerAdaptor
      */
   }
 
-  public void register(IInvalidator invalidator)
+  synchronized public void register(IInvalidator invalidator)
   {
     _generalInvalidators.add(invalidator);
   }
 
-  public void unregister(IInvalidator invalidator)
+  synchronized public void unregister(IInvalidator invalidator)
   {
     _generalInvalidators.remove(invalidator);
   }
 
+  synchronized private FastList<IInvalidator> getInvalidators()
+  {
+    FastList<IInvalidator> invalidators = FastList.newInstance();
+    invalidators.addAll(_generalInvalidators);
+    return invalidators;
+  }
+
   private void invalidateAll()
   {
+    FastList<IInvalidator> invalidators = getInvalidators();
 
-    FastList<IInvalidator> invalidators = FastList.newInstance();
-
-    invalidators.addAll(_generalInvalidators);
-
-    if (invalidators.size() > 0)
+    try
     {
-      if (LOGGER.isDebugEnabled())
-        LOGGER.debug(String.format("Invalidating due to content change of %s",
-            _buffer));
-      for (IInvalidator invalidator : invalidators)
-        invalidator.invalidate();
+      if (invalidators.size() > 0)
+      {
+        if (LOGGER.isDebugEnabled())
+          LOGGER.debug(String.format(
+              "Invalidating due to content change of %s", _buffer));
+
+        for (IInvalidator invalidator : invalidators)
+          invalidator.invalidate();
+      }
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("failed to invalidate ", e);
     }
 
     FastList.recycle(invalidators);

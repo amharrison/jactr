@@ -127,9 +127,9 @@ public class InstantiationCache
       LOGGER.debug(String.format("Testing %s after %s", production, cie));
 
     FastList<IInvalidator> invalidators = FastList.newInstance();
-    registerAll(production, cie, invalidators);
+    boolean canCache = registerAll(production, cie, invalidators);
 
-    if (invalidators.size() > 0)
+    if (canCache)
     {
       try
       {
@@ -147,9 +147,11 @@ public class InstantiationCache
       {
         _lock.writeLock().unlock();
       }
+
       /*
        * no need for this to be in the write lock
        */
+      // lack of thread safety here.
       for (IInvalidator invalidator : invalidators)
         invalidator.register(_listenerHub);
     }
@@ -213,7 +215,8 @@ public class InstantiationCache
     FastList<IInvalidator> invalidators = _invalidators.remove(production);
     if (invalidators == null) return;
     for (IInvalidator invalidator : invalidators)
-      invalidator.unregister(_listenerHub);
+      if (invalidator != null) invalidator.unregister(_listenerHub);
+
     FastList.recycle(invalidators);
   }
 
@@ -225,7 +228,7 @@ public class InstantiationCache
    * @param cie
    * @return
    */
-  protected void registerAll(IProduction production,
+  protected boolean registerAll(IProduction production,
       CannotInstantiateException cie, Collection<IInvalidator> invalidators)
   {
 
@@ -300,6 +303,8 @@ public class InstantiationCache
 
       invalidators.clear();
     }
+
+    return invalidators.size() > 0;
   }
 
   protected void processSlotMatchFailure(IProduction production,
