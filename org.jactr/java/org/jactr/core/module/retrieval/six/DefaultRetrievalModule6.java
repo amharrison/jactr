@@ -303,22 +303,44 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
           if (LOGGER.isDebugEnabled())
             LOGGER.debug(String.format(
                 "%s has not been recently retrieved, returning", chunk));
+
+          if (Logger.hasLoggers(getModel()))
+            Logger.log(getModel(), Logger.Stream.RETRIEVAL, String.format(
+                "%s was not recently retrieved. Selecting.", chunk));
           return chunk;
         }
-        else if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format(
-              "%s has been recently retrieved, ignoring", chunk));
+        else
+        {
+          if (LOGGER.isDebugEnabled())
+            LOGGER.debug(String.format(
+                "%s has been recently retrieved, ignoring", chunk));
+
+          if (Logger.hasLoggers(getModel()))
+            Logger.log(getModel(), Logger.Stream.RETRIEVAL,
+                String.format("%s was recently retrieved. Ignoring.", chunk));
+        }
       }
       else if (_finstManager.hasBeenRetrieved(chunk))
       {
         if (LOGGER.isDebugEnabled())
           LOGGER.debug(String.format(
-              "%s has been recently retrieved, returning", chunk));
+              "%s has been recently retrieved. Selecting.", chunk));
+
+        if (Logger.hasLoggers(getModel()))
+          Logger.log(getModel(), Logger.Stream.RETRIEVAL,
+              String.format("%s was recently retrieved. Selecting.", chunk));
+
         return chunk;
       }
-      else if (LOGGER.isDebugEnabled())
-        LOGGER.debug(String.format("%s has been recently retrieved, ignoring",
-            chunk));
+      else
+      {
+        if (LOGGER.isDebugEnabled())
+          LOGGER.debug(String.format(
+              "%s has not been recently retrieved, ignoring", chunk));
+        if (Logger.hasLoggers(getModel()))
+          Logger.log(getModel(), Logger.Stream.RETRIEVAL,
+              String.format("%s was not recently retrieved. Ignoring.", chunk));
+      }
 
     if (LOGGER.isDebugEnabled())
       LOGGER
