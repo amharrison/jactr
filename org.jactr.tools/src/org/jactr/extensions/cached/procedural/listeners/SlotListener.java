@@ -122,13 +122,7 @@ public class SlotListener implements ISlotContainerListener
     }
 
     //
-    if (list != invalidators)
-    {
-      if (LOGGER.isDebugEnabled())
-        LOGGER.debug(String.format("Recycling : %s used list:%d",
-            invalidator.getSlotName(), list.hashCode()));
-      FastList.recycle(list);
-    }
+    if (list != invalidators) FastList.recycle(list);
   }
 
   public void unregister(SlotInvalidator invalidator)
@@ -144,13 +138,6 @@ public class SlotListener implements ISlotContainerListener
           LOGGER.debug(String.format("removed for %s list:%d ",
               invalidator.getSlotName(), invalidator.hashCode()));
       }
-
-    // this can cause problems when multiple thread access
-    // if (invalidators.size() == 0)
-    // {
-    // _invalidators.remove(slotName);
-    // FastList.recycle((FastList) invalidators);
-    // }
   }
 
   protected FastList<IInvalidator> getInvalidators(String slotName)
