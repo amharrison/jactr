@@ -71,35 +71,35 @@ public class PartialMatchActivationFilter implements ILoggedChunkFilter
     ISubsymbolicChunk ssc = chunk.getSubsymbolicChunk();
 
     double totalActivation = ssc.getActivation();
-    double tmpAct = totalActivation;
+    double tmpActivation = totalActivation;
     double base = ssc.getBaseLevelActivation();
     double spread = ssc.getSpreadingActivation();
 
     ISubsymbolicChunk5 ssc5 = (ISubsymbolicChunk5) ssc
         .getAdapter(ISubsymbolicChunk5.class);
 
-    if (ssc5 != null) tmpAct = ssc5.getActivation(_request);
+    if (ssc5 != null) tmpActivation = ssc5.getActivation(_request);
 
-    double discount = totalActivation - tmpAct;
+    double discount = totalActivation - tmpActivation;
 
-    boolean acceptChunk = tmpAct >= _activationThreshold;
+    boolean acceptChunk = tmpActivation >= _activationThreshold;
 
-    if (totalActivation > _highestActivationYet)
+    if (tmpActivation > _highestActivationYet)
     {
       _bestChunkYet = chunk;
-      _highestActivationYet = totalActivation;
+      _highestActivationYet = tmpActivation;
 
       if (_message != null)
         _message.append(String.format(
             "%s is best candidate yet (%.2f=%.2f+%.2f [%.2f discount])\n",
-            _bestChunkYet, tmpAct, base, spread, discount));
+            _bestChunkYet, tmpActivation, base, spread, discount));
     }
     else if (_message != null)
       _message
           .append(String
               .format(
                   "%s doesn't have the highest activation (%.2f=%.2f+%.2f [%.2f discount])\n",
-                  chunk, tmpAct, base, spread, discount));
+                  chunk, tmpActivation, base, spread, discount));
 
     return acceptChunk;
   }

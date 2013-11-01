@@ -63,7 +63,7 @@ public class ActivationFilter implements IChunkFilter, ILoggedChunkFilter
 
       if (_message != null)
         _message.append(String.format(
-            "%s has highest activation (%.2f=%.2f+%.2f)\n", _bestChunkYet,
+            "%s is best candidate yet (%.2f=%.2f+%.2f)\n", _bestChunkYet,
             totalActivation, base, spread));
     }
     else if (_message != null)
