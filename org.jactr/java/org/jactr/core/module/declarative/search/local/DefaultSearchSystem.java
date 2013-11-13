@@ -609,8 +609,10 @@ public class DefaultSearchSystem implements ISearchSystem
     if (rtnSet instanceof CompositeCollection)
       ((CompositeCollection) rtnSet).addComposited(candidates);
     else
+    {
       rtnSet.addAll(candidates);
-    recycleCollection(candidates);
+      recycleCollection(candidates);
+    }
   }
 
   protected void cleanRetainAll(Collection<IChunk> rtnSet,

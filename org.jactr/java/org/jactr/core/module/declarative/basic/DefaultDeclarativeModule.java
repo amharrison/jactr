@@ -474,7 +474,7 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
       IChunkFilter filter)
   {
     SortedSet<IChunk> candidates = _searchSystem.findExact(pattern, sorter,
-        null);
+        filter);
 
     TextBuilder logMessage = null;
 
