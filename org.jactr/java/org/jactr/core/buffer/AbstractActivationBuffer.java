@@ -112,7 +112,16 @@ public abstract class AbstractActivationBuffer extends DefaultAdaptable
       @Override
       public void cycleStarted(ModelEvent me)
       {
-        calculateAndSpreadSourceActivation();
+        ISourceActivationSpreader spreader = getActivationSpreader();
+        spreader.clearSourceActivation();
+        spreader.spreadSourceActivation();
+      }
+
+      @Override
+      public void cycleStopped(ModelEvent me)
+      {
+        ISourceActivationSpreader spreader = getActivationSpreader();
+        spreader.clearSourceActivation();
       }
     };
   }
@@ -315,13 +324,6 @@ public abstract class AbstractActivationBuffer extends DefaultAdaptable
     return sources;
   }
 
-  /**
-   * spread activation to the contents, if any..
-   */
-  final protected void calculateAndSpreadSourceActivation()
-  {
-    _activationSpreader.spreadSourceActivation();
-  }
 
   public void setActivationSpreader(ISourceActivationSpreader spreader)
   {

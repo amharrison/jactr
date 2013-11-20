@@ -571,7 +571,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
 
           });
     }
-    
+
     final Future<Collection<IChunk>> fMatches = matches;
 
     return delayedFuture(new Callable<IChunk>() {
@@ -947,11 +947,6 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
       LOGGER.debug("Merging new chunk " + newChunk + " into existing chunk "
           + originalChunk);
 
-    String msg = null;
-
-    if (Logger.hasLoggers(getModel()))
-      msg = "Merged " + newChunk + " into "
-          + StringUtilities.toString(originalChunk);
 
     originalChunk.dispatch(new ChunkEvent(originalChunk,
         ChunkEvent.Type.MERGING_WITH, newChunk));
@@ -960,6 +955,13 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
         originalChunk));
 
     mergeChunksInternal(originalChunk, newChunk);
+
+    String msg = null;
+
+    if (Logger.hasLoggers(getModel()))
+      msg = String.format("Merged %s into %s (%.2f)", newChunk, StringUtilities
+          .toString(originalChunk), originalChunk.getSubsymbolicChunk()
+          .getActivation());
 
     if (msg != null) Logger.log(getModel(), Logger.Stream.DECLARATIVE, msg);
 
