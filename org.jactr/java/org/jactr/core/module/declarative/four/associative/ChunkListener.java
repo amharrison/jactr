@@ -94,10 +94,10 @@ public class ChunkListener extends ChunkListenerAdaptor
     
     if (LOGGER.isDebugEnabled())
       {
-      LOGGER.debug(String.format("Master %s(N:%d, C:%.2f)", master, master
+      LOGGER.debug(String.format("Master %s(N:%.2f, C:%.2f)", master, master
           .getSubsymbolicChunk().getTimesNeeded(), master.getSubsymbolicChunk()
           .getTimesInContext()));
-      LOGGER.debug(String.format("Mergee %s(N:%d, C:%.2f)", self, self
+      LOGGER.debug(String.format("Mergee %s(N:%.2f, C:%.2f)", self, self
           .getSubsymbolicChunk().getTimesNeeded(), self.getSubsymbolicChunk()
           .getTimesInContext()));
       }
@@ -281,7 +281,7 @@ public class ChunkListener extends ChunkListenerAdaptor
           LOGGER
               .debug(String
                   .format(
-                      "Master(N:%d, C:%.2f) is already linked to %s(N:%d, C:%.2f) via %s",
+                      "Master(N:%.2f, C:%.2f) is already linked to %s(N:%.2f, C:%.2f) via %s",
               masterSSC.getTimesNeeded(), masterSSC.getTimesInContext(), otherChunk, otherSSC.getTimesNeeded(), otherSSC.getTimesInContext(), masterLink));
 
         if (absorbLinks)
@@ -371,7 +371,10 @@ public class ChunkListener extends ChunkListenerAdaptor
     masterSSC.setTimesNeeded(selfSSC.getTimesNeeded());
     
     
-    if (LOGGER.isDebugEnabled()) LOGGER.debug(String.format("Master %s(N:%d, C:%d)", master, master.getSubsymbolicChunk().getTimesNeeded(), master.getSubsymbolicChunk().getTimesInContext()));
+    if (LOGGER.isDebugEnabled())
+      LOGGER.debug(String.format("Master %s(N:%.2f, C:%.2f)", master, master
+          .getSubsymbolicChunk().getTimesNeeded(), master.getSubsymbolicChunk()
+          .getTimesInContext()));
 
     double[] correction = processSelfLinks(master, copy, true);
 
@@ -412,7 +415,7 @@ public class ChunkListener extends ChunkListenerAdaptor
     
     
     if (LOGGER.isDebugEnabled())
-      LOGGER.debug(String.format("Master %s(N:%d, C:%.2f)", master, master
+      LOGGER.debug(String.format("Master %s(N:%.2f, C:%.2f)", master, master
           .getSubsymbolicChunk().getTimesNeeded(), master.getSubsymbolicChunk()
           .getTimesInContext()));
 
