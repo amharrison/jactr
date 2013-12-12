@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.AbstractActivationBuffer;
 import org.jactr.core.buffer.BufferUtilities;
 import org.jactr.core.buffer.IActivationBuffer;
+import org.jactr.core.buffer.IllegalActivationBufferStateException;
 import org.jactr.core.buffer.event.ActivationBufferEvent;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.logging.Logger;
@@ -512,6 +513,10 @@ public abstract class AbstractActivationBuffer6 extends
     IChunk tmp = containsExact(sourceChunk);
     if (tmp != null) return tmp;
 
+    if (!shouldAcceptAsSource(sourceChunk))
+      throw new IllegalActivationBufferStateException(String.format(
+          "%s cannot accept chunk %s as a source", getName(), sourceChunk));
+
     if (shouldCopyOnInsertion(sourceChunk))
       /*
        * we only copy slotted chunks, zero slot chunks get inserted as they are
@@ -523,8 +528,11 @@ public abstract class AbstractActivationBuffer6 extends
           if (LOGGER.isDebugEnabled())
             LOGGER
                 .debug("sourceChunk exists and has been encoded, creating a copy instead");
+          IChunk original = sourceChunk;
           sourceChunk = getModel().getDeclarativeModule()
               .copyChunk(sourceChunk).get();
+
+          sourceChunkCopied(original, sourceChunk);
         }
         catch (Exception e)
         {
@@ -534,6 +542,22 @@ public abstract class AbstractActivationBuffer6 extends
 
     // this will check addSourceChunkInternal
     return super.addSourceChunk(sourceChunk);
+  }
+
+  /**
+   * called when we have to copy the source chunk before adding it.
+   * 
+   * @param originalChunk
+   * @param nextSourceChunk
+   */
+  protected void sourceChunkCopied(IChunk originalChunk, IChunk nextSourceChunk)
+  {
+
+  }
+
+  protected boolean shouldAcceptAsSource(IChunk futureSourceChunk)
+  {
+    return true;
   }
 
   // /**
