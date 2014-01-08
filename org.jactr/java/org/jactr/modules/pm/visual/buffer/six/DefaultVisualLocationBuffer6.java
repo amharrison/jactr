@@ -82,6 +82,12 @@ public class DefaultVisualLocationBuffer6 extends AbstractPMActivationBuffer6
   @Override
   public void initialize()
   {
+    super.initialize();
+  }
+
+  @Override
+  protected void modelStarting()
+  {
     try
     {
       _visualLocationChunkType = getModel().getDeclarativeModule()
@@ -101,9 +107,8 @@ public class DefaultVisualLocationBuffer6 extends AbstractPMActivationBuffer6
       LOGGER.error("Could not get chunktype "
           + IVisualModule.VISUAL_LOCATION_CHUNK_TYPE, e);
     }
-
-    super.initialize();
     installDefaultChunkPatternProcessors();
+    super.modelStarting();
   }
 
   @Override
@@ -333,6 +338,7 @@ public class DefaultVisualLocationBuffer6 extends AbstractPMActivationBuffer6
     return _defaultSearchRequest;
   }
   
+  @Override
   public ICompilableContext getCompilableContext()
   {
     return _compilableContext;

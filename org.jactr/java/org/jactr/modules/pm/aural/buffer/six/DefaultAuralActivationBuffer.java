@@ -57,6 +57,11 @@ public class DefaultAuralActivationBuffer extends AbstractPMActivationBuffer6
   public void initialize()
   {
     super.initialize();
+  }
+
+  @Override
+  protected void modelStarting()
+  {
     IAuralModule module = (IAuralModule) getModule();
     
     
@@ -81,6 +86,7 @@ public class DefaultAuralActivationBuffer extends AbstractPMActivationBuffer6
     {
       LOGGER.error("could not install general attending processor ", e);
     }
+    super.modelStarting();
   }
 
   @Override

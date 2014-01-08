@@ -40,9 +40,13 @@ public class PartialMatchActivationFilter implements ILoggedChunkFilter
 
   private TextBuilder                _message;
 
-  public PartialMatchActivationFilter(ChunkTypeRequest request,
+  private ActivationPolicy           _activationPolicy;
+
+  public PartialMatchActivationFilter(ActivationPolicy policy,
+      ChunkTypeRequest request,
       double threshold, boolean logEvaluations)
   {
+    _activationPolicy = policy;
     _request = request;
     _activationThreshold = threshold;
     _log = logEvaluations;
@@ -51,7 +55,7 @@ public class PartialMatchActivationFilter implements ILoggedChunkFilter
 
   public PartialMatchActivationFilter(ChunkTypeRequest request, double threshold)
   {
-    this(request, threshold, false);
+    this(ActivationPolicy.SUMMATION, request, threshold, false);
   }
 
   public boolean accept(IChunk chunk)
@@ -70,36 +74,40 @@ public class PartialMatchActivationFilter implements ILoggedChunkFilter
 
     ISubsymbolicChunk ssc = chunk.getSubsymbolicChunk();
 
+    double referenceActivation = _activationPolicy.getActivation(chunk);
     double totalActivation = ssc.getActivation();
-    double tmpActivation = totalActivation;
+    double discountedActivation = totalActivation;
     double base = ssc.getBaseLevelActivation();
     double spread = ssc.getSpreadingActivation();
 
     ISubsymbolicChunk5 ssc5 = (ISubsymbolicChunk5) ssc
         .getAdapter(ISubsymbolicChunk5.class);
 
-    if (ssc5 != null) tmpActivation = ssc5.getActivation(_request);
+    if (ssc5 != null) discountedActivation = ssc5.getActivation(_request);
 
-    double discount = totalActivation - tmpActivation;
+    double discount = totalActivation - discountedActivation;
 
-    boolean acceptChunk = tmpActivation >= _activationThreshold;
+    // now with the discount, we can correctly due the referenceAc
+    referenceActivation -= discount;
 
-    if (tmpActivation > _highestActivationYet)
+    boolean acceptChunk = referenceActivation >= _activationThreshold;
+
+    if (referenceActivation > _highestActivationYet)
     {
       _bestChunkYet = chunk;
-      _highestActivationYet = tmpActivation;
+      _highestActivationYet = referenceActivation;
 
       if (_message != null)
         _message.append(String.format(
             "%s is best candidate yet (%.2f=%.2f+%.2f [%.2f discount])\n",
-            _bestChunkYet, tmpActivation, base, spread, discount));
+            _bestChunkYet, discountedActivation, base, spread, discount));
     }
     else if (_message != null)
       _message
           .append(String
               .format(
                   "%s doesn't have the highest activation (%.2f=%.2f+%.2f [%.2f discount])\n",
-                  chunk, tmpActivation, base, spread, discount));
+                  chunk, discountedActivation, base, spread, discount));
 
     return acceptChunk;
   }

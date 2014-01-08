@@ -67,6 +67,11 @@ public class DefaultAuralLocationBuffer extends AbstractPMActivationBuffer6
   {
     super.initialize();
 
+  }
+
+  @Override
+  protected void modelStarting()
+  {
     /*
      * this will expand any inserted chunk requests to chunktype requests. this
      * allows the modeler to do a +visual-location> =oldLoc which will then
@@ -75,6 +80,7 @@ public class DefaultAuralLocationBuffer extends AbstractPMActivationBuffer6
     addRequestDelegate(new ExpandChunkRequestDelegate(false));
     addRequestDelegate(new AuralSearchRequestDelegate(
         (IAuralModule) getModule()));
+    super.modelStarting();
   }
 
   @Override

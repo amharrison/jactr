@@ -34,6 +34,11 @@ public class DefaultVocalActivationBuffer6 extends AbstractPMActivationBuffer6 i
   public void initialize()
   {
     super.initialize();
+  }
+
+  @Override
+  protected void modelStarting()
+  {
     IDeclarativeModule dm = getModel().getDeclarativeModule();
 
     try
@@ -56,6 +61,7 @@ public class DefaultVocalActivationBuffer6 extends AbstractPMActivationBuffer6 i
     {
 
     }
+    super.modelStarting();
   }
 
   @Override

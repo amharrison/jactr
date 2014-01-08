@@ -123,6 +123,12 @@ public abstract class AbstractActivationBuffer extends DefaultAdaptable
         ISourceActivationSpreader spreader = getActivationSpreader();
         spreader.clearSourceActivation();
       }
+
+      @Override
+      public void modelStarted(ModelEvent me)
+      {
+        modelStarting();
+      }
     };
   }
 
@@ -626,6 +632,15 @@ public abstract class AbstractActivationBuffer extends DefaultAdaptable
       setActivationSpreader(new DefaultSourceActivationSpreader(this));
 
     _model.addListener(_modelListener, ExecutorServices.INLINE_EXECUTOR);
+  }
+
+  /**
+   * called once the model is started. this is the hook to grab references to
+   * chunks & types
+   */
+  protected void modelStarting()
+  {
+
   }
 
   @Override

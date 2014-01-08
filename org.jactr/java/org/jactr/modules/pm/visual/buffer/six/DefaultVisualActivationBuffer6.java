@@ -70,7 +70,7 @@ public class DefaultVisualActivationBuffer6 extends AbstractPMActivationBuffer6
   }
 
   @Override
-  public void initialize()
+  protected void modelStarting()
   {
     try
     {
@@ -82,9 +82,12 @@ public class DefaultVisualActivationBuffer6 extends AbstractPMActivationBuffer6
       LOGGER.error("Could not get " + IVisualModule.VISUAL_CHUNK_TYPE
           + " chunk type", e);
     }
-    super.initialize();
+
     installDefaultChunkPatternProcessors();
+
+    super.modelStarting();
   }
+
 
   protected void installDefaultChunkPatternProcessors()
   {

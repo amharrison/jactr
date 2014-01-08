@@ -3,7 +3,10 @@ package org.jactr.core.module.retrieval.buffer;
 /*
  * default logging
  */
+import java.util.Collection;
 import java.util.concurrent.Future;
+
+import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -15,6 +18,8 @@ import org.jactr.core.chunktype.ISymbolicChunkType;
 import org.jactr.core.chunktype.IllegalChunkTypeStateException;
 import org.jactr.core.logging.Logger;
 import org.jactr.core.model.IModel;
+import org.jactr.core.module.declarative.four.IDeclarativeModule4;
+import org.jactr.core.module.declarative.search.filter.ActivationPolicy;
 import org.jactr.core.module.retrieval.IRetrievalModule;
 import org.jactr.core.module.retrieval.six.DefaultRetrievalModule6;
 import org.jactr.core.production.request.ChunkRequest;
@@ -26,6 +31,7 @@ import org.jactr.core.slot.ISlot;
 
 public class RetrievalRequestDelegate extends AsynchronousRequestDelegate
 {
+
   /**
    * Logger definition
    */
@@ -35,6 +41,97 @@ public class RetrievalRequestDelegate extends AsynchronousRequestDelegate
   private IRetrievalModule           _retrievalModule;
 
   private boolean                    _includeNullValues;
+
+
+
+  static public double getThreshold(IRetrievalModule module,
+      Collection<? extends ISlot> slots)
+  {
+    double threshold = module.getRetrievalThreshold();
+
+    for (ISlot slot : slots)
+      if (slot.getName().equalsIgnoreCase(
+          DefaultRetrievalModule6.RETRIEVAL_THRESHOLD_SLOT))
+        try
+        {
+          // resolve the slot value...
+          double value = ((Number) slot.getValue()).doubleValue();
+          threshold = value;
+        }
+        catch (Exception e)
+        {
+          if (LOGGER.isWarnEnabled())
+            LOGGER.warn(String.format(
+                "Failed to get threshold from %s, using default %.2f",
+                slot.getValue(), threshold));
+        }
+
+    return threshold;
+  }
+
+  static public ActivationPolicy getActivationPolicy(String slotName,
+      Collection<? extends ISlot> slots)
+  {
+    ActivationPolicy rtn = ActivationPolicy.SUMMATION;
+
+    for (ISlot slot : slots)
+      if (slot.getName().equalsIgnoreCase(slotName)) try
+      {
+        // resolve the slot value... for now, string?
+        String value = slot.getValue().toString();
+
+        rtn = ActivationPolicy.valueOf(value.toUpperCase());
+      }
+      catch (Exception e)
+      {
+        if (LOGGER.isWarnEnabled())
+          LOGGER.warn(String.format(
+                "Failed to derive activationPolicy from %s, using summation",
+                slot.getValue()));
+      }
+
+    return rtn;
+  }
+
+  static public boolean getBoolean(String slotName,
+      Collection<? extends ISlot> slots, boolean defaultValue)
+  {
+    boolean rtn = defaultValue;
+
+    for (ISlot slot : slots)
+      if (slot.getName().equalsIgnoreCase(slotName))
+        try
+        {
+          // resolve the slot value... for now, string?
+          String value = slot.getValue().toString();
+
+          rtn = Boolean.parseBoolean(value);
+        }
+        catch (Exception e)
+        {
+          if (LOGGER.isWarnEnabled())
+            LOGGER.warn(String.format(
+                "Failed to extract boolean from %s, using default",
+                slot.getValue()));
+        }
+
+    return rtn;
+  }
+
+  static public boolean isIndexRetrievalEnabled(DefaultRetrievalModule6 module,
+      Collection<? extends ISlot> slots)
+  {
+    boolean rtn = getBoolean(DefaultRetrievalModule6.INDEXED_RETRIEVAL_SLOT,
+        slots, module != null ? module.isIndexedRetrievalEnabled() : false);
+    return rtn;
+  }
+
+  static public boolean isPartialMatchEnabled(IDeclarativeModule4 module,
+      Collection<? extends ISlot> slots)
+  {
+    return getBoolean(DefaultRetrievalModule6.PARTIAL_MATCH_SLOT, slots,
+        module.isPartialMatchingEnabled());
+  }
 
   public RetrievalRequestDelegate(IRetrievalModule module)
   {
@@ -53,11 +150,18 @@ public class RetrievalRequestDelegate extends AsynchronousRequestDelegate
       previous.abort();
   }
 
-  private boolean indexedRetrievalsEnabled()
+  private boolean indexedRetrievalsEnabled(IRequest request)
   {
     DefaultRetrievalModule6 rm = (DefaultRetrievalModule6) _retrievalModule
         .getAdapter(DefaultRetrievalModule6.class);
-    if (rm != null) return rm.isIndexedRetrievalEnabled();
+    if (rm != null)
+    {
+      FastList<ISlot> slots = FastList.newInstance();
+      ((ChunkTypeRequest) request).getSlots(slots);
+      boolean rtn = RetrievalRequestDelegate.isIndexRetrievalEnabled(rm, slots);
+      FastList.recycle(slots);
+      return rtn;
+    }
     return false;
   }
 
@@ -110,7 +214,7 @@ public class RetrievalRequestDelegate extends AsynchronousRequestDelegate
   @Override
   protected IRequest expandRequest(IRequest request)
   {
-    if (request instanceof ChunkRequest && !indexedRetrievalsEnabled())
+    if (request instanceof ChunkRequest && !indexedRetrievalsEnabled(request))
     {
       IChunk chunk = ((ChunkRequest) request).getChunk();
       ChunkTypeRequest ctr = new ChunkTypeRequest(chunk.getSymbolicChunk()
@@ -159,7 +263,7 @@ public class RetrievalRequestDelegate extends AsynchronousRequestDelegate
     /*
      * indexed retrievals must be enabled, lets just return the chunk
      */
-    if (request instanceof ChunkRequest)
+    if (request instanceof ChunkRequest && indexedRetrievalsEnabled(request))
       return ((ChunkRequest) request).getChunk();
 
     ChunkTypeRequest ctRequest = (ChunkTypeRequest) request;
@@ -249,6 +353,7 @@ public class RetrievalRequestDelegate extends AsynchronousRequestDelegate
 
   public boolean willAccept(IRequest request)
   {
+    // includes chunkRequest for indexed retrievals
     return request instanceof ChunkTypeRequest;
   }
 

@@ -283,10 +283,7 @@ public class DefaultSubsymbolicChunk5 extends DefaultSubsymbolicChunk4
     }
   }
 
-  /*
-   * @bug is source activation added to total activation?? No : the self
-   * referential associative link will handle that for us
-   */
+
   /**
    * Gets the Activation attribute of the DefaultSubsymbolicChunk5 object
    * 
@@ -338,8 +335,7 @@ public class DefaultSubsymbolicChunk5 extends DefaultSubsymbolicChunk4
 
     IModel parentModel = _parentChunk.getModel();
     IDeclarativeModule5 idm = (IDeclarativeModule5) parentModel
-        .getDeclarativeModule()
-        .getAdapter(IDeclarativeModule5.class);
+        .getDeclarativeModule().getAdapter(IDeclarativeModule5.class);
 
     if (idm == null && !_warnedSimilarity)
     {
@@ -355,10 +351,12 @@ public class DefaultSubsymbolicChunk5 extends DefaultSubsymbolicChunk4
     double mmp = idm.getMismatchPenalty();
     double discountedActivation = 0;
     /*
-     * note: we are only computing this for equality. That is likely wrong.
+     * note: we are only computing this for equality. That is likely wrong. we
+     * also ignore any metaslots.
      */
     for (IConditionalSlot s : p.getConditionalSlots())
-      if (s.getCondition() == IConditionalSlot.EQUALS)
+      if (!s.getName().startsWith(":")
+          && s.getCondition() == IConditionalSlot.EQUALS)
       {
         String slotName = s.getName();
         try

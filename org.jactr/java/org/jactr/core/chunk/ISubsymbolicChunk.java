@@ -200,6 +200,14 @@ public interface ISubsymbolicChunk extends
   public double getSpreadingActivation();
 
   /**
+   * get the transient, random activation of this chunk (calculated at most,
+   * once per cycle)
+   * 
+   * @return
+   */
+  public double getRandomActivation();
+
+  /**
    * Sets the spreadingActivation attribute of the ISubsymbolicChunk object
    * 
    * @param spread

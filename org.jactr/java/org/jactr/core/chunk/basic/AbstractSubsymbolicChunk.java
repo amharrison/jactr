@@ -56,6 +56,8 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
 
   protected double                         _spreadingActivation;
 
+  protected double                         _randomActivation;
+
   protected Map<IActivationBuffer, Double> _sourceActivation;
 
   protected double                         _totalActivation;
@@ -152,6 +154,22 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
     {
       l.lock();
       return _baseLevelActivation;
+    }
+    finally
+    {
+      l.unlock();
+    }
+  }
+
+  public double getRandomActivation()
+  {
+    Lock l = readLock();
+    refreshActivationValues();
+
+    try
+    {
+      l.lock();
+      return _randomActivation;
     }
     finally
     {
@@ -290,6 +308,21 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
       _parentChunk.dispatch(new ParameterEvent(this, ACTRRuntime.getRuntime()
           .getClock(_parentChunk.getModel()).getTime(), BASE_LEVEL_ACTIVATION,
           old, base));
+  }
+
+  public void setRandomActivation(double random)
+  {
+
+    Lock l = writeLock();
+    try
+    {
+      l.lock();
+      _randomActivation = random;
+    }
+    finally
+    {
+      l.unlock();
+    }
   }
 
   public void setCreationTime(double time)
@@ -628,6 +661,7 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
           "%s base:%.2f spread:%.2f noise:%.2f total:%.2f", _parentChunk, base,
           spread, noise, total));
 
+    setRandomActivation(noise);
     setBaseLevelActivation(base);
     setSpreadingActivation(spread);
     setActivation(total);

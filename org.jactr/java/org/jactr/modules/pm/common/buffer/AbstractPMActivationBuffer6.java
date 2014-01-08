@@ -102,10 +102,16 @@ public abstract class AbstractPMActivationBuffer6 extends
           }
         }, ExecutorServices.INLINE_EXECUTOR);
 
+  }
+
+  @Override
+  protected void modelStarting()
+  {
     setStatusSlotContent(MODALITY_SLOT, getFreeChunk());
     setStatusSlotContent(PREPARATION_SLOT, getFreeChunk());
     setStatusSlotContent(PROCESSOR_SLOT, getFreeChunk());
     setStatusSlotContent(EXECUTION_SLOT, getFreeChunk());
+    super.modelStarting();
   }
 
   /**

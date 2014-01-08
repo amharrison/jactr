@@ -13,6 +13,8 @@
 
 package org.jactr.core.module.retrieval.time;
 
+import javolution.util.FastList;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
@@ -20,8 +22,12 @@ import org.jactr.core.chunk.five.ISubsymbolicChunk5;
 import org.jactr.core.logging.Logger;
 import org.jactr.core.module.declarative.IDeclarativeModule;
 import org.jactr.core.module.declarative.four.IDeclarativeModule4;
+import org.jactr.core.module.declarative.search.filter.ActivationPolicy;
+import org.jactr.core.module.retrieval.buffer.RetrievalRequestDelegate;
 import org.jactr.core.module.retrieval.four.IRetrievalModule4;
+import org.jactr.core.module.retrieval.six.DefaultRetrievalModule6;
 import org.jactr.core.production.request.ChunkTypeRequest;
+import org.jactr.core.slot.ISlot;
 
 /**
  * 4.0 retrieval time equation
@@ -64,11 +70,18 @@ public class DefaultRetrievalTimeEquation implements IRetrievalTimeEquation
   public double computeRetrievalTime(IChunk retrievedChunk,
       ChunkTypeRequest retrievalRequest)
   {
+    FastList<ISlot> slots = FastList.newInstance();
+    retrievalRequest.getSlots(slots);
     double latencyFactor = _retrievalModule.getLatencyFactor();
     double latencyExponent = _retrievalModule.getLatencyExponent();
-    double threshold = _retrievalModule.getRetrievalThreshold();
+    double threshold = RetrievalRequestDelegate.getThreshold(_retrievalModule,
+        slots);
     IDeclarativeModule decM = _retrievalModule.getModel()
         .getDeclarativeModule();
+
+    ActivationPolicy policy = RetrievalRequestDelegate.getActivationPolicy(
+        DefaultRetrievalModule6.RETRIEVAL_TIME_SLOT, slots);
+
     double retrievalTime = 0;
 
     if (_errorChunk == null) _errorChunk = decM.getErrorChunk();
@@ -84,7 +97,7 @@ public class DefaultRetrievalTimeEquation implements IRetrievalTimeEquation
       if (Double.isInfinite(threshold) || Double.isNaN(threshold))
       {
         retrievalTime = latencyFactor
-            * Math.exp(-_errorChunk.getSubsymbolicChunk().getActivation());
+            * Math.exp(-policy.getActivation(_errorChunk));
         if (!_warned)
         {
           StringBuilder msg = new StringBuilder(
@@ -109,7 +122,7 @@ public class DefaultRetrievalTimeEquation implements IRetrievalTimeEquation
        * everything is fine, calculate the retrieval time bsed on the chunks
        * activation.
        */
-      double activation = retrievedChunk.getSubsymbolicChunk().getActivation();
+      double activation = policy.getActivation(retrievedChunk);
 
       /**
        * if partial matching is enabled and the chunk supports
@@ -118,16 +131,27 @@ public class DefaultRetrievalTimeEquation implements IRetrievalTimeEquation
        */
       IDeclarativeModule4 decM4 = (IDeclarativeModule4) decM
           .getAdapter(IDeclarativeModule4.class);
-      if (decM4 != null && decM4.isPartialMatchingEnabled()
-          && retrievalRequest != null)
+      boolean partialEnabled = false;
+      if (decM4 != null)
+        partialEnabled = RetrievalRequestDelegate.isPartialMatchEnabled(decM4,
+            slots);
+
+      if (partialEnabled && retrievalRequest != null)
       {
         ISubsymbolicChunk5 ssc = (ISubsymbolicChunk5) retrievedChunk
             .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk5.class);
-        if (ssc != null) activation = ssc.getActivation(retrievalRequest);
+        if (ssc != null)
+        {
+          double total = ssc.getActivation();
+          double discounted = ssc.getActivation(retrievalRequest);
+          activation -= total - discounted;
+        }
       }
 
       retrievalTime = latencyFactor * Math.exp(-latencyExponent * activation);
     }
+
+    FastList.recycle(slots);
 
     return retrievalTime;
   }

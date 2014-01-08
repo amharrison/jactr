@@ -35,40 +35,46 @@ public class ActivationFilter implements IChunkFilter, ILoggedChunkFilter
 
   private TextBuilder                _message;
 
-  public ActivationFilter(double threshold, boolean logEvaluations)
+  private ActivationPolicy           _activationPolicy;
+
+  public ActivationFilter(ActivationPolicy policy, double threshold,
+      boolean logEvaluations)
   {
     _activationThreshold = threshold;
     _log = logEvaluations;
+    _activationPolicy = policy;
     if (_log) _message = new TextBuilder();
   }
 
   public ActivationFilter(double threshold)
   {
-    this(threshold, false);
+    this(ActivationPolicy.SUMMATION, threshold, false);
   }
 
   public boolean accept(IChunk chunk)
   {
     ISubsymbolicChunk ssc = chunk.getSubsymbolicChunk();
+
+    double referenceActivation = _activationPolicy.getActivation(chunk);
     double totalActivation = ssc.getActivation();
     double base = ssc.getBaseLevelActivation();
     double spread = ssc.getSpreadingActivation();
 
-    boolean acceptChunk = totalActivation >= _activationThreshold;
+    boolean acceptChunk = referenceActivation >= _activationThreshold;
 
-    if (totalActivation > _highestActivationYet)
+    if (referenceActivation > _highestActivationYet)
     {
       _bestChunkYet = chunk;
-      _highestActivationYet = totalActivation;
+      _highestActivationYet = referenceActivation;
 
       if (_message != null)
         _message.append(String.format(
-            "%s is best candidate yet (%.2f=%.2f+%.2f)\n", _bestChunkYet,
+            "%s.(%.2f=%.2f+%.2f) is best candidate yet \n", _bestChunkYet,
             totalActivation, base, spread));
     }
     else if (_message != null)
       _message.append(String.format(
-          "%s doesn't have the highest activation (%.2f=%.2f+%.2f)\n", chunk,
+          "%s.(%.2f=%.2f+%.2f) doesn't have the highest activation \n", chunk,
           totalActivation, base, spread));
 
     return acceptChunk;

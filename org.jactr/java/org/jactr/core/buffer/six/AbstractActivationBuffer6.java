@@ -459,12 +459,10 @@ public abstract class AbstractActivationBuffer6 extends
     return _unrequestedChunk;
   }
 
-  /**
-   * must be called after the model has started so that we can ensure that the
-   * status slot values are properly initialized
-   */
+
+
   @Override
-  public void initialize()
+  protected void modelStarting()
   {
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("About to run, ensuring the status buffer slots");
@@ -472,7 +470,7 @@ public abstract class AbstractActivationBuffer6 extends
     setStateChunk(getFreeChunk());
     setBufferChunk(getEmptyChunk());
 
-    super.initialize();
+    super.modelStarting();
   }
 
   /**

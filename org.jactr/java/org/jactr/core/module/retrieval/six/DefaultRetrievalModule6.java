@@ -36,16 +36,19 @@ import org.jactr.core.module.IllegalModuleStateException;
 import org.jactr.core.module.declarative.IDeclarativeModule;
 import org.jactr.core.module.declarative.four.IDeclarativeModule4;
 import org.jactr.core.module.declarative.search.filter.ActivationFilter;
+import org.jactr.core.module.declarative.search.filter.ActivationPolicy;
 import org.jactr.core.module.declarative.search.filter.IChunkFilter;
 import org.jactr.core.module.declarative.search.filter.ILoggedChunkFilter;
 import org.jactr.core.module.declarative.search.filter.PartialMatchActivationFilter;
 import org.jactr.core.module.retrieval.IRetrievalModule;
 import org.jactr.core.module.retrieval.buffer.DefaultRetrievalBuffer6;
+import org.jactr.core.module.retrieval.buffer.RetrievalRequestDelegate;
 import org.jactr.core.module.retrieval.event.IRetrievalModuleListener;
 import org.jactr.core.module.retrieval.event.RetrievalModuleEvent;
 import org.jactr.core.module.retrieval.four.IRetrievalModule4;
 import org.jactr.core.module.retrieval.time.DefaultRetrievalTimeEquation;
 import org.jactr.core.module.retrieval.time.IRetrievalTimeEquation;
+import org.jactr.core.production.request.ChunkRequest;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.IConditionalSlot;
 import org.jactr.core.slot.ISlot;
@@ -71,6 +74,16 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
   static public final String                                              INDEXED_RETRIEVALS_ENABLED_PARAM = "EnableIndexedRetrievals";
 
   static public final String                                              RECENTLY_RETRIEVED_SLOT          = ":recently-retrieved";
+
+  static public final String                                              RETRIEVAL_THRESHOLD_SLOT         = ":retrievalThreshold";
+
+  static public final String                                              PARTIAL_MATCH_SLOT               = ":partialMatch";
+
+  static public final String                                              ACCESSIBILITY_SLOT               = ":accessibility";
+
+  static public final String                                              RETRIEVAL_TIME_SLOT              = ":retrievalTime";
+
+  static public final String                                              INDEXED_RETRIEVAL_SLOT           = ":indexedRetrieval";
 
   private double                                                          _retrievalThreshold              = Double.NEGATIVE_INFINITY;
 
@@ -141,11 +154,19 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
     return _retrievalThreshold;
   }
 
-  private boolean isPartialMatchingEnabled(IDeclarativeModule dm)
+  private boolean isPartialMatchingEnabled(IDeclarativeModule dm,
+      Collection<? extends ISlot> slots)
   {
+    dm = (IDeclarativeModule) dm.getAdapter(IDeclarativeModule4.class);
     if (dm instanceof IDeclarativeModule4)
-      return ((IDeclarativeModule4) dm).isPartialMatchingEnabled();
+      return RetrievalRequestDelegate.isPartialMatchEnabled(
+          (IDeclarativeModule4) dm, slots);
     return false;
+  }
+
+  private double getThreshold(Collection<? extends ISlot> slots)
+  {
+    return RetrievalRequestDelegate.getThreshold(this, slots);
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -156,6 +177,9 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
 
     fireInitiated(pattern);
 
+    FastList<ISlot> slots = FastList.newInstance();
+    pattern.getSlots(slots);
+
     // this must be vestigial code, but from when?
     // for (IConditionalSlot cSlot : pattern.getConditionalSlots())
     // if (cSlot.getName().equals(RECENTLY_RETRIEVED_SLOT)) break;
@@ -164,7 +188,14 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
 
     _activationSorter.setChunkTypeRequest(null);
     IChunkFilter filter = null;
-    if (isPartialMatchingEnabled(dm))
+    double threshold = getThreshold(slots);
+    ActivationPolicy accessibility = RetrievalRequestDelegate
+        .getActivationPolicy(ACCESSIBILITY_SLOT, slots);
+    boolean wasIndexed = RetrievalRequestDelegate.isIndexRetrievalEnabled(
+        (DefaultRetrievalModule6) dm.getAdapter(DefaultRetrievalModule6.class),
+        slots);
+
+    if (isPartialMatchingEnabled(dm, slots))
     {
       /**
        * set the reference pattern for partial matching discounting, which is
@@ -172,15 +203,17 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
        */
 
       _activationSorter.setChunkTypeRequest(cleanedPattern);
-      filter = new PartialMatchActivationFilter(cleanedPattern,
-          _retrievalThreshold, true);
+      filter = new PartialMatchActivationFilter(accessibility, cleanedPattern,
+          threshold, true);
       fromDM = dm.findPartialMatches(cleanedPattern, _activationSorter, filter);
     }
     else
     {
-      filter = new ActivationFilter(_retrievalThreshold, true);
+      filter = new ActivationFilter(accessibility, threshold, true);
       fromDM = dm.findExactMatches(cleanedPattern, _activationSorter, filter);
     }
+
+    FastList.recycle(slots);
 
     Collection<IChunk> results = fromDM.get();
 
@@ -199,8 +232,13 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
     if (results instanceof ConcurrentSkipListSet)
       SkipListSetFactory.recycle((ConcurrentSkipListSet) results);
 
-    fireCompleted(pattern, retrievalResult, getRetrievalTimeEquation()
-        .computeRetrievalTime(retrievalResult, cleanedPattern));
+    // we should check to see if this is an indexed, as their time is immediate
+    double retrievalTime = 0;
+    if (!wasIndexed)
+      retrievalTime = getRetrievalTimeEquation().computeRetrievalTime(
+          retrievalResult, pattern);
+
+    fireCompleted(pattern, retrievalResult, retrievalTime);
 
     return retrievalResult;
   }
@@ -215,18 +253,17 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
   {
     FastList<ISlot> slots = FastList.newInstance();
     pattern.getSlots(slots);
+    FastList<ISlot> cleanSlots = FastList.newInstance();
 
     for (ISlot cSlot : slots)
-      if (cSlot.getName().equals(RECENTLY_RETRIEVED_SLOT))
-      {
-        // we need to copy
-        ChunkTypeRequest clean = new ChunkTypeRequest(pattern.getChunkType());
-        for (ISlot slot : slots)
-          if (!slot.getName().equals(RECENTLY_RETRIEVED_SLOT))
-            clean.addSlot(slot);
+      if (!cSlot.getName().startsWith(":")) cleanSlots.add(cSlot);
 
-        return clean;
-      }
+    if (cleanSlots.size() != slots.size())
+      if (pattern instanceof ChunkTypeRequest)
+        pattern = new ChunkTypeRequest(pattern.getChunkType(), cleanSlots);
+      else if (pattern instanceof ChunkRequest)
+        pattern = new ChunkRequest(((ChunkRequest) pattern).getChunk(),
+            cleanSlots);
 
     return pattern;
   }
