@@ -468,7 +468,7 @@ public abstract class AbstractActivationBuffer6 extends
       LOGGER.debug("About to run, ensuring the status buffer slots");
 
     setStateChunk(getFreeChunk());
-    setBufferChunk(getEmptyChunk());
+    setBufferChunk(getSourceChunk() == null ? getEmptyChunk() : getFullChunk());
 
     super.modelStarting();
   }
