@@ -13,7 +13,7 @@ import org.jactr.modules.temporal.buffer.processor.TimeRequestDelegate;
 
 /**
  * default temporal buffer. This doesn't do much other than automatically install some
- * command handler (which handle {@link ChunkPattern}s). For a module/buffer as simple as 
+ * command handler (which handle {@link ChunkPattern}s). For a module/buffer as simple as
  * this one, this is overkill, but it serves as a good example for how you can extend
  * the behavior of modules/buffers by just adding new {@link IRequestDelegate}s
  * @author harrison
@@ -28,10 +28,15 @@ public class DefaultTemporalActivationBuffer extends
     super(name, module);
   }
 
+  @Override
   public void initialize()
   {
     super.initialize();
-    
+  }
+
+  @Override
+  protected void modelStarting()
+  {
     //expand encoded chunks
     addRequestDelegate(new AddChunkRequestDelegate());
 
@@ -46,6 +51,7 @@ public class DefaultTemporalActivationBuffer extends
     {
       throw new RuntimeException("Could not get required chunktypes ", e);
     }
+    super.modelStarting();
   }
 
 }
