@@ -26,6 +26,8 @@ import org.apache.commons.logging.LogFactory;
 import org.jactr.io.antlr3.builder.JACTRBuilder;
 import org.jactr.io.antlr3.misc.ASTSupport;
 import org.jactr.io.generator.ICodeGenerator;
+import org.jactr.io.parser.IParserImportDelegate;
+import org.jactr.io.parser.ParserImportDelegateFactory;
 import org.jactr.io.participant.ASTParticipantRegistry;
 import org.jactr.io.participant.IASTParticipant;
 
@@ -63,6 +65,11 @@ public class JACTRCodeGenerator implements ICodeGenerator
      */
     if (shouldTrim)
     {
+      // this is very likely not correct for trimming.
+
+      IParserImportDelegate importer = ParserImportDelegateFactory
+          .createDelegate((Object[]) null);
+
       for (CommonTree moduleNode : ASTSupport.getAllDescendantsWithType(root,
           JACTRBuilder.MODULE))
       {
@@ -74,7 +81,7 @@ public class JACTRCodeGenerator implements ICodeGenerator
         IASTParticipant participant = ASTParticipantRegistry
             .getParticipant(className);
         if (participant != null)
-          generator.addTrimmer(participant.getTrimmer());
+          generator.addTrimmer(participant.getTrimmer(importer));
       }
 
       for (CommonTree moduleNode : ASTSupport.getAllDescendantsWithType(root,
@@ -88,7 +95,7 @@ public class JACTRCodeGenerator implements ICodeGenerator
         IASTParticipant participant = ASTParticipantRegistry
             .getParticipant(className);
         if (participant != null)
-          generator.addTrimmer(participant.getTrimmer());
+          generator.addTrimmer(participant.getTrimmer(importer));
       }
     }
 

@@ -22,9 +22,9 @@ import java.util.TreeMap;
 import org.antlr.runtime.tree.CommonTree;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jactr.core.module.IModule;
 import org.jactr.core.utils.IInstallable;
 import org.jactr.io.IOUtilities;
+import org.jactr.io.parser.IParserImportDelegate;
 import org.jactr.io.participant.IASTInjector;
 import org.jactr.io.participant.IASTParticipant;
 import org.jactr.io.participant.IASTTrimmer;
@@ -101,22 +101,24 @@ public class BasicASTParticipant implements IASTParticipant
     return _installableClass;
   }
 
-  protected CommonTree load(URL importModel) throws IOException
+  protected CommonTree load(URL importModel,
+      IParserImportDelegate delegateForLoading) throws IOException
   {
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("Attempting to load from " + importModel);
     if (importModel == null) return null;
     CommonTree defaults = IOUtilities.loadModelFile(importModel,
+        delegateForLoading,
         new ArrayList<Exception>(), new ArrayList<Exception>());
     return defaults;
   }
 
-  public IASTInjector getInjector()
+  public IASTInjector getInjector(IParserImportDelegate delegateForLoading)
   {
     CommonTree toBeInjected = null;
     try
     {
-      toBeInjected = load(getURL());
+      toBeInjected = load(getURL(), delegateForLoading);
     }
     catch (IOException ioe)
     {
@@ -128,12 +130,12 @@ public class BasicASTParticipant implements IASTParticipant
         getParameterMap());
   }
 
-  public IASTTrimmer getTrimmer()
+  public IASTTrimmer getTrimmer(IParserImportDelegate delegateForLoading)
   {
     CommonTree toBeTrimmed = null;
     try
     {
-      toBeTrimmed = load(getURL());
+      toBeTrimmed = load(getURL(), delegateForLoading);
     }
     catch (IOException ioe)
     {

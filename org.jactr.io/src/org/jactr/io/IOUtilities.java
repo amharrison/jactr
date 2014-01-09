@@ -30,9 +30,10 @@ import org.jactr.io.antlr3.compiler.CompilationWarning;
 import org.jactr.io.antlr3.misc.ASTSupport;
 import org.jactr.io.antlr3.misc.CommonTreeException;
 import org.jactr.io.compiler.DefaultCompiler;
-import org.jactr.io.parser.DefaultParserImportDelegate;
 import org.jactr.io.parser.IModelParser;
+import org.jactr.io.parser.IParserImportDelegate;
 import org.jactr.io.parser.ModelParserFactory;
+import org.jactr.io.parser.ParserImportDelegateFactory;
 
 /**
  * convenience utilities for the lazy
@@ -63,7 +64,8 @@ public class IOUtilities
     if (installModules)
       try
       {
-        DefaultParserImportDelegate delegate = new DefaultParserImportDelegate();
+        IParserImportDelegate delegate = ParserImportDelegateFactory
+            .createDelegate((Object[]) null);
         CommonTree modulesRoot = ASTSupport.getFirstDescendantWithType(
             modelDesc, JACTRBuilder.MODULES);
         modulesRoot
@@ -97,6 +99,13 @@ public class IOUtilities
     return loadModelFile(url, warnings, errors);
   }
 
+  static public CommonTree loadModelFile(URL modelFileLocation,
+      Collection<Exception> warnings, Collection<Exception> errors)
+      throws IOException
+  {
+    return loadModelFile(modelFileLocation, null, warnings, errors);
+  }
+
   /**
    * load the specified model file and store any and all warnings and exceptions
    * 
@@ -106,16 +115,19 @@ public class IOUtilities
    * @return null if a critical error occured
    */
   static public CommonTree loadModelFile(URL modelFileLocation,
+      IParserImportDelegate delegate,
       Collection<Exception> warnings, Collection<Exception> errors)
       throws IOException
   {
-	CommonTree modelDescriptor = null;
+    CommonTree modelDescriptor = null;
     IModelParser parser = null;
     try
     {
       parser = ModelParserFactory.getModelParser(modelFileLocation);
       if (parser != null)
       {
+        if (delegate != null) parser.setImportDelegate(delegate);
+
         parser.parse();
         modelDescriptor = parser.getDocumentTree();
       }

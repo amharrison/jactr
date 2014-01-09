@@ -45,7 +45,7 @@ public class DefaultParserImportDelegate implements IParserImportDelegate
    *      java.lang.String)
    */
   public CommonTree importModuleInto(CommonTree modelDescriptor,
-      String moduleClassName, boolean importContents)
+      String moduleClassName, boolean importContents) throws Exception
   {
     if (!isValidClassName(moduleClassName))
       throw new CompilationError("Could not find module class named "
@@ -78,7 +78,7 @@ public class DefaultParserImportDelegate implements IParserImportDelegate
   }
 
   private void inject(CommonTree classBasedNode, CommonTree modelDescriptor,
-      boolean importContents)
+      boolean importContents) throws Exception
   {
     String className = ASTSupport.getFirstDescendantWithType(classBasedNode,
         JACTRBuilder.CLASS_SPEC).getText();
@@ -88,14 +88,16 @@ public class DefaultParserImportDelegate implements IParserImportDelegate
     {
       IASTInjector injector = null;
       if (participant != null)
-        injector = participant.getInjector();
-      else if (LOGGER.isDebugEnabled())
-        LOGGER.debug("no IASTParticipant found for " + className);
+        injector = participant.getInjector(this);
+      else
+        throw new CompilationError("Could not find IASTParticipant for "
+            + className, null);
 
       if (injector != null)
         injector.inject(modelDescriptor, true);
-      else if (LOGGER.isDebugEnabled())
-        LOGGER.debug("no IASTInjector found for " + className);
+      else
+        throw new CompilationError("Could not find IASTInjector for "
+            + className, null);
 
       if (injector instanceof BasicASTInjector)
         ((BasicASTInjector) injector).injectParameters(classBasedNode);
@@ -136,7 +138,7 @@ public class DefaultParserImportDelegate implements IParserImportDelegate
     if (!_importSources.contains(url))
     {
       BasicASTParticipant bap = new BasicASTParticipant(url);
-      bap.getInjector().inject(modelDescriptor, importBuffers);
+      bap.getInjector(this).inject(modelDescriptor, importBuffers);
       _importSources.add(url);
     }
   }

@@ -13,6 +13,8 @@
  */
 package org.jactr.io.participant;
 
+import org.jactr.io.parser.IParserImportDelegate;
+
 
 /**
  * IModule(s) wanting to provide AST modifications (such as injecting the
@@ -28,12 +30,12 @@ public interface IASTParticipant
    * 
    * @return
    */
-  public IASTTrimmer getTrimmer();
+  public IASTTrimmer getTrimmer(IParserImportDelegate delegateForLoading);
 
   /**
    * return the initializer that will do the injecting
    * 
    * @return
    */
-  public IASTInjector getInjector();
+  public IASTInjector getInjector(IParserImportDelegate delegateForLoading);
 }

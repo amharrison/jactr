@@ -37,10 +37,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.io.antlr3.compiler.CompilationWarning;
 import org.jactr.io.parser.CanceledException;
-import org.jactr.io.parser.DefaultParserImportDelegate;
 import org.jactr.io.parser.IModelParser;
 import org.jactr.io.parser.IParserImportDelegate;
 import org.jactr.io.parser.ITreeTracker;
+import org.jactr.io.parser.ParserImportDelegateFactory;
 
 /**
  * @author developer
@@ -145,7 +145,8 @@ public abstract class AbstractModelParser implements IModelParser
 
   protected Collection<Exception>                  _warnings;
 
-  protected IParserImportDelegate                  _delegate         = new DefaultParserImportDelegate();
+  protected IParserImportDelegate                  _delegate         = ParserImportDelegateFactory
+                                                                         .createDelegate((Object[]) null);
 
   protected CharStream                             _inputStream;
 
