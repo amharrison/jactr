@@ -90,8 +90,7 @@ public class BasicASTInjector implements IASTInjector
   {
     // snag all the chuhnktypes
     Collection<CommonTree> importChunkTypes = ASTSupport.getTrees(
-        sourceDeclarativeMemory,
-        JACTRBuilder.CHUNK_TYPE);
+        sourceDeclarativeMemory, JACTRBuilder.CHUNK_TYPE);
     Map<String, CommonTree> destChunkTypes = ASTSupport.getMapOfTrees(
         destinationDeclarativeMemory, JACTRBuilder.CHUNK_TYPE);
 
@@ -172,12 +171,11 @@ public class BasicASTInjector implements IASTInjector
               JACTRBuilder.DECLARATIVE_MEMORY).toStringTree());
   }
 
-
   private void steal(CommonTree srcTree, CommonTree destTree, int nodeType)
   {
     CommonTree toSteal = null;
     for (int i = 0; i < srcTree.getChildCount(); i++)
-      if (srcTree.getChild(i).getType() == nodeType)
+      if (srcTree.getChild(i).getType() == nodeType || nodeType == -1)
       {
         toSteal = (CommonTree) srcTree.getChild(i);
         break;
@@ -186,7 +184,7 @@ public class BasicASTInjector implements IASTInjector
     if (toSteal == null) return;
 
     for (int i = 0; i < destTree.getChildCount(); i++)
-      if (destTree.getChild(i).getType() == nodeType)
+      if (destTree.getChild(i).getType() == nodeType || nodeType == -1)
       {
         destTree.setChild(i, toSteal);
         break;
@@ -200,11 +198,34 @@ public class BasicASTInjector implements IASTInjector
         JACTRBuilder.BUFFER);
     CommonTree buffers = ASTSupport.getFirstDescendantWithType(destModel,
         JACTRBuilder.BUFFERS);
+
+    Map<String, CommonTree> existingBuffers = ASTSupport.getMapOfTrees(buffers,
+        JACTRBuilder.BUFFER);
+
     for (CommonTree bufferTree : importBuffers.values())
     {
+      String bufferName = ASTSupport.getName(bufferTree);
+
       if (LOGGER.isDebugEnabled())
         LOGGER.debug("Importing buffer  " + bufferTree.toStringTree());
-      buffers.addChild(bufferTree);
+
+      CommonTree existingBuffer = existingBuffers.get(bufferName.toLowerCase());
+
+      if (existingBuffer == null) buffers.addChild(bufferTree);
+      else
+      {
+        /*
+         * if the local (dest) doesn't have any parameters, steal them.
+         */
+        CommonTree originalParameters = ASTSupport.getFirstDescendantWithType(
+            existingBuffer, JACTRBuilder.PARAMETERS);
+        CommonTree newParameters = ASTSupport.getFirstDescendantWithType(
+            bufferTree, JACTRBuilder.PARAMETERS);
+        if ((originalParameters == null || originalParameters.getChildCount() == 0)
+            && newParameters != null && newParameters.getChildCount() > 0)
+          steal(newParameters, originalParameters, JACTRBuilder.PARAMETER);
+      }
+
     }
 
     if (LOGGER.isDebugEnabled())
