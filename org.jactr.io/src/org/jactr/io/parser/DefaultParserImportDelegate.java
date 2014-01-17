@@ -84,20 +84,26 @@ public class DefaultParserImportDelegate implements IParserImportDelegate
         JACTRBuilder.CLASS_SPEC).getText();
     IASTParticipant participant = getASTParticipant(className);
 
+
+    // short term fix until new antlr can be tested
     if (importContents)
     {
       IASTInjector injector = null;
       if (participant != null)
         injector = participant.getInjector(this);
       else
-        throw new CompilationError("Could not find IASTParticipant for "
-            + className, null);
+      // throw new CompilationWarning("Could not find IASTParticipant for "
+      // + className, null);
+      if (LOGGER.isWarnEnabled())
+        LOGGER.warn("Could not find IASTParticipant for " + className, null);
 
       if (injector != null)
         injector.inject(modelDescriptor, true);
       else
-        throw new CompilationError("Could not find IASTInjector for "
-            + className, null);
+      // throw new CompilationWarning("Could not find IASTInjector for "
+      // + className, null);
+      if (LOGGER.isWarnEnabled())
+        LOGGER.warn("Could not find IASTInjector for " + className, null);
 
       if (injector instanceof BasicASTInjector)
         ((BasicASTInjector) injector).injectParameters(classBasedNode);
