@@ -462,7 +462,7 @@ public abstract class AbstractActivationBuffer6 extends
 
 
   @Override
-  protected void modelStarting()
+  protected void grabReferences()
   {
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("About to run, ensuring the status buffer slots");
@@ -470,7 +470,7 @@ public abstract class AbstractActivationBuffer6 extends
     setStateChunk(getFreeChunk());
     setBufferChunk(getSourceChunk() == null ? getEmptyChunk() : getFullChunk());
 
-    super.modelStarting();
+    super.grabReferences();
   }
 
   /**

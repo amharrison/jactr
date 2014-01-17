@@ -70,7 +70,7 @@ public class DefaultVisualActivationBuffer6 extends AbstractPMActivationBuffer6
   }
 
   @Override
-  protected void modelStarting()
+  protected void grabReferences()
   {
     try
     {
@@ -85,7 +85,7 @@ public class DefaultVisualActivationBuffer6 extends AbstractPMActivationBuffer6
 
     installDefaultChunkPatternProcessors();
 
-    super.modelStarting();
+    super.grabReferences();
   }
 
 

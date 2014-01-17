@@ -86,7 +86,7 @@ public class DefaultVisualLocationBuffer6 extends AbstractPMActivationBuffer6
   }
 
   @Override
-  protected void modelStarting()
+  protected void grabReferences()
   {
     try
     {
@@ -108,7 +108,7 @@ public class DefaultVisualLocationBuffer6 extends AbstractPMActivationBuffer6
           + IVisualModule.VISUAL_LOCATION_CHUNK_TYPE, e);
     }
     installDefaultChunkPatternProcessors();
-    super.modelStarting();
+    super.grabReferences();
   }
 
   @Override

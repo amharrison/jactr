@@ -62,7 +62,7 @@ public class DefaultMotorActivationBuffer6 extends AbstractPMActivationBuffer6
   }
 
   @Override
-  protected void modelStarting()
+  protected void grabReferences()
   {
     IMotorModule module = (IMotorModule) getModule();
     try
@@ -97,7 +97,7 @@ public class DefaultMotorActivationBuffer6 extends AbstractPMActivationBuffer6
       throw new IllegalModuleStateException(
           "Could not install required chunk pattern processor ", e);
     }
-    super.modelStarting();
+    super.grabReferences();
   }
 
   @Override

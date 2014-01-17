@@ -30,7 +30,14 @@ import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.ISlot;
 
 /**
- * 4.0 retrieval time equation
+ * 4.0 retrieval time equation. Added an override system parameter to deal with
+ * -infinite/NaN retrieval threshold on error (which will take infinite time to
+ * complete). By default, when an infinite time is calculated, we instead use
+ * the activation of the error chunk. By enabling
+ * "org.jactr.core.module.retrieval.time.AllowInfiniteRetrievalTime" to true
+ * (i.e.,
+ * -Dorg.jactr.core.module.retrieval.time.AllowInfiniteRetrievalTime=true),
+ * retrieval times can be infinite.
  * 
  * @author harrison
  * @created April 18, 2003
@@ -38,15 +45,32 @@ import org.jactr.core.slot.ISlot;
 public class DefaultRetrievalTimeEquation implements IRetrievalTimeEquation
 {
 
-  private static transient Log LOGGER  = LogFactory
-                                           .getLog(DefaultRetrievalTimeEquation.class
-                                               .getName());
+  private static transient Log LOGGER                      = LogFactory
+                                                               .getLog(DefaultRetrievalTimeEquation.class
+                                                                   .getName());
 
   IRetrievalModule4            _retrievalModule;
 
   IChunk                       _errorChunk;
 
-  boolean                      _warned = false;
+  boolean                      _warned                     = false;
+
+  static private boolean       _allowInfiniteRetrievalTime = false;
+
+  static
+  {
+    try
+    {
+      _allowInfiniteRetrievalTime = Boolean
+          .parseBoolean(System
+              .getProperty("org.jactr.core.module.retrieval.time.AllowInfiniteRetrievalTime"));
+    }
+    catch (Exception e)
+    {
+      _allowInfiniteRetrievalTime = false;
+    }
+
+  }
 
   public DefaultRetrievalTimeEquation(IRetrievalModule4 module)
   {
@@ -94,7 +118,8 @@ public class DefaultRetrievalTimeEquation implements IRetrievalTimeEquation
        * dangerous - so we use the error chunk activation to compute the
        * retrieval time.
        */
-      if (Double.isInfinite(threshold) || Double.isNaN(threshold))
+      if (!_allowInfiniteRetrievalTime
+          && (Double.isInfinite(threshold) || Double.isNaN(threshold)))
       {
         retrievalTime = latencyFactor
             * Math.exp(-policy.getActivation(_errorChunk));
@@ -113,8 +138,24 @@ public class DefaultRetrievalTimeEquation implements IRetrievalTimeEquation
         }
       }
       else
-        // otherwise, we fail using the normal math
+      { // otherwise, we fail using the normal math
+        if (Double.isNaN(threshold)) threshold = Double.POSITIVE_INFINITY;
+
         retrievalTime = latencyFactor * Math.exp(-threshold);
+
+        if (Double.isInfinite(retrievalTime))
+        {
+          String message = String
+              .format(
+                  "Warning : retrieval of error will take %.2f seconds, because of lack of threshold",
+                  retrievalTime);
+          if (LOGGER.isWarnEnabled()) LOGGER.warn(message);
+
+          if (Logger.hasLoggers(_retrievalModule.getModel()))
+            Logger.log(_retrievalModule.getModel(), Logger.Stream.RETRIEVAL,
+                message);
+        }
+      }
     }
     else
     {

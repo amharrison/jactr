@@ -105,13 +105,13 @@ public abstract class AbstractPMActivationBuffer6 extends
   }
 
   @Override
-  protected void modelStarting()
+  protected void grabReferences()
   {
     setStatusSlotContent(MODALITY_SLOT, getFreeChunk());
     setStatusSlotContent(PREPARATION_SLOT, getFreeChunk());
     setStatusSlotContent(PROCESSOR_SLOT, getFreeChunk());
     setStatusSlotContent(EXECUTION_SLOT, getFreeChunk());
-    super.modelStarting();
+    super.grabReferences();
   }
 
   /**

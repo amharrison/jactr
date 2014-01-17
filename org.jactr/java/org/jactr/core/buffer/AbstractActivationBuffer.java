@@ -120,14 +120,20 @@ public abstract class AbstractActivationBuffer extends DefaultAdaptable
       @Override
       public void cycleStopped(ModelEvent me)
       {
-        ISourceActivationSpreader spreader = getActivationSpreader();
-        spreader.clearSourceActivation();
+
       }
 
       @Override
       public void modelStarted(ModelEvent me)
       {
-        modelStarting();
+        grabReferences();
+      }
+
+      @Override
+      public void modelStopped(ModelEvent me)
+      {
+        ISourceActivationSpreader spreader = getActivationSpreader();
+        spreader.clearSourceActivation();
       }
     };
   }
@@ -638,7 +644,7 @@ public abstract class AbstractActivationBuffer extends DefaultAdaptable
    * called once the model is started. this is the hook to grab references to
    * chunks & types
    */
-  protected void modelStarting()
+  protected void grabReferences()
   {
 
   }

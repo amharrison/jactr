@@ -70,7 +70,7 @@ public class DefaultAuralLocationBuffer extends AbstractPMActivationBuffer6
   }
 
   @Override
-  protected void modelStarting()
+  protected void grabReferences()
   {
     /*
      * this will expand any inserted chunk requests to chunktype requests. this
@@ -80,7 +80,7 @@ public class DefaultAuralLocationBuffer extends AbstractPMActivationBuffer6
     addRequestDelegate(new ExpandChunkRequestDelegate(false));
     addRequestDelegate(new AuralSearchRequestDelegate(
         (IAuralModule) getModule()));
-    super.modelStarting();
+    super.grabReferences();
   }
 
   @Override
