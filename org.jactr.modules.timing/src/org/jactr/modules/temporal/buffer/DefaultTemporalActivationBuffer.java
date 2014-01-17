@@ -35,7 +35,7 @@ public class DefaultTemporalActivationBuffer extends
   }
 
   @Override
-  protected void modelStarting()
+  protected void grabReferences()
   {
     //expand encoded chunks
     addRequestDelegate(new AddChunkRequestDelegate());
@@ -51,7 +51,7 @@ public class DefaultTemporalActivationBuffer extends
     {
       throw new RuntimeException("Could not get required chunktypes ", e);
     }
-    super.modelStarting();
+    super.grabReferences();
   }
 
 }
