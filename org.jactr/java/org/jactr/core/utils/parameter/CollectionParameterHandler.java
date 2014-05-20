@@ -97,14 +97,19 @@ public class CollectionParameterHandler<T> extends
       IParameterHandler<T> secondaryHandler)
   {
     StringBuilder sb = new StringBuilder("(");
+    int appended = 0;
 
     for (T element : values)
     {
       String secondary = secondaryHandler.toString(element);
-      if (secondary.length() > 0) sb.append(secondary).append(", ");
+      if (secondary.length() > 0)
+      {
+        sb.append(secondary).append(", ");
+        appended++;
+      }
     }
     // delete the last two characters
-    if (values.size() != 0)
+    if (appended != 0)
     {
       sb.deleteCharAt(sb.length() - 1);
       sb.deleteCharAt(sb.length() - 1);
