@@ -750,7 +750,7 @@ public class DefaultSearchSystem implements ISearchSystem
     if (typeValueMap != null) container = typeValueMap.not(slot.getValue());
     rtn.addComposited(container);
 
-    recycleCollection(container);
+
 
     // now let's snag all the rest
     try
