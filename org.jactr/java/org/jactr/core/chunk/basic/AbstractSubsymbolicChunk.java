@@ -496,6 +496,14 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
 
   public Collection<String> getPossibleParameters()
   {
+    Collection<String> setable = getSetableParameters();
+    setable.add(SOURCE_ACTIVATION);
+    // setable.add(SPREADING_ACTIVATION);
+    return setable;
+  }
+
+  public Collection<String> getSetableParameters()
+  {
     ArrayList<String> params = new ArrayList<String>();
 
     params.addAll(_unknownParameters.keySet());
@@ -506,14 +514,9 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
     params.add(REFERENCE_TIMES);
     params.add(BASE_LEVEL_ACTIVATION);
     params.add(SPREADING_ACTIVATION);
-    params.add(SOURCE_ACTIVATION);
+    // params.add(SOURCE_ACTIVATION);
     params.add(ACTIVATION);
     return params;
-  }
-
-  public Collection<String> getSetableParameters()
-  {
-    return getPossibleParameters();
   }
 
   public void setParameter(String key, String value)
@@ -613,7 +616,7 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
         if (LOGGER.isWarnEnabled())
           LOGGER
               .warn(String
-                  .format("setting source activation via setParameter no longer supported. Requires which buffer is providing source. This is a noop"));
+                  .format("Setting source activation directly via setParameter no longer supported. "));
       }
       setSourceActivation(null, ParameterHandler.numberInstance().coerce(value)
           .doubleValue());
