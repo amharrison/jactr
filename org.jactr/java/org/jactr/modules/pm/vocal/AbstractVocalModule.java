@@ -360,13 +360,14 @@ public class AbstractVocalModule extends AbstractPerceptualModule implements
     return _vocalManager.execute(command);
   }
 
-  public Future<VocalizationCommand> prepare(IRequest request)
+  public Future<VocalizationCommand> prepare(IRequest request,
+      double estimatedDuration)
   {
     if (_vocalManager == null)
       throw new IllegalStateException(
           "Cannot prepare vocalization unless connected to running model");
 
-    return _vocalManager.prepare(request);
+    return _vocalManager.prepare(request, estimatedDuration);
   }
 
   public void addListener(IVocalModuleListener listener, Executor executor)

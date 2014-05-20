@@ -78,10 +78,12 @@ public class VocalManagementDelegate
     return future;
   }
 
-  public Future<VocalizationCommand> prepare(IRequest request)
+  public Future<VocalizationCommand> prepare(IRequest request,
+      double estimatedDuration)
   {
     ChunkTypeRequest ctRequest = (ChunkTypeRequest) request;
     String text = "";
+
 
     for (IConditionalSlot cSlot : ctRequest.getConditionalSlots())
       if (cSlot.getName().equals(IVocalModule.STRING_SLOT)
@@ -101,7 +103,7 @@ public class VocalManagementDelegate
     if (vocalizationSource == null)
       return error("No vocalization source defined. I'm mute");
 
-    return _manager.newCommand(vocalizationSource, text);
+    return _manager.newCommand(vocalizationSource, text, estimatedDuration);
   }
 
   public Future<VocalizationCommand> execute(IEfferentCommand command)
@@ -113,10 +115,16 @@ public class VocalManagementDelegate
       return error("No vocalization source. I'm mute");
 
     VocalizationCommand vCommand = (VocalizationCommand) command;
+
     DeltaTracker<VocalizationCommand> tracker = new DeltaTracker<VocalizationCommand>(
         vCommand);
     tracker.setProperty(IEfferentCommand.REQUESTED_START_TIME, ACTRRuntime
         .getRuntime().getClock(_module.getModel()).getTime());
+
+    // ensure that we have a duration, no matter what
+    if (Math.abs(vCommand.getEstimatedDuration()) <= 0.001)
+      tracker.setProperty(IEfferentCommand.ESTIMATED_DURATION, 0.1);
+
 
     return _manager.execute(tracker);
   }

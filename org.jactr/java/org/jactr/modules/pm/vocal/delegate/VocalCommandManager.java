@@ -5,6 +5,7 @@ package org.jactr.modules.pm.vocal.delegate;
  */
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.commonreality.efferent.IEfferentCommand;
 import org.commonreality.efferent.IEfferentCommandTemplate;
 import org.commonreality.modalities.vocal.VocalizationCommand;
 import org.commonreality.modalities.vocal.VocalizationCommandTemplate;
@@ -106,6 +107,8 @@ public class VocalCommandManager extends EfferentCommandManager<VocalizationComm
               .instantiate(getAgent(), vocalizationSource);
           
           command.setText((String) parameters[0]);
+          command.setProperty(IEfferentCommand.ESTIMATED_DURATION,
+              parameters[1]);
           
           _isPreparing = true;
           

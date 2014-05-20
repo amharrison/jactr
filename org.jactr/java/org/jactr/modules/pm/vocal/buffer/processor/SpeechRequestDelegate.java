@@ -82,7 +82,11 @@ public class SpeechRequestDelegate extends AbstractRequestDelegate
     IChunk busy = _vocal.getModel().getDeclarativeModule().getBusyChunk();
     ((IPerceptualBuffer) buffer).setPreparationChunk(busy);
     ((IPerceptualBuffer) buffer).setStateChunk(busy);
-    return _vocal.prepare(request);
+
+    double duration = _vocal.getExecutionTimeEquation().compute(
+        getText(request), _vocal);
+
+    return _vocal.prepare(request, duration);
   }
 
   @Override
@@ -150,8 +154,9 @@ public class SpeechRequestDelegate extends AbstractRequestDelegate
     double procEnd = model.getProceduralModule()
         .getDefaultProductionFiringTime()
         + start;
-    double execEnd = _vocal.getExecutionTimeEquation().compute(
+    double duration = _vocal.getExecutionTimeEquation().compute(
         getText(request), _vocal);
+    double execEnd = duration + start;
 
     ProcessTimedEvent procEvent = new ProcessTimedEvent(start, procEnd,
         executeFuture, buffer);

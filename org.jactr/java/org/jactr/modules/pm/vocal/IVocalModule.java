@@ -71,10 +71,11 @@ public interface IVocalModule extends IPerceptualModule
   
 
 //  public void prepare(ChunkTypeRequest request, String text, boolean isVocalization);
-//  
+//
 //  public void execute(IIdentifier commandId, boolean isVocalization);
   
-  public Future<VocalizationCommand> prepare(IRequest request);
+  public Future<VocalizationCommand> prepare(IRequest request,
+      double estimatedDuration);
   
   public Future<VocalizationCommand> execute(VocalizationCommand command);
   

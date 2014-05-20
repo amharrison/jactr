@@ -85,12 +85,15 @@ public class DefaultVocalModule6 extends AbstractVocalModule
 
       public double compute(String text, IVocalModule module)
       {
+        if (text.trim().length() == 0) return _processingTime;
+
         return text.length() / _charactersPerSyllable / _syllableRate;
       }
 
     });
   }
 
+  @Override
   public Collection<String> getSetableParameters()
   {
     ArrayList<String> parameters = new ArrayList<String>(super
@@ -105,6 +108,7 @@ public class DefaultVocalModule6 extends AbstractVocalModule
     return parameters;
   }
 
+  @Override
   public String getParameter(String key)
   {
     if (CHARACTERS_PER_SYLLABLE_PARAM.equalsIgnoreCase(key))
@@ -124,6 +128,7 @@ public class DefaultVocalModule6 extends AbstractVocalModule
     return super.getParameter(key);
   }
 
+  @Override
   public void setParameter(String key, String value)
   {
     NumericParameterHandler nph = ParameterHandler.numberInstance();
