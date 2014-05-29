@@ -206,9 +206,9 @@ public class DefaultSubsymbolicChunk5 extends DefaultSubsymbolicChunk4
    * @since
    */
   @Override
-  public Collection<String> getPossibleParameters()
+  public Collection<String> getSetableParameters()
   {
-    Collection<String> rtn = super.getPossibleParameters();
+    Collection<String> rtn = super.getSetableParameters();
     rtn.add(SIMILARITIES);
     rtn.add(SIMILARITY_ACTIVATION);
     return rtn;

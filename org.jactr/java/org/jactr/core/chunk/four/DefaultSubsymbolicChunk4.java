@@ -341,9 +341,9 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
   }
 
   @Override
-  public Collection<String> getPossibleParameters()
+  public Collection<String> getSetableParameters()
   {
-    Collection<String> str = super.getPossibleParameters();
+    Collection<String> str = super.getSetableParameters();
     str.add(LINKS);
     str.add(CREATION_CYCLE);
     return str;
