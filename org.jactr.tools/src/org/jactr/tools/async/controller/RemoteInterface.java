@@ -244,6 +244,18 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
             .getSimulationTime()));
       }
 
+      public void modelStarted(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
+
+      public void modelStopped(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
+
     };
 
     _breakpointListener = new IBreakpointListener() {

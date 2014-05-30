@@ -225,6 +225,18 @@ public class RuntimeTracer implements IInstrument, IParameterized
 
       }
 
+      public void modelStarted(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
+
+      public void modelStopped(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
+
     }, getExecutor());
 
     IController controller = runtime.getController();

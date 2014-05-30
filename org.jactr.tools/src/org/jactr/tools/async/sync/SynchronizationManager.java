@@ -175,6 +175,18 @@ public class SynchronizationManager implements IInstrument, IParameterized
           // TODO Auto-generated method stub
 
         }
+
+        public void modelStarted(ACTRRuntimeEvent event)
+        {
+          // TODO Auto-generated method stub
+
+        }
+
+        public void modelStopped(ACTRRuntimeEvent event)
+        {
+          // TODO Auto-generated method stub
+
+        }
       };
       ACTRRuntime.getRuntime().addListener(_runtimeListener, null);
     }
