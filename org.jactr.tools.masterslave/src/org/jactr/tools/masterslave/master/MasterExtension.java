@@ -20,15 +20,21 @@ import org.jactr.core.extensions.IExtension;
 import org.jactr.core.model.IModel;
 import org.jactr.core.model.basic.BasicModel;
 import org.jactr.core.production.IProduction;
+import org.jactr.core.queue.timedevents.RunnableTimedEvent;
 import org.jactr.core.queue.timedevents.TerminationTimedEvent;
+import org.jactr.core.reality.connector.IClockConfigurator;
+import org.jactr.core.reality.connector.IConnector;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.controller.IController;
+import org.jactr.core.runtime.event.ACTRRuntimeEvent;
+import org.jactr.core.runtime.event.IACTRRuntimeListener;
 import org.jactr.core.slot.BasicSlot;
 import org.jactr.core.slot.IMutableSlot;
 import org.jactr.core.slot.ISlot;
 import org.jactr.core.slot.IUniqueSlotContainer;
 import org.jactr.core.slot.UniqueSlotContainer;
 import org.jactr.io.IOUtilities;
+import org.jactr.tools.masterslave.clock.MasterSlaveClockConfigurator;
 import org.jactr.tools.masterslave.slave.SlaveExtension;
 import org.jactr.tools.masterslave.slave.SlaveStateCondition;
 
@@ -45,6 +51,8 @@ public class MasterExtension implements IExtension
   private Map<String, IModel>               _slaveModels    = new TreeMap<String, IModel>();
 
   private Map<String, IUniqueSlotContainer> _slaveVariables = new TreeMap<String, IUniqueSlotContainer>();
+
+  private IACTRRuntimeListener              _runtimeListener;
 
   /**
    * finds the installed instanceof the master extension in the given model
@@ -70,12 +78,102 @@ public class MasterExtension implements IExtension
   public void install(IModel model)
   {
     _model = model;
+
+    /*
+     * the masterslave also requires some tricky clock control, we need the
+     * IConnector to do taht.
+     */
+    IConnector connector = ACTRRuntime.getRuntime().getConnector();
+    IClockConfigurator original = connector.getClockConfigurator();
+    if (!(original instanceof MasterSlaveClockConfigurator))
+    {
+      MasterSlaveClockConfigurator mscc = new MasterSlaveClockConfigurator(
+          original);
+      connector.setClockConfigurator(mscc);
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug(String.format("Installed custom clock configurator"));
+    }
+
+    _runtimeListener = new IACTRRuntimeListener() {
+
+      public void runtimeSuspended(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
+
+      public void runtimeStopped(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
+
+      public void runtimeStarted(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
+
+      public void runtimeResumed(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
+
+      public void modelStopped(ACTRRuntimeEvent event)
+      {
+        IModel model = event.getModel();
+        String modelName = model.getName();
+        if (_slaveModels.containsKey(modelName))
+        {
+          IUniqueSlotContainer container = getSlaveVariables(modelName);
+          ((IMutableSlot) container
+              .getSlot(SlaveStateCondition.HAS_COMPLETED_SLOT))
+              .setValue(Boolean.TRUE);
+          ((IMutableSlot) container
+              .getSlot(SlaveStateCondition.IS_RUNNING_SLOT))
+              .setValue(Boolean.FALSE);
+        }
+
+      }
+
+      public void modelStarted(ACTRRuntimeEvent event)
+      {
+        IModel model = event.getModel();
+        String modelName = model.getName();
+        if (_slaveModels.containsKey(modelName))
+        {
+          IUniqueSlotContainer container = getSlaveVariables(modelName);
+          ((IMutableSlot) container
+              .getSlot(SlaveStateCondition.IS_RUNNING_SLOT))
+              .setValue(Boolean.TRUE);
+          ((IMutableSlot) container
+              .getSlot(SlaveStateCondition.HAS_COMPLETED_SLOT))
+              .setValue(Boolean.FALSE);
+        }
+      }
+
+      public void modelRemoved(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
+
+      public void modelAdded(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
+    };
+
+    ACTRRuntime.getRuntime().addListener(_runtimeListener, null);
   }
 
   public void uninstall(IModel model)
   {
     _model = null;
 
+    ACTRRuntime.getRuntime().removeListener(_runtimeListener);
   }
 
   public String getParameter(String key)
@@ -186,13 +284,21 @@ public class MasterExtension implements IExtension
 
     if (controller.getRunningModels().contains(model))
       throw new IllegalStateException("Already running");
-    else if (!runtime.getModels().contains(model)) runtime.addModel(model);
+    else if (!runtime.getModels().contains(model))
+    {
+      /*
+       * temporarily mark it as 'starting', to prevent models from starting
+       * multiple times
+       */
+      IUniqueSlotContainer container = getSlaveVariables(model.getName());
+      ((IMutableSlot) container.getSlot(SlaveStateCondition.IS_RUNNING_SLOT))
+          .setValue("starting");
 
-    IUniqueSlotContainer container = getSlaveVariables(model.getName());
-    ((IMutableSlot) container.getSlot(SlaveStateCondition.IS_RUNNING_SLOT))
-        .setValue(Boolean.TRUE);
-    ((IMutableSlot) container.getSlot(SlaveStateCondition.HAS_COMPLETED_SLOT))
-        .setValue(Boolean.FALSE);
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug(String.format("Starting %s", model.getName()));
+
+      runtime.addModel(model);
+    }
 
     if (!controller.isRunning()) controller.start();
   }
@@ -208,28 +314,77 @@ public class MasterExtension implements IExtension
       model.getTimedEventQueue().enqueue(new TerminationTimedEvent(now, now));
     }
 
+    /*
+     * we can't block
+     */
+
   }
 
-  protected void cleanUp(IModel model) throws IllegalStateException
+  protected void cleanUp(final IModel model) throws IllegalStateException
   {
-    ACTRRuntime runtime = ACTRRuntime.getRuntime();
-    Collection<IModel> terminated = runtime.getController()
-        .getTerminatedModels();
+    String modelName = model.getName().toLowerCase();
+    boolean wasSlave = _slaveModels.remove(modelName) != null;
+    _slaveVariables.remove(modelName);
 
-    _slaveModels.remove(model.getName().toLowerCase());
-    _slaveVariables.remove(model.getName().toLowerCase());
-
-    if (terminated.contains(model))
+    if (!wasSlave)
     {
-      // clean up
-      runtime.removeModel(model);
-      model.dispose();
-    }
-    else if (LOGGER.isWarnEnabled())
-      LOGGER.warn(String.format(
-          "%s is not in the terminated set %s, something strange has occured",
-          model, terminated));
+      if (LOGGER.isWarnEnabled())
+        LOGGER.warn(String.format(
+            "%s was not a slave model, or was already cleanedup", modelName));
 
+      return;
+    }
+
+    Runnable cleanUpRunner = new Runnable() {
+
+      public void run()
+      {
+        ACTRRuntime runtime = ACTRRuntime.getRuntime();
+        Collection<IModel> allModels = runtime.getModels();
+        Collection<IModel> terminated = runtime.getController()
+            .getTerminatedModels();
+
+        if (!allModels.contains(model))
+        {
+          if (LOGGER.isDebugEnabled())
+            LOGGER
+                .debug(String.format(
+                    "%s is not in the runtime, can safely ignore",
+                    model.getName()));
+
+          return;
+        }
+
+        if (terminated.contains(model))
+        {
+          if (LOGGER.isDebugEnabled())
+            LOGGER.debug(String.format("%s has terminated, cleaning up",
+                model.getName()));
+
+          // clean up
+          runtime.removeModel(model);
+          model.dispose();
+        }
+        else
+        // while we are in the cleanup, but the model hasn't fully terminated
+        {
+          if (LOGGER.isWarnEnabled())
+            LOGGER
+                .warn(String
+                    .format(
+                        "%s is not in the terminated set %s, but is in the active set. Not completely terminated, will try again later.",
+                        model, terminated));
+          _model.getTimedEventQueue().enqueue(
+              new RunnableTimedEvent(ACTRRuntime.getRuntime().getClock(_model)
+                  .getTime() + 0.05, this));
+        }
+      }
+
+    };
+
+    _model.getTimedEventQueue().enqueue(
+        new RunnableTimedEvent(ACTRRuntime.getRuntime().getClock(_model)
+            .getTime() + 0.05, cleanUpRunner));
   }
 
   public void copyInto(IChunkType chunkType, IModel destination)
