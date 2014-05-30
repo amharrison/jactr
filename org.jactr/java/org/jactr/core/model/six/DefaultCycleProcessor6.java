@@ -52,7 +52,7 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
 
   private volatile boolean     _isExecuting                      = false;
 
-  private final double         TEMPORAL_TOLERANCE                = 0.001;
+  private final double         TEMPORAL_TOLERANCE                = 0.0001;
 
   public DefaultCycleProcessor6()
   {
@@ -190,31 +190,30 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
             goalBuffer.clear();
           else
             return Double.NaN; // signal quit
-        }
-      }
-      else /*
-            * we only skip cycles if no events have fired. If events have fired,
-            * then productions might be able to fire..
-            */
-      if (model.isCycleSkippingEnabled() /* && !eventsHaveFired */)
-      {
-        if (eventsHaveFired)
-          nextWaitTime = Math
-              .min(nextEventFiringTime, nextProductionFiringTime);
-        else
-        {
-          nextWaitTime = nextEventFiringTime;
-          nextProductionFiringTime = nextEventFiringTime;
-        }
+  }
+}
+else /*
+      * we only skip cycles if no events have fired. If events have fired, then
+      * productions might be able to fire..
+      */
+if (model.isCycleSkippingEnabled() /* && !eventsHaveFired */)
+{
+  if (eventsHaveFired)
+    nextWaitTime = Math.min(nextEventFiringTime, nextProductionFiringTime);
+  else
+  {
+    nextWaitTime = nextEventFiringTime;
+    nextProductionFiringTime = nextEventFiringTime;
+  }
 
-        /*
-         * increment the cycles
-         */
-        long cycleDelta = (long) ((nextWaitTime - now) / model
-            .getProceduralModule().getDefaultProductionFiringTime());
-        cycleDelta--;
-        model.setCycle(model.getCycle() + cycleDelta);
-      }
+  /*
+   * increment the cycles
+   */
+  long cycleDelta = (long) ((nextWaitTime - now) / model.getProceduralModule()
+      .getDefaultProductionFiringTime());
+  cycleDelta--;
+  model.setCycle(model.getCycle() + cycleDelta);
+}
 
     /*
      * if the two are absurdly close, just take the larger of the two. this
@@ -229,6 +228,20 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
         && Math.abs(nextProductionFiringTime - nextEventFiringTime) < TEMPORAL_TOLERANCE)
       nextWaitTime = Math.max(nextProductionFiringTime, nextEventFiringTime);
 
+    if (nextWaitTime <= now)
+    {
+      double newWaitTime = Math.nextAfter(nextWaitTime + 0.001,
+          Double.POSITIVE_INFINITY);
+
+      if (LOGGER.isWarnEnabled())
+        LOGGER
+            .warn(String
+                .format(
+                    "nextWaitTime (%.4f) is less than or equal to the time (%.4f), incrementing to (%.4f). Please report to amharrison@gmail.com",
+                    nextWaitTime, now, newWaitTime));
+
+      nextWaitTime = newWaitTime;
+    }
     /*
      * if we didn't fire a production, we might be able to right after the event
      * has fired
@@ -257,7 +270,15 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
      * 0.1000000002 and current is 0.100000
      */
     if (_nextPossibleProductionFiringTime - currentTime > TEMPORAL_TOLERANCE)
+    {
+      if (LOGGER.isDebugEnabled())
+        LOGGER
+            .debug(String
+                .format(
+                    "nextPossibleFiringTime (%.4f) is greater than current time (%.4f), no production may fire yet.",
+                    _nextPossibleProductionFiringTime, currentTime));
       return Double.NEGATIVE_INFINITY;
+    }
 
     /*
      * get the buffers and their contents
@@ -303,8 +324,8 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
       }
       catch (ExecutionException e)
       {
-        throw new ExecutionException("Failed to execute " + instantiation, e
-            .getCause());
+        throw new ExecutionException("Failed to execute " + instantiation,
+            e.getCause());
       }
     else
       _nextPossibleProductionFiringTime = currentTime

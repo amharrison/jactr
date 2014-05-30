@@ -70,11 +70,6 @@ public class TimedEventQueue
 
                                                                     };
 
-  // PriorityQueue<ITimedEvent> _newButExpiredEvents;
-  //
-  // PriorityQueue<ITimedEvent> _pendingEvents;
-  //
-  // PriorityQueue<ITimedEvent> _pendingIntermediateEvents;
 
   ACTREventDispatcher<TimedEventQueue, ITimedEventListener> _eventDispatcher;
 
@@ -98,14 +93,10 @@ public class TimedEventQueue
 
   public TimedEventQueue(IModel model)
   {
-    // this needs to be a sorted list
     _model = model;
+
     _eventDispatcher = new ACTREventDispatcher<TimedEventQueue, ITimedEventListener>();
     _firingEvents = new ArrayList<ITimedEvent>();
-
-    // _newButExpiredEvents = new PriorityQueue<ITimedEvent>(10, _sorter);
-    // _pendingEvents = new PriorityQueue<ITimedEvent>(10, _sorter);
-    // _pendingIntermediateEvents = new PriorityQueue<ITimedEvent>(10, _sorter);
 
     _prioritizer = new IPrioritizer<ITimedEvent>() {
 
@@ -147,8 +138,6 @@ public class TimedEventQueue
     {
       _lock.lock();
       return _priorityQueue.isEmpty();
-      // return (_pendingEvents.size() == 0) && (_newButExpiredEvents.size() ==
-      // 0);
     }
     finally
     {
@@ -162,26 +151,11 @@ public class TimedEventQueue
    */
   public double getNextEndTime()
   {
-    /*
-     * both newExpired and pending must be empty
-     */
-    // if (isEmpty()) return Double.NaN;
     try
     {
       _lock.lock();
 
       return _priorityQueue.getFirstPriority();
-
-      // double rtn = 0;
-      // if (_pendingEvents.size() == 0)
-      // {
-      // rtn = _newButExpiredEvents.peek().getEndTime();
-      // if (LOGGER.isDebugEnabled()) LOGGER.debug("returning expired time");
-      // }
-      // else
-      // rtn = _pendingEvents.peek().getEndTime();
-      //
-      // return rtn;
     }
     finally
     {
@@ -194,28 +168,11 @@ public class TimedEventQueue
    */
   public void enqueue(ITimedEvent te)
   {
-    // double now = ACTRRuntime.getRuntime().getClock(_model).getTime();
-
     try
     {
       _lock.lock();
       _priorityQueue.add(te);
       if (te instanceof IIntermediateTimedEvent) _intermediateEvents.add(te);
-
-      // if (te.getEndTime() <= now)
-      // {
-      // if (LOGGER.isDebugEnabled())
-      // LOGGER.debug("Enqueued expired event " + te);
-      // _newButExpiredEvents.add(te);
-      // }
-      // else
-      // {
-      // if (LOGGER.isDebugEnabled())
-      // LOGGER.debug("Enqueued pending event " + te);
-      // _pendingEvents.add(te);
-      // if (te instanceof IIntermediateTimedEvent)
-      // _pendingIntermediateEvents.add(te);
-      // }
     }
     finally
     {
@@ -231,15 +188,6 @@ public class TimedEventQueue
     if (Logger.hasLoggers(_model))
       Logger.log(_model, Logger.Stream.EVENT, "Queued " + te);
 
-    /*
-     * double now = ACTRRuntime.getRuntime().getClock(_model).getTime(); if
-     * (te.getEndTime() <= now) { synchronized (_eventQueue) {
-     * _eventQueue.remove(te); _intermediateEventQueue.remove(te); } if
-     * (LOGGER.isDebugEnabled()) LOGGER.debug("firing " + te + " @ " + now);
-     * te.fire(now); if (_eventDispatcher.hasListeners())
-     * _eventDispatcher.fire(new TimedEventEvent(this, te,
-     * TimedEventEvent.Type.FIRED)); }
-     */
   }
 
   /**
@@ -249,16 +197,6 @@ public class TimedEventQueue
   public Collection<ITimedEvent> getPendingEvents()
   {
     return _priorityQueue.get();
-    // ArrayList<ITimedEvent> events = new ArrayList<ITimedEvent>();
-    // synchronized (_newButExpiredEvents)
-    // {
-    // events.addAll(_newButExpiredEvents);
-    // }
-    // synchronized (_pendingEvents)
-    // {
-    // events.addAll(_pendingEvents);
-    // }
-    // return events;
   }
 
   /**
@@ -301,7 +239,6 @@ public class TimedEventQueue
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("Will attempt to fire " + _firingEvents);
-    
 
     for (ITimedEvent expiredEvent : _firingEvents)
     {
@@ -346,7 +283,7 @@ public class TimedEventQueue
         if (expiredEvent.hasAborted() && _eventDispatcher.hasListeners())
           _eventDispatcher.fire(new TimedEventEvent(this, expiredEvent,
               TimedEventEvent.Type.ABORTED));
-        
+
         if (Logger.hasLoggers(_model))
           Logger.log(_model, Logger.Stream.EVENT, "Aborted " + expiredEvent);
       }
