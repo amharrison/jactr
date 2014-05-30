@@ -14,7 +14,6 @@
 package org.jactr.core.module.declarative.basic;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
@@ -781,12 +780,20 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
 
   public Collection<String> getSetableParameters()
   {
-    return Arrays.asList(CHUNK_FACTORY_PARAM, SYMBOLIC_CHUNK_FACTORY_PARAM,
-        SUBSYMBOLIC_CHUNK_FACTORY_PARAM, CHUNK_NAMER_PARAM,
-        CHUNK_CONFIGURATOR_PARAM, CHUNK_TYPE_FACTORY_PARAM,
-        SYMBOLIC_CHUNK_TYPE_FACTORY_PARAM,
-        SUBSYMBOLIC_CHUNK_TYPE_FACTORY_PARAM, CHUNK_TYPE_NAMER_PARAM,
-        CHUNK_TYPE_CONFIGURATOR_PARAM);
+    Collection<String> rtn = new ArrayList<String>(10);
+
+    rtn.add(CHUNK_FACTORY_PARAM);
+    rtn.add(SYMBOLIC_CHUNK_FACTORY_PARAM);
+    rtn.add(SUBSYMBOLIC_CHUNK_FACTORY_PARAM);
+    rtn.add(CHUNK_NAMER_PARAM);
+    rtn.add(CHUNK_CONFIGURATOR_PARAM);
+    rtn.add(CHUNK_TYPE_FACTORY_PARAM);
+    rtn.add(SYMBOLIC_CHUNK_TYPE_FACTORY_PARAM);
+    rtn.add(SUBSYMBOLIC_CHUNK_TYPE_FACTORY_PARAM);
+    rtn.add(CHUNK_TYPE_NAMER_PARAM);
+    rtn.add(CHUNK_TYPE_CONFIGURATOR_PARAM);
+
+    return rtn;
   }
 
   public void setParameter(String key, String value)
