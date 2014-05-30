@@ -13,7 +13,6 @@
  */
 package org.jactr.core.module.declarative.six;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -346,7 +345,7 @@ public class DefaultDeclarativeModule6 extends DefaultDeclarativeModule
   @Override
   public Collection<String> getSetableParameters()
   {
-    ArrayList<String> rtn = new ArrayList<String>();
+    Collection<String> rtn = super.getSetableParameters();
     rtn.add(PARTIAL_MATCHING);
     rtn.add(BASE_LEVEL_CONSTANT);
     rtn.add(ACTIVATION_NOISE);
