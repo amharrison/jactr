@@ -40,7 +40,7 @@ public class DecoratedACTRRuntimeListener implements IACTRRuntimeListener
     _listener = listener;
   }
   
-  /** 
+  /**
    * @see org.jactr.core.runtime.event.IACTRRuntimeListener#modelAdded(org.jactr.core.runtime.event.ACTRRuntimeEvent)
    */
   public void modelAdded(ACTRRuntimeEvent event)
@@ -49,7 +49,7 @@ public class DecoratedACTRRuntimeListener implements IACTRRuntimeListener
       _listener.modelAdded(event);
   }
 
-  /** 
+  /**
    * @see org.jactr.core.runtime.event.IACTRRuntimeListener#modelRemoved(org.jactr.core.runtime.event.ACTRRuntimeEvent)
    */
   public void modelRemoved(ACTRRuntimeEvent event)
@@ -59,7 +59,7 @@ public class DecoratedACTRRuntimeListener implements IACTRRuntimeListener
   }
 
 
-  /** 
+  /**
    * @see org.jactr.core.runtime.event.IACTRRuntimeListener#runtimeResumed(org.jactr.core.runtime.event.ACTRRuntimeEvent)
    */
   public void runtimeResumed(ACTRRuntimeEvent event)
@@ -68,7 +68,7 @@ public class DecoratedACTRRuntimeListener implements IACTRRuntimeListener
       _listener.runtimeResumed(event);
   }
 
-  /** 
+  /**
    * @see org.jactr.core.runtime.event.IACTRRuntimeListener#runtimeStarted(org.jactr.core.runtime.event.ACTRRuntimeEvent)
    */
   public void runtimeStarted(ACTRRuntimeEvent event)
@@ -77,7 +77,7 @@ public class DecoratedACTRRuntimeListener implements IACTRRuntimeListener
       _listener.runtimeStarted(event);
   }
 
-  /** 
+  /**
    * @see org.jactr.core.runtime.event.IACTRRuntimeListener#runtimeStopped(org.jactr.core.runtime.event.ACTRRuntimeEvent)
    */
   public void runtimeStopped(ACTRRuntimeEvent evnet)
@@ -86,13 +86,25 @@ public class DecoratedACTRRuntimeListener implements IACTRRuntimeListener
       _listener.runtimeStopped(evnet);
   }
 
-  /** 
+  /**
    * @see org.jactr.core.runtime.event.IACTRRuntimeListener#runtimeSuspended(org.jactr.core.runtime.event.ACTRRuntimeEvent)
    */
   public void runtimeSuspended(ACTRRuntimeEvent event)
   {
     if(_listener!=null)
       _listener.runtimeSuspended(event);
+  }
+
+  public void modelStarted(ACTRRuntimeEvent event)
+  {
+    if (_listener != null) _listener.modelStarted(event);
+
+  }
+
+  public void modelStopped(ACTRRuntimeEvent event)
+  {
+    if (_listener != null) _listener.modelStopped(event);
+
   }
 
 }

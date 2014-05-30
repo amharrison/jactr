@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.commonreality.time.IClock;
 import org.jactr.core.buffer.IActivationBuffer;
 import org.jactr.core.logging.Logger;
 import org.jactr.core.model.ICycleProcessor;
@@ -28,6 +29,7 @@ import org.jactr.core.model.ModelTerminatedException;
 import org.jactr.core.model.basic.BasicModel;
 import org.jactr.core.model.event.ModelEvent;
 import org.jactr.core.queue.TimedEventQueue;
+import org.jactr.core.runtime.event.ACTRRuntimeEvent;
 
 /**
  * basic model runner, handles all events except disconnected which will be
@@ -74,17 +76,25 @@ public class DefaultModelRunner implements Runnable
      * common reality, it will call model.initialize(). we then block until it
      * gets the start command
      */
-    ACTRRuntime.getRuntime().getConnector().connect(_model);
+    ACTRRuntime runtime = ACTRRuntime.getRuntime();
+    runtime.getConnector().connect(_model);
 
-    ACTRRuntime.getRuntime().getClock(_model).setTimeShift(_model.getAge());
+    IClock clock = runtime.getClock(_model);
 
-    if (LOGGER.isDebugEnabled())
-      LOGGER.debug("Shifted clock to " + _model.getAge());
+    double timeShift = _model.getAge() - clock.getTime();
+
+    clock.setTimeShift(timeShift);
+
+    if (LOGGER.isDebugEnabled()) LOGGER.debug("Shifted clock to " + timeShift);
 
     /**
      * let anyone who depends on commonreality know that we have connected
      */
     _model.dispatch(new ModelEvent(_model, ModelEvent.Type.CONNECTED));
+
+    if (runtime.hasListeners())
+      runtime.dispatch(new ACTRRuntimeEvent(_model,
+          ACTRRuntimeEvent.Type.MODEL_STARTED, null));
   }
 
   protected void shutDown(Exception deferred)
@@ -155,8 +165,8 @@ public class DefaultModelRunner implements Runnable
   {
     if (Double.isNaN(waitForTime)) return 0;
 
-    double rtn = ACTRRuntime.getRuntime().getClock(_model).waitForTime(
-        waitForTime);
+    double rtn = ACTRRuntime.getRuntime().getClock(_model)
+        .waitForTime(waitForTime);
 
     return rtn;
   }

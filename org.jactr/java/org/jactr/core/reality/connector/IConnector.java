@@ -37,4 +37,8 @@ public interface IConnector
 
   public abstract IClock getClock(IModel model);
 
+  public IClockConfigurator getClockConfigurator();
+
+  public void setClockConfigurator(IClockConfigurator clockConfig);
+
 }

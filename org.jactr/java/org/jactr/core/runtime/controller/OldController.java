@@ -435,6 +435,18 @@ public class OldController //implements IController
       {
         if (LOGGER.isDebugEnabled()) LOGGER.debug("runtime suspended");
       }
+
+      public void modelStarted(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
+
+      public void modelStopped(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
     };
   }
 
@@ -1002,7 +1014,7 @@ public class OldController //implements IController
             modelRunner.run();
           }
           finally
-          { 
+          {
             destroyModelRunner(modelRunner, model);
           }
         }

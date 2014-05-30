@@ -15,6 +15,7 @@ package org.jactr.core.queue.timedevents;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.commonreality.time.impl.BasicClock;
 import org.jactr.core.queue.ITimedEvent;
 
 /**
@@ -69,8 +70,8 @@ public class AbstractTimedEvent implements ITimedEvent
    */
   public void setTimes(double start, double end)
   {
-    _startTime = start;
-    _endTime = end;
+    _startTime = BasicClock.constrainPrecision(start);
+    _endTime = BasicClock.constrainPrecision(end);
   }
 
   /**

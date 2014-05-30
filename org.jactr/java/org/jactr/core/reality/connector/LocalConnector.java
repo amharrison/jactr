@@ -23,6 +23,7 @@ import org.commonreality.time.IClock;
 import org.commonreality.time.impl.SharedClock;
 import org.commonreality.time.impl.WrappedClock;
 import org.jactr.core.model.IModel;
+import org.jactr.core.reality.ACTRAgent;
 
 /**
  * @author developer
@@ -35,12 +36,32 @@ public class LocalConnector implements IConnector
   static private final Log  LOGGER = LogFactory.getLog(LocalConnector.class);
 
   private final SharedClock _defaultClock;
-  private Map<IModel, WrappedClock> _clocks;
+
+  private Map<IModel, IClock> _clocks;
+
+  private IClockConfigurator        _configurator;
 
   public LocalConnector()
   {
     _defaultClock = new SharedClock();
-    _clocks = new ConcurrentHashMap<IModel, WrappedClock>();
+    _clocks = new ConcurrentHashMap<IModel, IClock>();
+    setClockConfigurator(new IClockConfigurator() {
+
+      public void release(IModel model, IClock clock)
+      {
+
+      }
+
+      public IClock getClockFor(IModel model, IClock defaultClock)
+      {
+        return new WrappedClock(defaultClock);
+      }
+
+      public IClock getClockFor(IModel model, ACTRAgent agent)
+      {
+        return agent.getClock();
+      }
+    });
 //    _defaultClock.setTime(-1);
   }
 
@@ -50,7 +71,10 @@ public class LocalConnector implements IConnector
   public void connect(IModel model)
   {
     _defaultClock.addOwner(Thread.currentThread());
-    _clocks.put(model, new WrappedClock(_defaultClock));
+
+    IClock clock = getClockConfigurator().getClockFor(model, _defaultClock);
+
+    _clocks.put(model, clock);
   }
 
   /**
@@ -59,7 +83,9 @@ public class LocalConnector implements IConnector
   public void disconnect(IModel model)
   {
     _defaultClock.removeOwner(Thread.currentThread());
-    _clocks.remove(model);
+    IClock defined = _clocks.remove(model);
+
+    getClockConfigurator().release(model, defined);
 
     if (_defaultClock.getOwners().size() == 0)
     {
@@ -108,6 +134,16 @@ public class LocalConnector implements IConnector
   public void stop()
   {
 
+  }
+
+  public IClockConfigurator getClockConfigurator()
+  {
+    return _configurator;
+  }
+
+  public void setClockConfigurator(IClockConfigurator clockConfig)
+  {
+    _configurator = clockConfig;
   }
 
 }

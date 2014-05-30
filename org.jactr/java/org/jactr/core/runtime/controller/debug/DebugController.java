@@ -191,6 +191,18 @@ public class DebugController extends DefaultController implements
 
       }
 
+      public void modelStarted(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
+
+      public void modelStopped(ACTRRuntimeEvent event)
+      {
+        // TODO Auto-generated method stub
+
+      }
+
     };
 
     _modelListener = new ModelListenerAdaptor() {

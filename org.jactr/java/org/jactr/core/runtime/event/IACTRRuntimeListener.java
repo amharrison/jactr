@@ -18,18 +18,64 @@ import java.util.EventListener;
 
 public interface IACTRRuntimeListener extends EventListener
 {
-   
+
+  /**
+   * called anytime a model is added to the runtime
+   * 
+   * @param event
+   */
   public void modelAdded(ACTRRuntimeEvent event);
   
+  /**
+   * when model is removed
+   * 
+   * @param event
+   */
   public void modelRemoved(ACTRRuntimeEvent event);
   
+  /**
+   * after at least one model has starteed
+   * 
+   * @param event
+   */
   public void runtimeStarted(ACTRRuntimeEvent event);
   
+  /**
+   * after the last model has stopped
+   * 
+   * @param event
+   */
   public void runtimeStopped(ACTRRuntimeEvent event);
   
+  /**
+   * after last model has suspended
+   * 
+   * @param event
+   */
   public void runtimeSuspended(ACTRRuntimeEvent event);
   
+  /**
+   * after last model resumes
+   * 
+   * @param event
+   */
   public void runtimeResumed(ACTRRuntimeEvent event);
+
+  /**
+   * after model has started
+   * 
+   * @param event
+   */
+  public void modelStarted(ACTRRuntimeEvent event);
+
+  /**
+   * after model has stopped, and all its events (stopped, disconnected) have
+   * been fired, this will be called (but before runtimeStopped if this is th
+   * elast model)
+   * 
+   * @param event
+   */
+  public void modelStopped(ACTRRuntimeEvent event);
 }
 
 

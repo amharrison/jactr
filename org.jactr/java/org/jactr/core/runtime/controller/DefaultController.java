@@ -71,6 +71,26 @@ public class DefaultController implements IController
       {
         super.modelRemoved(event);
       }
+
+      @Override
+      public void modelStopped(ACTRRuntimeEvent event)
+      {
+        IModel model = event.getModel();
+        model.removeListener(_modelListener);
+
+        try
+        {
+          _lock.lock();
+          _activeThreads.remove(Thread.currentThread());
+        }
+        finally
+        {
+          _lock.unlock();
+        }
+
+        _state.stopped(model);
+      }
+
     };
     _modelListener = new ModelListener(_state);
   }
@@ -163,6 +183,7 @@ public class DefaultController implements IController
     Runnable actual = new Runnable() {
       public void run()
       {
+        ACTRRuntime runtime = ACTRRuntime.getRuntime();
         try
         {
           _lock.lock();
@@ -178,28 +199,23 @@ public class DefaultController implements IController
         try
         {
           model.addListener(_modelListener, ExecutorServices.INLINE_EXECUTOR);
+
+          // if (runtime.hasListeners())
+          // runtime.dispatch(new ACTRRuntimeEvent(model,
+          // ACTRRuntimeEvent.Type.MODEL_STARTED, null));
+          //
+          // we rely upon the model runner to fire that first event.
+
           runner.run();
         }
         finally
         {
+          if (runtime.hasListeners())
+            runtime.dispatch(new ACTRRuntimeEvent(model,
+                ACTRRuntimeEvent.Type.MODEL_STOPPED, null));
+
           destroyModelRunnable(model, runner);
           destroyExecutorService(model, service);
-
-          try
-          {
-            _lock.lock();
-            _activeThreads.remove(Thread.currentThread());
-          }
-          finally
-          {
-            _lock.unlock();
-          }
-
-          /*
-           * remove our listener and possibly shutdown the runtime
-           */
-          model.removeListener(_modelListener);
-          _state.stopped(model);
         }
       }
     };

@@ -28,7 +28,7 @@ public class ACTRRuntimeEvent extends
   static private final Log LOGGER = LogFactory.getLog(ACTRRuntimeEvent.class);
 
   static public enum Type {
-    MODEL_ADDED, MODEL_REMOVED, STARTED, STOPPED, SUSPENDED, RESUMED
+    MODEL_ADDED, MODEL_REMOVED, STARTED, STOPPED, SUSPENDED, RESUMED, MODEL_STARTED, MODEL_STOPPED
   };
 
   private Type   _type;
@@ -93,6 +93,12 @@ public class ACTRRuntimeEvent extends
         break;
       case STOPPED:
         listener.runtimeStopped(this);
+        break;
+      case MODEL_STARTED:
+        listener.modelStarted(this);
+        break;
+      case MODEL_STOPPED:
+        listener.modelStopped(this);
         break;
       default:
         if (LOGGER.isWarnEnabled())

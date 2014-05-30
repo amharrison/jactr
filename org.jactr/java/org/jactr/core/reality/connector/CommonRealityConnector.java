@@ -26,7 +26,6 @@ import org.commonreality.reality.control.RealityShutdown;
 import org.commonreality.reality.control.RealityStartup;
 import org.commonreality.time.IClock;
 import org.commonreality.time.impl.BasicClock;
-import org.commonreality.time.impl.SlavedClock;
 import org.jactr.core.model.IModel;
 import org.jactr.core.reality.ACTRAgent;
 
@@ -50,16 +49,45 @@ public class CommonRealityConnector implements IConnector
 
   protected Map<IModel, ACTRAgent> _agentInterfaces;
 
-  protected Map<IModel, IClock>    _disconnectedModels;
+  // protected Map<IModel, IClock> _disconnectedModels;
 
   protected BasicClock             _defaultClock;
+
+  protected Map<IModel, IClock>    _allClocks;
+
+  protected IClockConfigurator     _clockConfig;
 
   public CommonRealityConnector()
   {
     _defaultClock = new BasicClock();
     _defaultClock.setTime(-1);
     _agentInterfaces = new ConcurrentHashMap<IModel, ACTRAgent>();
-    _disconnectedModels = new ConcurrentHashMap<IModel, IClock>();
+    // _disconnectedModels = new ConcurrentHashMap<IModel, IClock>();
+    _allClocks = new ConcurrentHashMap<IModel, IClock>();
+    setClockConfigurator(new IClockConfigurator() {
+
+      public IClock getClockFor(IModel model, ACTRAgent agent)
+      {
+        return agent.getClock();
+      }
+
+      /*
+       * by default, we don't support nested clock (non-Javadoc)
+       * @see
+       * org.jactr.core.reality.connector.IClockConfigurator#getClockFor(org
+       * .jactr.core.model.IModel, org.commonreality.time.IClock)
+       */
+      public IClock getClockFor(IModel model, IClock defaultClock)
+      {
+        return null;
+      }
+
+      public void release(IModel model, IClock clock)
+      {
+        // noop
+      }
+
+    });
   }
 
   /**
@@ -81,27 +109,6 @@ public class CommonRealityConnector implements IConnector
   public void stop()
   {
     IReality reality = CommonReality.getReality();
-    // try
-    // {
-    // // already shutdown?
-    // if (reality.getState().equals(State.UNKNOWN))
-    // {
-    // if (LOGGER.isWarnEnabled()) LOGGER.warn("CR is already shutdown");
-    // return;
-    // }
-    //
-    // if (reality.stateMatches(State.STARTED, State.SUSPENDED))
-    // {
-    // reality.stop();
-    // reality.waitForState(State.STOPPED);
-    // }
-    //
-    // reality.shutdown();
-    // }
-    // catch (Exception e)
-    // {
-    // throw new RuntimeException("could not stop common reality ", e);
-    // }
 
     if (reality != null) new RealityShutdown(reality, true).run();
   }
@@ -129,6 +136,8 @@ public class CommonRealityConnector implements IConnector
       {
         _agentInterfaces.put(model, agentInterface);
 
+        _allClocks.put(model, _clockConfig.getClockFor(model, agentInterface));
+
         if (LOGGER.isDebugEnabled())
           LOGGER.debug("connected, waiting for start");
 
@@ -139,35 +148,32 @@ public class CommonRealityConnector implements IConnector
       }
       else
       {
-        /*
-         * if no agent was found, then common reality has no knowledge of this
-         * particular model. This can occur in master/slave scenarios (model in
-         * model) we could create an agent and connect to CR, but that might
-         * propogate the agency through the system and the sensors unlikely to
-         * be configured for that. Instead, we create a slave clock based off of
-         * any existing clock (if none, then use the default clock and warn)
-         */
-        String clockOwner = "default";
         IClock baseClock = _defaultClock;
-        /*
-         * find the clock to use
-         */
-        if (_agentInterfaces.size() > 0)
+
+        if (LOGGER.isDebugEnabled())
+          LOGGER.debug(String.format(
+              "Unexpected model %s, not common reality agent configured.",
+              model.getName()));
+
+        IClock assignedClock = _clockConfig.getClockFor(model, baseClock);
+
+        if (assignedClock != null)
         {
-          Map.Entry<IModel, ACTRAgent> entry = _agentInterfaces.entrySet()
-              .iterator().next();
-          clockOwner = entry.getKey().getName();
-          baseClock = entry.getValue().getClock();
+          _allClocks.put(model, assignedClock);
+          if (LOGGER.isDebugEnabled())
+            LOGGER.debug(String
+                .format("Running the model using provided clock"));
+        }
+        else
+        {
+          if (LOGGER.isDebugEnabled())
+            LOGGER.debug(String.format("Unable to run this model. Exception"));
+
+          throw new RuntimeException(String.format(
+              "No clue how to hook up %s using current IConnector",
+              model.getName()));
         }
 
-        if (LOGGER.isWarnEnabled())
-          LOGGER
-              .warn(String
-                  .format(
-                      "No IAgent configured for %s, connecting as disembodied using the clock from %s",
-                      model, clockOwner));
-
-        _disconnectedModels.put(model, new SlavedClock(baseClock));
       }
 
       if (LOGGER.isDebugEnabled()) LOGGER.debug("started!!");
@@ -175,6 +181,7 @@ public class CommonRealityConnector implements IConnector
     catch (Exception e)
     {
       _agentInterfaces.remove(model);
+      _allClocks.remove(model);
 
       throw new RuntimeException("Could not connect " + model + " to reality",
           e);
@@ -186,6 +193,9 @@ public class CommonRealityConnector implements IConnector
    */
   public void disconnect(IModel model)
   {
+    IClock clock = _allClocks.remove(model);
+    if (clock != null) getClockConfigurator().release(model, clock);
+
     // now we can disconnect from reality
     IAgent agentInterface = getAgent(model);
     if (agentInterface != null)
@@ -200,8 +210,6 @@ public class CommonRealityConnector implements IConnector
         throw new RuntimeException("Could not disconnect " + model
             + " from reality", e);
       }
-    else
-      _disconnectedModels.remove(model);
   }
 
   protected void cleanDisconnect(IAgent agent)
@@ -247,13 +255,21 @@ public class CommonRealityConnector implements IConnector
   {
     if (model == null) return _defaultClock;
 
-    IAgent agentInterface = getAgent(model);
-    if (agentInterface != null) return agentInterface.getClock();
+    IClock rtn = _allClocks.get(model);
 
-    IClock disconnected = _disconnectedModels.get(model);
-    if (disconnected != null) return disconnected;
+    if (rtn == null) rtn = _defaultClock;
 
-    return _defaultClock;
+    return rtn;
+  }
+
+  public IClockConfigurator getClockConfigurator()
+  {
+    return _clockConfig;
+  }
+
+  public void setClockConfigurator(IClockConfigurator clockConfig)
+  {
+    _clockConfig = clockConfig;
   }
 
 }

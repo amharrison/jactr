@@ -748,9 +748,8 @@ public class DefaultSearchSystem implements ISearchSystem
     Collection<IChunk> container = Collections.EMPTY_LIST;
 
     if (typeValueMap != null) container = typeValueMap.not(slot.getValue());
+
     rtn.addComposited(container);
-
-
 
     // now let's snag all the rest
     try

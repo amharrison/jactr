@@ -192,9 +192,9 @@ public class RuntimeState
         model.removeListener(this);
       }
     };
-    
+
     model.addListener(actualStart, ExecutorServices.INLINE_EXECUTOR);
-    
+
     try
     {
       _lock.lock();
@@ -206,10 +206,10 @@ public class RuntimeState
     {
       _lock.unlock();
     }
-    
+
     /*
-     * call the runnable and connect reality.. but we dont fire
-     * the runtime started until actuallyStarted()
+     * call the runnable and connect reality.. but we dont fire the runtime
+     * started until actuallyStarted()
      */
     // if(shouldFireStart)
     // {
@@ -227,22 +227,22 @@ public class RuntimeState
     // if (runnable != null) runnable.run();
     // }
   }
-  
+
   private void actuallyStarted(IModel model)
   {
     boolean shouldFireEvent = false;
     try
     {
-     _lock.lock();
-     if (_startingModels.remove(model)) _activeModels.add(model);
-     shouldFireEvent = _activeModels.size()==1;
+      _lock.lock();
+      if (_startingModels.remove(model)) _activeModels.add(model);
+      shouldFireEvent = _activeModels.size() == 1;
     }
     finally
     {
       _lock.unlock();
     }
-    
-    if(shouldFireEvent)
+
+    if (shouldFireEvent)
     {
       ACTRRuntime runtime = ACTRRuntime.getRuntime();
       if (runtime.hasListeners())
@@ -250,75 +250,76 @@ public class RuntimeState
     }
   }
 
-//  public void started(IModel model)
-//  {
-//    boolean shouldFireStart = false;
-//
-//    /*
-//     * we don't mark the runtime as actually starting until there is a model
-//     * in the running state, which means it must have connected to CR and fully initialized
-//     * first.
-//     */
-//    IModelListener actualStart = new ModelListenerAdaptor() {
-//      public void modelStarted(ModelEvent event)
-//      {
-//        IModel model = event.getSource();
-//        try
-//        {
-//          _lock.lock();
-//          if (_startingModels.remove(model)) _activeModels.add(model);
-//        }
-//        finally
-//        {
-//          _lock.unlock();
-//        }
-//        /*
-//         * remove the listener
-//         */
-//        model.removeListener(this);
-//      }
-//    };
-//
-//
-//
-//    try
-//    {
-//      _lock.lock();
-//      _startingModels.add(model);
-//      shouldFireStart = _startingModels.size() == 1;
-//    }
-//    finally
-//    {
-//      _lock.unlock();
-//    }
-//
-//    /*
-//     * we can fire this late because nothing will have happened in the model
-//     * yet. If we fire early, we run the risk of duplicate start events since we
-//     * cant run from within the lock
-//     */
-//    if (shouldFireStart)
-//    {
-//      ACTRRuntime runtime = ACTRRuntime.getRuntime();
-//
-//      /*
-//       * connect to CR or local
-//       */
-//      runtime.getConnector().start();
-//
-//      /*
-//       * and the custom start up
-//       */
-//      Runnable runnable = runtime.getOnStart();
-//      if (runnable != null) runnable.run();
-//
-//      /*
-//       * finally notify
-//       */
-//      if (runtime.hasListeners())
-//        runtime.dispatch(new ACTRRuntimeEvent(ACTRRuntimeEvent.Type.STARTED));
-//    }
-//  }
+  // public void started(IModel model)
+  // {
+  // boolean shouldFireStart = false;
+  //
+  // /*
+  // * we don't mark the runtime as actually starting until there is a model
+  // * in the running state, which means it must have connected to CR and fully
+  // initialized
+  // * first.
+  // */
+  // IModelListener actualStart = new ModelListenerAdaptor() {
+  // public void modelStarted(ModelEvent event)
+  // {
+  // IModel model = event.getSource();
+  // try
+  // {
+  // _lock.lock();
+  // if (_startingModels.remove(model)) _activeModels.add(model);
+  // }
+  // finally
+  // {
+  // _lock.unlock();
+  // }
+  // /*
+  // * remove the listener
+  // */
+  // model.removeListener(this);
+  // }
+  // };
+  //
+  //
+  //
+  // try
+  // {
+  // _lock.lock();
+  // _startingModels.add(model);
+  // shouldFireStart = _startingModels.size() == 1;
+  // }
+  // finally
+  // {
+  // _lock.unlock();
+  // }
+  //
+  // /*
+  // * we can fire this late because nothing will have happened in the model
+  // * yet. If we fire early, we run the risk of duplicate start events since we
+  // * cant run from within the lock
+  // */
+  // if (shouldFireStart)
+  // {
+  // ACTRRuntime runtime = ACTRRuntime.getRuntime();
+  //
+  // /*
+  // * connect to CR or local
+  // */
+  // runtime.getConnector().start();
+  //
+  // /*
+  // * and the custom start up
+  // */
+  // Runnable runnable = runtime.getOnStart();
+  // if (runnable != null) runnable.run();
+  //
+  // /*
+  // * finally notify
+  // */
+  // if (runtime.hasListeners())
+  // runtime.dispatch(new ACTRRuntimeEvent(ACTRRuntimeEvent.Type.STARTED));
+  // }
+  // }
 
   public void stopped(IModel model)
   {
@@ -333,6 +334,10 @@ public class RuntimeState
 
         fireStopped = _inactiveModels.containsAll(runtime.getModels());
       }
+      else if (LOGGER.isWarnEnabled())
+        LOGGER.warn(String.format(
+            "%s has stopped, but we have no record of it running or starting",
+            model.getName()));
     }
     finally
     {
