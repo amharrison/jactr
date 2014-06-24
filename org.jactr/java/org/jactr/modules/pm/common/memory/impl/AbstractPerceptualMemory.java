@@ -416,26 +416,35 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
 
     boolean firstRun = true;
     for (IFeatureMap featureMap : featureMaps)
-      if (featureMap.isInterestedIn(request))
+      try
       {
-        featureMap.normalizeRequest(request);
-
-        candidates.clear();
-        featureMap.getCandidateRealObjects(request, candidates);
-
-        if (firstRun)
-          container.addAll(candidates);
-        else
-          container.retainAll(candidates);
-
-        firstRun = false;
-        if (container.size() == 0)
+        if (featureMap.isInterestedIn(request))
         {
-          if (LOGGER.isDebugEnabled())
-            LOGGER.debug("No candidates were found after checking "
-                + featureMap + ". aborting search.");
-          break;
+          featureMap.normalizeRequest(request);
+
+          candidates.clear();
+          featureMap.getCandidateRealObjects(request, candidates);
+
+          if (firstRun)
+            container.addAll(candidates);
+          else
+            container.retainAll(candidates);
+
+          firstRun = false;
+
+          if (container.size() == 0)
+          {
+            if (LOGGER.isDebugEnabled())
+              LOGGER.debug("No candidates were found after checking "
+                  + featureMap + ". aborting search.");
+            break;
+          }
         }
+      }
+      catch (Exception e)
+      {
+        LOGGER.error(String.format("Failed to extract candidates from %s ",
+            featureMap.getClass().getSimpleName()), e);
       }
 
     FastSet.recycle(candidates);

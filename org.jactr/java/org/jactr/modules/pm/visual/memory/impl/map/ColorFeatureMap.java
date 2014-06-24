@@ -86,8 +86,9 @@ public class ColorFeatureMap extends AbstractVisualFeatureMap<Color[]>
     catch (UnknownPropertyNameException unknown)
     {
       if (LOGGER.isDebugEnabled())
-        LOGGER.debug("Could not find coloring info for "
-            + afferentObject.getIdentifier(), unknown);
+        LOGGER.debug(
+            "Could not find coloring info for "
+                + afferentObject.getIdentifier(), unknown);
       return new Color[0];
     }
   }
@@ -101,10 +102,18 @@ public class ColorFeatureMap extends AbstractVisualFeatureMap<Color[]>
     FastSet<IIdentifier> tmp = FastSet.newInstance();
     for (IConditionalSlot slot : request.getConditionalSlots())
       if (slot.getName().equalsIgnoreCase(slotName))
-        if (slot.getValue() instanceof IChunk)
-        {
+      {
+        Object slotValue = slot.getValue();
+        Color value = null;
+
+        if (slotValue instanceof IChunk || slotValue == null)
+          value = _cache.getColor((IChunk) slotValue);
+        else if (LOGGER.isWarnEnabled())
+          LOGGER.warn(String
+              .format("color feature map requires null or color chunk values"));
+
           tmp.clear();
-          Color value = _cache.getColor((IChunk) slot.getValue());
+
           switch (slot.getCondition())
           {
             case IConditionalSlot.NOT_EQUALS:
@@ -126,8 +135,6 @@ public class ColorFeatureMap extends AbstractVisualFeatureMap<Color[]>
           else
             results.retainAll(tmp);
         }
-        else
-          LOGGER.warn(slot + " value is not a number");
 
     FastSet.recycle(tmp);
   }
@@ -135,7 +142,8 @@ public class ColorFeatureMap extends AbstractVisualFeatureMap<Color[]>
   protected void not(Color color, Set<IIdentifier> container)
   {
     for (Map.Entry<Color, Set<IIdentifier>> entry : _valueMap.entrySet())
-      if (!color.equals(entry.getKey())) container.addAll(entry.getValue());
+      if (color == null && entry.getKey() != null
+          || !color.equals(entry.getKey())) container.addAll(entry.getValue());
   }
 
   protected void equals(Color color, Set<IIdentifier> container)
@@ -196,9 +204,11 @@ public class ColorFeatureMap extends AbstractVisualFeatureMap<Color[]>
   {
     for (IConditionalSlot slot : request.getConditionalSlots())
       if (slot.getName().equalsIgnoreCase(IVisualModule.COLOR_SLOT))
-        if (slot.getValue() instanceof IChunk)
+      {
+        Object slotValue = slot.getValue();
+        if (slotValue instanceof IChunk || slotValue == null)
         {
-          Color value = _cache.getColor((IChunk) slot.getValue());
+          Color value = _cache.getColor((IChunk) slotValue);
           switch (slot.getCondition())
           {
             case IConditionalSlot.NOT_EQUALS:
@@ -213,6 +223,7 @@ public class ColorFeatureMap extends AbstractVisualFeatureMap<Color[]>
               break;
           }
         }
+      }
 
     return true;
   }
@@ -220,7 +231,7 @@ public class ColorFeatureMap extends AbstractVisualFeatureMap<Color[]>
   public void normalizeRequest(ChunkTypeRequest request)
   {
     // TODO Auto-generated method stub
-    
+
   }
 
 }
