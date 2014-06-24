@@ -11,7 +11,8 @@ import org.jactr.core.slot.ISlot;
 
 /**
  * takes a chunk request and automatically expands it to the chunktype request
- * and resubmits it.
+ * and resubmits it. This is a simple way to prevent modelers from trying to
+ * directly add a chunk.
  * 
  * @author harrison
  */

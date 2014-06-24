@@ -47,6 +47,14 @@ public class ExecutorServices
 
   static final public ExecutorService         INLINE_EXECUTOR = new InlineExecutor();
 
+  static final public Runnable                NOOP_RUNNABLE   = new Runnable() {
+
+                                                                public void run()
+                                                                {
+
+                                                                }
+                                                              };
+
   static private Map<String, ExecutorService> _executors      = new TreeMap<String, ExecutorService>();
 
   static private boolean                      _isShuttingDown = false;

@@ -20,27 +20,36 @@ import org.jactr.core.queue.timedevents.IBufferBasedTimedEvent;
  * {@link #startRequest(IRequest, IActivationBuffer, double)} and
  * {@link #finishRequest(IRequest, IActivationBuffer, Object)}. This makes it
  * easier to implement asynchronous requests that start a computation and then
- * later harvest the results.<br>
+ * later harvest the results.<br/>
+ * <br/>
  * To make derived classes asynchronous, merely override
  * {@link #isAsynchronous()} to return true, and use
  * {@link #computeCompletionTime(double, IRequest, IActivationBuffer)} to return
  * when the system should call
- * {@link #finishRequest(IRequest, IActivationBuffer, Object)}.<br>
+ * {@link #finishRequest(IRequest, IActivationBuffer, Object)}.<br/>
+ * <br/>
  * If {@link #finishRequest(IRequest, IActivationBuffer, Object)} requires some
- * value from {@link #startRequest(IRequest, IActivationBuffer, double)} they both have
- * an object that can be passed from one to the other.<br>
+ * value from {@link #startRequest(IRequest, IActivationBuffer, double)} they
+ * both have an object that can be passed from one to the other.<br/>
+ * <br/>
  * The asynchrony is implemented by calling
- * {@link #startRequest(IRequest, IActivationBuffer, double)} and then queueing up a
- * {@link ITimedEvent} that will fire at
+ * {@link #startRequest(IRequest, IActivationBuffer, double)} and then queueing
+ * up a {@link ITimedEvent} that will fire at
  * {@link #computeCompletionTime(double, IRequest, IActivationBuffer)} which
- * will then call {@link #finishRequest(IRequest, IActivationBuffer, Object)}.
- * <br>
+ * will then call {@link #finishRequest(IRequest, IActivationBuffer, Object)}. <br/>
+ * <br/>
  * You can also configure the delegate to use blocking timed events to ensure
- * that the model clock does not advance beyond the harvest time (instead of relying
- * upon some blocking mechanism in {@link #finishRequest(IRequest, IActivationBuffer, Object)}.
- * However, if you do enable blocking timed events ({@link #setUseBlockingTimedEvents(boolean)}),
- * you must be sure that you call {@link #release()} in response to some event, otherwise
- * the model will deadlock.
+ * that the model clock does not advance beyond the harvest time (instead of
+ * relying upon some blocking mechanism in
+ * {@link #finishRequest(IRequest, IActivationBuffer, Object)}. However, if you
+ * do enable blocking timed events ({@link #setUseBlockingTimedEvents(boolean)}
+ * ), you must be sure that you call {@link #release()} in response to some
+ * event, otherwise the model will deadlock.<br/>
+ * <br/>
+ * <br/>
+ * This is for requested that are delayed in time (beyond the current cycle),
+ * such as visual requests. As opposed to buffers that accept new chunk
+ * insertions directly and immediately (like goal).
  * 
  * @author harrison
  */
@@ -69,24 +78,25 @@ public abstract class AsynchronousRequestDelegate implements IRequestDelegate
   protected void release()
   {
     if (_previousBlockingTimedEvent != null
-        && !_previousBlockingTimedEvent.hasAborted()) _previousBlockingTimedEvent.abort();
+        && !_previousBlockingTimedEvent.hasAborted())
+      _previousBlockingTimedEvent.abort();
   }
-  
+
   public void setUseBlockingTimedEvents(boolean use)
   {
     _useBlockingTimedEvents = use;
   }
-  
+
   public boolean isUsingBlockingTimedEvents()
   {
     return _useBlockingTimedEvents;
   }
-  
+
   public boolean isDelayingStart()
   {
     return _delayRequestStart;
   }
-  
+
   public void setDelayStart(boolean delayStart)
   {
     _delayRequestStart = delayStart;
@@ -113,7 +123,8 @@ public abstract class AsynchronousRequestDelegate implements IRequestDelegate
    * 
    * @param request
    * @param buffer
-   * @param requestTime TODO
+   * @param requestTime
+   *          TODO
    */
   abstract protected Object startRequest(IRequest request,
       IActivationBuffer buffer, double requestTime);
@@ -140,14 +151,14 @@ public abstract class AsynchronousRequestDelegate implements IRequestDelegate
   {
     release();
   }
-  
+
   public void clear()
   {
-   ITimedEvent event = getCurrentTimedEvent();
-   setCurrentTimedEvent(null);
-   
-   if(event!=null && !event.hasAborted() && !event.hasFired())
-     event.abort();
+    ITimedEvent event = getCurrentTimedEvent();
+    setCurrentTimedEvent(null);
+
+    if (event != null && !event.hasAborted() && !event.hasFired())
+      event.abort();
 
     release();
   }
@@ -215,7 +226,8 @@ public abstract class AsynchronousRequestDelegate implements IRequestDelegate
    * @see org.jactr.core.buffer.delegate.IRequestDelegate#request(org.jactr.core.production.request.IRequest,
    *      org.jactr.core.buffer.IActivationBuffer)
    */
-  final public boolean request(IRequest request, IActivationBuffer buffer, double requestTime)
+  final public boolean request(IRequest request, IActivationBuffer buffer,
+      double requestTime)
   {
     if (!isValid(request, buffer)) return false;
 
@@ -245,7 +257,7 @@ public abstract class AsynchronousRequestDelegate implements IRequestDelegate
     {
       ITimedEvent timedEvent = createFinishTimedEvent(start, finish, request,
           buffer, startReturn);
-      
+
       setCurrentTimedEvent(timedEvent);
 
       model.getTimedEventQueue().enqueue(timedEvent);
@@ -255,8 +267,8 @@ public abstract class AsynchronousRequestDelegate implements IRequestDelegate
   }
 
   /**
-   * called just before {@link #startRequest(IRequest, IActivationBuffer, double)} is
-   * called
+   * called just before
+   * {@link #startRequest(IRequest, IActivationBuffer, double)} is called
    * 
    * @param request
    * @param buffer
@@ -278,8 +290,8 @@ public abstract class AsynchronousRequestDelegate implements IRequestDelegate
       _previousBlockingTimedEvent = new BlockingTimedEvent(this, startTime,
           finishTime);
 
-      buffer.getModel().getTimedEventQueue().enqueue(
-          _previousBlockingTimedEvent);
+      buffer.getModel().getTimedEventQueue()
+          .enqueue(_previousBlockingTimedEvent);
     }
   }
 
@@ -317,7 +329,7 @@ public abstract class AsynchronousRequestDelegate implements IRequestDelegate
   {
     return _currentTimedEvent;
   }
-  
+
   protected void setCurrentTimedEvent(ITimedEvent event)
   {
     _currentTimedEvent = event;

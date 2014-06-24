@@ -21,7 +21,11 @@ import org.jactr.core.slot.ISlot;
 
 /**
  * takes a chunk type request creates a chunk, before inserting into the buffer
- * via {@link IActivationBuffer#addSourceChunk(org.jactr.core.chunk.IChunk)}.
+ * via {@link IActivationBuffer#addSourceChunk(org.jactr.core.chunk.IChunk)} . <br/>
+ * <br/>
+ * This is used when you have a buffer that accepts new chunk insertions
+ * directly and immediately (like goal). As opposed to a delayed request that
+ * takes some amount of time (beyond the current cycle).
  * 
  * @author harrison
  */
@@ -48,8 +52,10 @@ public class AddChunkTypeRequestDelegate extends AsynchronousRequestDelegate
   public boolean willAccept(IRequest request)
   {
     if (!(request instanceof ChunkTypeRequest)) return false;
-    
-    if(_chunkType!=null && !((ChunkTypeRequest)request).getChunkType().isA(_chunkType)) return false;
+
+    if (_chunkType != null
+        && !((ChunkTypeRequest) request).getChunkType().isA(_chunkType))
+      return false;
 
     return true;
   }
