@@ -388,7 +388,7 @@ public class JACTRCompiler extends TreeParser
         }
       }
       else if (!slotName.startsWith(":") && !validSlotNames.contains(slotName))
-        reportException(new CompilationWarning(slotName
+        reportException(new CompilationError(slotName
             + " is not a valid slot for " + slotDefiner + ". Possible :"
             + validSlotNames, id));
     }
