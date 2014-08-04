@@ -402,9 +402,9 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
     }
     catch (RejectedExecutionException e)
     {
-      if (LOGGER.isWarnEnabled())
+      if (LOGGER.isDebugEnabled())
         LOGGER
-            .warn(String
+            .debug(String
                 .format("Execution of clean disconnect was rejected. Already shutting down."));
     }
   }
