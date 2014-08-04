@@ -19,6 +19,7 @@ import java.util.TreeMap;
 import org.jactr.core.module.asynch.IAsynchronousModule;
 import org.jactr.io.participant.impl.BasicASTParticipant;
 import org.jactr.modules.pm.aural.AbstractAuralModule;
+import org.jactr.modules.pm.aural.DefaultAuralEncodingTimeEquation;
 import org.jactr.modules.pm.aural.six.DefaultAuralModule6;
 import org.jactr.modules.pm.common.memory.IPerceptualMemory;
 
@@ -37,7 +38,7 @@ public class AuralModuleParticipant extends BasicASTParticipant
     parameters.put(AbstractAuralModule.ENABLE_BUFFER_STUFF_PARAM, "true");
     parameters.put(AbstractAuralModule.AURAL_DECAY_TIME_PARAM,"3");
     parameters.put(AbstractAuralModule.ENCODING_TIME_EQUATION_PARAM,
-        AbstractAuralModule.DefaultAuralEncodingTimeEquation.class.getName());
+        DefaultAuralEncodingTimeEquation.class.getName());
     parameters
         .put(IPerceptualMemory.NEW_FINST_ONSET_DURATION_TIME_PARAM, "0.5");
     parameters.put(IPerceptualMemory.FINST_DURATION_TIME_PARAM, "3");
