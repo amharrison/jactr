@@ -280,7 +280,7 @@ protected void validateSlotNames(String slotDefiner, Set<String> validSlotNames,
   }
   else
    if(!slotName.startsWith(":") && !validSlotNames.contains(slotName))
-    reportException(new CompilationWarning(slotName+" is not a valid slot for "+slotDefiner+". Possible :"+validSlotNames, id));
+    reportException(new CompilationError(slotName+" is not a valid slot for "+slotDefiner+". Possible :"+validSlotNames, id));
  }
 }
 
