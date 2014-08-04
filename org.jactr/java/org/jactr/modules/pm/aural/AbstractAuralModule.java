@@ -63,19 +63,6 @@ public abstract class AbstractAuralModule extends AbstractPerceptualModule
     implements IAuralModule, IParameterized
 {
 
-  public final class DefaultAuralEncodingTimeEquation implements
-      IAuralEncodingTimeEquation
-  {
-    public double computeEncodingTime(
-         IChunk soundChunk,
-         IAuralModule auralModule)
-     {
-       return getRecodeTime(soundChunk
-           .getSymbolicChunk()
-           .getChunkType());
-     }
-  }
-
   static public final String                                      ENABLE_BUFFER_STUFF_PARAM    = "EnableBufferStuff";
 
   static public final String                                      AURAL_DECAY_TIME_PARAM       = "AuralDecayTime";

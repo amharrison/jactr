@@ -45,7 +45,10 @@ public interface IActivationBufferListener extends EventListener,
   public void sourceChunksCleared(ActivationBufferEvent abe);
 
   /**
-   * called when a pattern is added to the buffer
+   * Fired when a request is made to a buffer. That is, the request has been
+   * accepted and possibly started. How far into the processing of the request
+   * the notification occurs depends upon the implementation of the request
+   * handler.
    * 
    * @param abe
    */
