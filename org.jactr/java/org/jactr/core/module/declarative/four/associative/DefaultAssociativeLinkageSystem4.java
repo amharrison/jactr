@@ -81,7 +81,7 @@ public class DefaultAssociativeLinkageSystem4 extends
 
         if (linkageSystem != null)
         {
-          ISubsymbolicChunk4 ssc4 = (ISubsymbolicChunk4) iChunk
+          ISubsymbolicChunk4 ssc4 = iChunk
               .getAdapter(ISubsymbolicChunk4.class);
           ssc4.addLink(linkageSystem.createLink(iChunk, iChunk));
         }
@@ -193,9 +193,9 @@ public class DefaultAssociativeLinkageSystem4 extends
       return;
     }
 
-    ISubsymbolicChunk4 sscI = (ISubsymbolicChunk4) iChunk.getSubsymbolicChunk()
+    ISubsymbolicChunk4 sscI = iChunk.getSubsymbolicChunk()
         .getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 sscJ = (ISubsymbolicChunk4) value.getSubsymbolicChunk()
+    ISubsymbolicChunk4 sscJ = value.getSubsymbolicChunk()
         .getAdapter(ISubsymbolicChunk4.class);
     IAssociativeLink sJI = sscJ.getIAssociation(iChunk);
 
@@ -208,6 +208,9 @@ public class DefaultAssociativeLinkageSystem4 extends
         if (LOGGER.isDebugEnabled())
           LOGGER.debug("Adding link between " + iChunk + " and " + value
               + " : " + sJI);
+        // since we are the linkage system, we can assume this is correct and
+        // not
+        // use linkageSystem.addLink
         sscI.addLink(sJI);
         sscJ.addLink(sJI);
       }

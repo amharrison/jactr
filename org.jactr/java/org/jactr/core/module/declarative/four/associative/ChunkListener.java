@@ -139,9 +139,9 @@ public class ChunkListener extends ChunkListenerAdaptor
   {
     double[] correction = new double[2];
 
-    ISubsymbolicChunk4 copySSC = (ISubsymbolicChunk4) copy
+    ISubsymbolicChunk4 copySSC = copy
         .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 masterSSC = (ISubsymbolicChunk4) master
+    ISubsymbolicChunk4 masterSSC = master
         .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
     
 
@@ -215,9 +215,9 @@ public class ChunkListener extends ChunkListenerAdaptor
       LOGGER.debug(String.format("%s merging into %s, processing %sLinks",
           copy, master, processJLinks ? "j" : "i"));
 
-    ISubsymbolicChunk4 copySSC = (ISubsymbolicChunk4) copy
+    ISubsymbolicChunk4 copySSC = copy
         .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 masterSSC = (ISubsymbolicChunk4) master
+    ISubsymbolicChunk4 masterSSC = master
         .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
 
     FastList<IAssociativeLink> links = FastList.newInstance();
@@ -253,7 +253,7 @@ public class ChunkListener extends ChunkListenerAdaptor
        * regardless of what we do with this, we need to remove it from the
        * otherChunk so that otherChunk doesn't link back to the merged chunk.
        */
-      ISubsymbolicChunk4 otherSSC = (ISubsymbolicChunk4) otherChunk
+      ISubsymbolicChunk4 otherSSC = otherChunk
           .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
 
       double fNiCj = oldLink.getFNICJ();
@@ -322,9 +322,11 @@ public class ChunkListener extends ChunkListenerAdaptor
         newLink.setCount(count);
         newLink.setFNICJ(fNiCj);
 
-        // add to both
-        otherSSC.addLink(newLink);
-        masterSSC.addLink(newLink);
+        // no longer make these calls directly
+        // otherSSC.addLink(newLink);
+        // masterSSC.addLink(newLink);
+
+        _linkageSystem.addLink(newLink);
 
         if (LOGGER.isDebugEnabled())
           LOGGER
@@ -339,8 +341,10 @@ public class ChunkListener extends ChunkListenerAdaptor
        * to be sure we remove the link entirely.
        */
       oldLink.setCount(1);
-      copySSC.removeLink(oldLink);
-      otherSSC.removeLink(oldLink);
+
+      _linkageSystem.removeLink(oldLink);
+      // copySSC.removeLink(oldLink);
+      // otherSSC.removeLink(oldLink);
     }
 
     FastList.recycle(links);
@@ -359,9 +363,9 @@ public class ChunkListener extends ChunkListenerAdaptor
       LOGGER.debug(String.format("%s, a copy of %s is being merged back in.",
           copy, master));
 
-    ISubsymbolicChunk4 selfSSC = (ISubsymbolicChunk4) copy
+    ISubsymbolicChunk4 selfSSC = copy
         .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 masterSSC = (ISubsymbolicChunk4) master
+    ISubsymbolicChunk4 masterSSC = master
         .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
 
     /**
@@ -399,9 +403,9 @@ public class ChunkListener extends ChunkListenerAdaptor
       LOGGER.debug(String.format("%s is now identical to %s. Merging.",
           identical, master));
 
-    ISubsymbolicChunk4 selfSSC = (ISubsymbolicChunk4) identical
+    ISubsymbolicChunk4 selfSSC = identical
         .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 masterSSC = (ISubsymbolicChunk4) master
+    ISubsymbolicChunk4 masterSSC = master
         .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
 
     /**

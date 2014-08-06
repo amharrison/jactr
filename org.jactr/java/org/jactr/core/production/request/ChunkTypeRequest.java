@@ -15,9 +15,14 @@ import org.jactr.core.model.IModel;
 import org.jactr.core.production.VariableBindings;
 import org.jactr.core.production.condition.CannotMatchException;
 import org.jactr.core.production.condition.match.ChunkTypeMatchFailure;
-import org.jactr.core.slot.IConditionalSlot;
 import org.jactr.core.slot.ISlot;
 
+/**
+ * request based on a chunktype and slot pattern. Predominantly used in
+ * specifying retrievals, but also chunktype based request from modules.
+ * 
+ * @author harrison
+ */
 public class ChunkTypeRequest extends SlotBasedRequest
 {
   /**
@@ -38,6 +43,18 @@ public class ChunkTypeRequest extends SlotBasedRequest
   {
     super(slots);
     _chunkType = chunkType;
+  }
+
+  /**
+   * create a request that directly mirrors this chunk. All of its slots are
+   * turned directly into equality conditions.
+   * 
+   * @param chunk
+   */
+  public ChunkTypeRequest(IChunk chunk)
+  {
+    this(chunk.getSymbolicChunk().getChunkType(), chunk.getSymbolicChunk()
+        .getSlots());
   }
 
   @Override

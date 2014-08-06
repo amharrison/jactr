@@ -100,7 +100,7 @@ public class DefaultAssociativeLinkageSystem implements
    */
   public void chunkWillBeDisposed(IChunk chunk)
   {
-    ISubsymbolicChunk4 ssc4 = (ISubsymbolicChunk4) chunk
+    ISubsymbolicChunk4 ssc4 = chunk
         .getAdapter(ISubsymbolicChunk4.class);
     if (ssc4 != null)
     {
@@ -136,12 +136,12 @@ public class DefaultAssociativeLinkageSystem implements
     ISubsymbolicChunk4 ssc4 = null;
 
     if (!iChunk.hasBeenDisposed())
-      ssc4 = (ISubsymbolicChunk4) iChunk.getAdapter(ISubsymbolicChunk4.class);
+      ssc4 = iChunk.getAdapter(ISubsymbolicChunk4.class);
 
     if (ssc4 != null) ssc4.removeLink(link);
 
     if (!jChunk.hasBeenDisposed())
-      ssc4 = (ISubsymbolicChunk4) jChunk.getAdapter(ISubsymbolicChunk4.class);
+      ssc4 = jChunk.getAdapter(ISubsymbolicChunk4.class);
 
     if (ssc4 != null) ssc4.removeLink(link);
   }
@@ -163,9 +163,9 @@ public class DefaultAssociativeLinkageSystem implements
 
     // zip through all of sources links
 
-    ISubsymbolicChunk4 sourceSSC = (ISubsymbolicChunk4) source
+    ISubsymbolicChunk4 sourceSSC = source
         .getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 destSSC = (ISubsymbolicChunk4) destination
+    ISubsymbolicChunk4 destSSC = destination
         .getAdapter(ISubsymbolicChunk4.class);
 
     if (sourceSSC != null && destSSC != null)
@@ -234,18 +234,42 @@ public class DefaultAssociativeLinkageSystem implements
           oldLink, newLink));
 
     // now add to both dest and the other side of the link
-    ((ISubsymbolicChunk4) dest.getAdapter(ISubsymbolicChunk4.class))
+    dest.getAdapter(ISubsymbolicChunk4.class)
         .addLink(newLink);
 
     if (sourceIsI && sourceIsJ)
       return;
     else if (sourceIsI)
-      ((ISubsymbolicChunk4) oldLink.getJChunk().getAdapter(
-          ISubsymbolicChunk4.class)).addLink(newLink);
+      oldLink.getJChunk().getAdapter(
+          ISubsymbolicChunk4.class).addLink(newLink);
     else if (sourceIsJ)
-      ((ISubsymbolicChunk4) oldLink.getIChunk().getAdapter(
-          ISubsymbolicChunk4.class)).addLink(newLink);
+      oldLink.getIChunk().getAdapter(
+          ISubsymbolicChunk4.class).addLink(newLink);
 
+  }
+
+  public void addLink(IAssociativeLink link)
+  {
+    IChunk sourceJ = link.getJChunk();
+    IChunk targetI = link.getIChunk();
+
+    ISubsymbolicChunk4 j4 = sourceJ.getAdapter(ISubsymbolicChunk4.class);
+    ISubsymbolicChunk4 i4 = targetI.getAdapter(ISubsymbolicChunk4.class);
+
+    j4.addLink(link);
+    i4.addLink(link);
+  }
+
+  public void removeLink(IAssociativeLink link)
+  {
+    IChunk sourceJ = link.getJChunk();
+    IChunk targetI = link.getIChunk();
+
+    ISubsymbolicChunk4 j4 = sourceJ.getAdapter(ISubsymbolicChunk4.class);
+    ISubsymbolicChunk4 i4 = targetI.getAdapter(ISubsymbolicChunk4.class);
+
+    j4.removeLink(link);
+    i4.removeLink(link);
   }
 
 }

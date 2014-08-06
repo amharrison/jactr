@@ -15,5 +15,5 @@ package org.jactr.core.utils;
 public interface IAdaptable
 {
 
-  public Object getAdapter(Class adapterClass);
+  public <T> T getAdapter(Class<T> adapterClass);
 }

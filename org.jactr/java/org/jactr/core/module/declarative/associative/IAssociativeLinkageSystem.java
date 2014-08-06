@@ -54,4 +54,20 @@ public interface IAssociativeLinkageSystem extends IInstallable
    * @param chunk
    */
   public void chunkWillBeDisposed(IChunk chunk);
+
+  /**
+   * add the link to the appropriate containers within the chunks. This is the
+   * only "right" way to add a link to a chunk.
+   * 
+   * @param link
+   */
+  public void addLink(IAssociativeLink link);
+
+  /**
+   * remove the link from the appropriate contains within the chunk. This is the
+   * only "right" way to remove a link to a chunk.
+   * 
+   * @param link
+   */
+  public void removeLink(IAssociativeLink link);
 }
