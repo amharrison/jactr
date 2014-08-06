@@ -25,6 +25,7 @@ import org.jactr.core.chunk.basic.AbstractSubsymbolicChunk;
 import org.jactr.core.chunk.link.IAssociativeLink;
 import org.jactr.core.event.ParameterEvent;
 import org.jactr.core.module.declarative.IDeclarativeModule;
+import org.jactr.core.module.declarative.associative.IAssociativeLinkageSystem;
 import org.jactr.core.module.declarative.four.IBaseLevelActivationEquation;
 import org.jactr.core.module.declarative.four.IDeclarativeModule4;
 import org.jactr.core.module.declarative.four.IRandomActivationEquation;
@@ -84,7 +85,7 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
         writeLock().lock();
         IDeclarativeModule decMod = _parentChunk.getModel()
             .getDeclarativeModule();
-        IDeclarativeModule4 dm = (IDeclarativeModule4) decMod
+        IDeclarativeModule4 dm = decMod
             .getAdapter(IDeclarativeModule4.class);
         if (dm == null)
         {
@@ -390,6 +391,9 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
       ACTRParameterHandler actrph = new ACTRParameterHandler(getParentChunk()
           .getModel());
 
+      IAssociativeLinkageSystem ls = getParentChunk().getModel()
+          .getDeclarativeModule().getAssociativeLinkageSystem();
+
       LinkParameterHandler lph = getParentChunk().getModel()
           .getDeclarativeModule().getAssociativeLinkageSystem()
           .getParameterHandler();
@@ -405,14 +409,7 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
         if (oldLink != null)
           oldLink.copy(l);
         else
-        {
-          addLink(l);
-          /*
-           * we also have to add it to the iChunk
-           */
-          ((ISubsymbolicChunk4) l.getIChunk().getSubsymbolicChunk()
-              .getAdapter(ISubsymbolicChunk4.class)).addLink(l);
-        }
+          ls.addLink(l);
       }
     }
     else
