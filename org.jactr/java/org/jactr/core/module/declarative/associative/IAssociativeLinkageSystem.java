@@ -5,6 +5,7 @@ import org.jactr.core.chunk.link.IAssociativeLink;
 import org.jactr.core.chunk.link.IAssociativeLinkEquation;
 import org.jactr.core.utils.IInstallable;
 import org.jactr.core.utils.parameter.LinkParameterHandler;
+import org.jactr.core.utils.parameter.LinkParameterProcessor;
 
 /*
  * default logging
@@ -45,8 +46,16 @@ public interface IAssociativeLinkageSystem extends IInstallable
       boolean copySourceIs, boolean copySourceJs);
 
   public IAssociativeLinkEquation getAssociativeLinkEquation();
-  
+
+  /**
+   * @deprecated use {@link #getParameterProcessor(IChunk)} instead
+   * @return
+   */
+  @Deprecated
   public LinkParameterHandler getParameterHandler();
+
+
+  public LinkParameterProcessor getParameterProcessor(IChunk sourceChunk);
 
   /**
    * this chunk will be disposed, clean up its links correctly.

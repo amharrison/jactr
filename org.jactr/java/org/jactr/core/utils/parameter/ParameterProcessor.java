@@ -72,7 +72,7 @@ public class ParameterProcessor<T>
     return _setFunction != null;
   }
 
-  public void setParameter(String value) throws ParameterException
+  public T setParameter(String value) throws ParameterException
   {
     if (!isSetable()) throw new ReadOnlyParameterException(_parameterName);
 
@@ -80,6 +80,7 @@ public class ParameterProcessor<T>
     {
       T fromString = getFromStringFunction().apply(value);
       getSetFunction().accept(fromString);
+      return fromString;
     }
     catch (Exception e)
     {

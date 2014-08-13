@@ -25,13 +25,14 @@ public class DefaultAdaptable implements IAdaptable
   static private final transient Log LOGGER = LogFactory
                                                 .getLog(DefaultAdaptable.class);
 
-  final private Map<Class, IAdaptableFactory>     _adapters  = new HashMap<Class, IAdaptableFactory>();
+  final private Map<Class<?>, IAdaptableFactory> _adapters  = new HashMap<Class<?>, IAdaptableFactory>();
 
-  final private Map<Class, Object>                _hardCache = new HashMap<Class, Object>();
+  final private Map<Class<?>, Object>            _hardCache = new HashMap<Class<?>, Object>();
 
-  final private Map<Class, SoftReference<Object>> _softCache = new HashMap<Class, SoftReference<Object>>();
+  final private Map<Class<?>, SoftReference<?>>  _softCache = new HashMap<Class<?>, SoftReference<?>>();
 
   
+  @SuppressWarnings("unchecked")
   public <T> T getAdapter(Class<T> adapterClass)
   {
     if (adapterClass.isAssignableFrom(getClass())) return (T) this;
@@ -40,7 +41,7 @@ public class DefaultAdaptable implements IAdaptable
     Object adapter = _hardCache.get(adapterClass);
     if (adapter != null) return (T) adapter;
 
-    SoftReference reference = _softCache.get(adapterClass);
+    SoftReference<?> reference = _softCache.get(adapterClass);
     if (reference != null) adapter = reference.get();
 
     if (adapter != null) return (T) adapter;
@@ -55,7 +56,7 @@ public class DefaultAdaptable implements IAdaptable
       if (factory.shouldCache())
         _hardCache.put(adapterClass, adapter);
       else if (factory.shouldSoftCache())
-        _softCache.put(adapterClass, new SoftReference(adapter));
+        _softCache.put(adapterClass, new SoftReference<Object>(adapter));
     }
     
 
@@ -63,9 +64,9 @@ public class DefaultAdaptable implements IAdaptable
   }
   
   
-  public void addAdapterFactory(IAdaptableFactory factory, Class[] forClasses)
+  public void addAdapterFactory(IAdaptableFactory factory, Class<?>[] forClasses)
   {
-    for (Class c : forClasses)
+    for (Class<?> c : forClasses)
     {
       IAdaptableFactory prior = _adapters.put(c, factory);
       if (prior != factory)
@@ -74,9 +75,10 @@ public class DefaultAdaptable implements IAdaptable
     }
   }
 
-  public void removeAdapterFactory(IAdaptableFactory factory, Class[] forClasses)
+  public void removeAdapterFactory(IAdaptableFactory factory,
+      Class<?>[] forClasses)
   {
-    for (Class c : forClasses)
+    for (Class<?> c : forClasses)
     {
       IAdaptableFactory prior = _adapters.remove(c);
       if (prior != factory)

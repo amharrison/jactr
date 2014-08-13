@@ -4,6 +4,7 @@ package org.jactr.core.utils.parameter;
  * default logging
  */
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
@@ -17,19 +18,19 @@ public class ParameterHelper
   static private final transient Log            LOGGER = LogFactory
                                                            .getLog(ParameterHelper.class);
 
-  final private Map<String, ParameterProcessor> _parameterProcessors;
+  final private Map<String, ParameterProcessor<?>> _parameterProcessors;
 
   final private Map<String, String>             _deferredParameters;
 
   public ParameterHelper()
   {
-    _parameterProcessors = new TreeMap<String, ParameterProcessor>();
+    _parameterProcessors = new TreeMap<String, ParameterProcessor<?>>();
     _deferredParameters = new TreeMap<String, String>();
   }
 
-  public void addProcessor(ParameterProcessor processor)
+  public void addProcessor(ParameterProcessor<?> processor)
   {
-    ParameterProcessor old = _parameterProcessors.put(processor
+    ParameterProcessor<?> old = _parameterProcessors.put(processor
         .getParameterName().toLowerCase(), processor);
     if (old != null)
       if (LOGGER.isDebugEnabled())
@@ -37,7 +38,7 @@ public class ParameterHelper
             old, processor.getParameterName(), processor));
   }
 
-  public void removeProcessor(ParameterProcessor processor)
+  public void removeProcessor(ParameterProcessor<?> processor)
   {
     _parameterProcessors.remove(processor.getParameterName().toLowerCase());
   }
@@ -45,7 +46,7 @@ public class ParameterHelper
   public void setParameter(String name, String value) throws ParameterException
   {
     String pName = name.toLowerCase();
-    ParameterProcessor processor = _parameterProcessors.get(pName);
+    ParameterProcessor<?> processor = _parameterProcessors.get(pName);
     if (processor != null)
     {
       _deferredParameters.remove(name);
@@ -59,7 +60,7 @@ public class ParameterHelper
   {
     String pName = name.toLowerCase();
     String value = null;
-    ParameterProcessor processor = _parameterProcessors.get(pName);
+    ParameterProcessor<?> processor = _parameterProcessors.get(pName);
     if (processor != null)
       value = processor.getParameter();
     else
@@ -68,5 +69,35 @@ public class ParameterHelper
     return value;
   }
 
+  /**
+   * returns all the parameter names for all parameter handlers that are setable
+   * and any known deferred parameters
+   * 
+   * @param container
+   */
+  public void getSetableParameterNames(Set<String> container)
+  {
+    container.addAll(_deferredParameters.keySet());
+    _parameterProcessors.values().forEach(p -> {
+      if (p.isSetable()) container.add(p.getParameterName());
+    });
+  }
 
+  /**
+   * return all the known parameter names
+   * 
+   * @param container
+   */
+  public void getParameterNames(Set<String> container)
+  {
+    container.addAll(_deferredParameters.keySet());
+    _parameterProcessors.values().forEach(p -> {
+      container.add(p.getParameterName());
+    });
+  }
+
+  public void getDeferredParameters(Map<String, String> container)
+  {
+    container.putAll(_deferredParameters);
+  }
 }

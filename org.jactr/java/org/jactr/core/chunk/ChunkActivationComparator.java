@@ -13,6 +13,8 @@
 
 package org.jactr.core.chunk;
 
+import java.util.Comparator;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.five.ISubsymbolicChunk5;
@@ -59,7 +61,7 @@ public class ChunkActivationComparator implements java.util.Comparator<IChunk>
     /*
      * exact same chunk
      */
-    if (one == two || (one != null && one.equals(two))) return 0;
+    if (one == two || one != null && one.equals(two)) return 0;
 
     ISubsymbolicChunk sc1 = one.getSubsymbolicChunk();
     ISubsymbolicChunk sc2 = two.getSubsymbolicChunk();
@@ -117,6 +119,12 @@ public class ChunkActivationComparator implements java.util.Comparator<IChunk>
   public void setChunkTypeRequest(ChunkTypeRequest p)
   {
     _pattern = p;
+  }
+
+  public Comparator<IChunk> reversed()
+  {
+    // TODO Auto-generated method stub
+    return null;
   }
 
 }

@@ -461,4 +461,45 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
           _parentChunk.getModel(), _parentChunk);
     return 0;
   }
+
+  @Override
+  public void getOutboundLinks(Collection<IAssociativeLink> container)
+  {
+    getIAssociations(container);
+  }
+
+  @Override
+  public long getNumberOfOutboundLinks()
+  {
+    return getNumberOfIAssociations();
+  }
+
+  @Override
+  public void getInboundLinks(Collection<IAssociativeLink> container)
+  {
+    getJAssociations(container);
+  }
+
+  @Override
+  public long getNumberOfInboundLinks()
+  {
+    return getNumberOfJAssociations();
+  }
+
+  @Override
+  public void getOutboundLinks(IChunk receiver,
+      Collection<IAssociativeLink> container)
+  {
+    IAssociativeLink link = getIAssociation(receiver);
+    if (link != null) container.add(link);
+
+  }
+
+  @Override
+  public void getInboundLinks(IChunk sender,
+      Collection<IAssociativeLink> container)
+  {
+    IAssociativeLink link = getJAssociation(sender);
+    if (link != null) container.add(link);
+  }
 }

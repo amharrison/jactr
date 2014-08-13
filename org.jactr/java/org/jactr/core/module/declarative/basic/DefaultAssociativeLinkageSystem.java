@@ -3,6 +3,9 @@ package org.jactr.core.module.declarative.basic;
 /*
  * default logging
  */
+import java.util.ArrayList;
+import java.util.Collection;
+
 import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
@@ -15,9 +18,12 @@ import org.jactr.core.chunk.link.DefaultAssociativeLinkEquation;
 import org.jactr.core.chunk.link.IAssociativeLink;
 import org.jactr.core.chunk.link.IAssociativeLinkEquation;
 import org.jactr.core.model.IModel;
+import org.jactr.core.module.declarative.associative.IAssociativeLinkContainer;
 import org.jactr.core.module.declarative.associative.IAssociativeLinkageSystem;
 import org.jactr.core.module.declarative.four.learning.DeclarativeModuleListener;
+import org.jactr.core.utils.parameter.ACTRParameterProcessor;
 import org.jactr.core.utils.parameter.LinkParameterHandler;
+import org.jactr.core.utils.parameter.LinkParameterProcessor;
 
 /**
  * creates {@link Link4} links, but does not install any code to
@@ -91,6 +97,29 @@ public class DefaultAssociativeLinkageSystem implements
   public LinkParameterHandler getParameterHandler()
   {
     return new LinkParameterHandler();
+  }
+
+  public LinkParameterProcessor getParameterProcessor(final IChunk sourceChunk)
+  {
+    return new LinkParameterProcessor(
+        ISubsymbolicChunk4.LINKS,
+        l -> {
+      IAssociativeLinkContainer container = sourceChunk.getSubsymbolicChunk().getAdapter(IAssociativeLinkContainer.class);
+      container.addLink(l);
+        },
+        () -> {
+          IAssociativeLinkContainer container = sourceChunk
+              .getSubsymbolicChunk()
+              .getAdapter(IAssociativeLinkContainer.class);
+          Collection<IAssociativeLink> lC = new ArrayList<IAssociativeLink>();
+          container.getOutboundLinks(sourceChunk, lC);
+          if (lC.size() > 0)
+            return lC.iterator().next();
+          else
+            return null;
+        },
+      new ACTRParameterProcessor("bsName",
+        null, null, sourceChunk.getModel()), sourceChunk);
   }
 
   /**

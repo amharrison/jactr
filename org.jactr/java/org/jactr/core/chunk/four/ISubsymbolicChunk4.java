@@ -18,6 +18,7 @@ import java.util.Collection;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISubsymbolicChunk;
 import org.jactr.core.chunk.link.IAssociativeLink;
+import org.jactr.core.module.declarative.associative.IAssociativeLinkContainer;
 import org.jactr.core.module.declarative.four.IBaseLevelActivationEquation;
 import org.jactr.core.module.declarative.four.IRandomActivationEquation;
 import org.jactr.core.module.declarative.four.ISpreadingActivationEquation;
@@ -29,7 +30,8 @@ import org.jactr.core.module.declarative.four.ISpreadingActivationEquation;
  * @author harrison
  * @created April 18, 2003
  */
-public interface ISubsymbolicChunk4 extends ISubsymbolicChunk
+public interface ISubsymbolicChunk4 extends ISubsymbolicChunk,
+    IAssociativeLinkContainer
 {
 
   /**
