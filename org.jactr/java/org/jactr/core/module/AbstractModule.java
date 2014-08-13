@@ -17,9 +17,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
+import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -148,16 +148,9 @@ public abstract class AbstractModule extends DefaultAdaptable implements
     return rtn;
   }
 
-  static public <T> Future<T> immediateReturn(T value)
+  static public <T> CompletableFuture<T> immediateReturn(T value)
   {
-    FutureTask<T> ft = new FutureTask<T>(new Runnable() {
-      public void run()
-      {
-        // noop
-      }
-    }, value);
-    ft.run();
-    return ft;
+    return CompletableFuture.completedFuture(value);
   }
 
   /**
@@ -167,7 +160,7 @@ public abstract class AbstractModule extends DefaultAdaptable implements
    * @param caller
    * @return
    */
-  static public <T> Future<T> immediateFuture(Callable<T> caller)
+  static public <T> CompletableFuture<T> immediateFuture(Callable<T> caller)
   {
     return delayedFuture(caller, ExecutorServices.INLINE_EXECUTOR);
   }
@@ -180,14 +173,29 @@ public abstract class AbstractModule extends DefaultAdaptable implements
    * @param executor
    * @return
    */
-  static public <T> Future<T> delayedFuture(Callable<T> caller,
+  static public <T> CompletableFuture<T> delayedFuture(Callable<T> caller,
       Executor executor)
   {
-    FutureTask<T> future = new FutureTask<T>(caller);
-    if (executor != null) executor.execute(future);
-    else
-      future.run();
-    
+    return delayedFuture(new Supplier<T>() {
+      public T get()
+      {
+        try
+        {
+          return caller.call();
+        }
+        catch (Exception e)
+        {
+          throw new RuntimeException(e);
+        }
+      }
+    }, executor);
+  }
+
+  static public <T> CompletableFuture<T> delayedFuture(Supplier<T> supplier,
+      Executor executor)
+  {
+    CompletableFuture<T> future = CompletableFuture.supplyAsync(supplier,
+        executor);
     return future;
   }
 

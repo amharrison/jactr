@@ -169,3 +169,4 @@ Require-Bundle: org.jactr.support;visibility:=reexport,
  org.commonreality,
  org.commonreality.mina,
  org.mozilla.javascript
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
