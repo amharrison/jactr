@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javolution.text.TextBuilder;
@@ -387,7 +387,7 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
         chunk = removedChunk;
 
         ISymbolicChunkType ct = sc.getChunkType().getSymbolicChunkType();
-        IRemovableSymbolicChunkType rct = (IRemovableSymbolicChunkType) ct
+        IRemovableSymbolicChunkType rct = ct
             .getAdapter(IRemovableSymbolicChunkType.class);
 
         if (rct != null) rct.removeChunk(chunk);
@@ -716,7 +716,7 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
    * @see org.jactr.core.module.declarative.IDeclarativeModule#findExactMatches(ChunkTypeRequest,
    *      java.util.Comparator, IChunkFilter)
    */
-  public Future<Collection<IChunk>> findExactMatches(
+  public CompletableFuture<Collection<IChunk>> findExactMatches(
       final ChunkTypeRequest request, final Comparator<IChunk> sorter,
       final IChunkFilter filter)
   {
@@ -734,7 +734,7 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
    * @see org.jactr.core.module.declarative.IDeclarativeModule#findPartialMatches(ChunkTypeRequest,
    *      java.util.Comparator, IChunkFilter)
    */
-  public Future<Collection<IChunk>> findPartialMatches(
+  public CompletableFuture<Collection<IChunk>> findPartialMatches(
       final ChunkTypeRequest request, final Comparator<IChunk> sorter,
       final IChunkFilter filter)
   {

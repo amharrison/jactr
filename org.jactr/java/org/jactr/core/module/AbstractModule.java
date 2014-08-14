@@ -194,6 +194,7 @@ public abstract class AbstractModule extends DefaultAdaptable implements
   static public <T> CompletableFuture<T> delayedFuture(Supplier<T> supplier,
       Executor executor)
   {
+    if (executor == null) executor = ExecutorServices.INLINE_EXECUTOR;
     CompletableFuture<T> future = CompletableFuture.supplyAsync(supplier,
         executor);
     return future;

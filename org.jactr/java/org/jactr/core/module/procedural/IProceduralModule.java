@@ -14,8 +14,8 @@
 package org.jactr.core.module.procedural;
 
 import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
 
 import org.jactr.core.buffer.IActivationBuffer;
 import org.jactr.core.module.IModule;
@@ -42,7 +42,7 @@ public interface IProceduralModule extends IModule
    * @param name
    * @return
    */
-  public Future<IProduction> createProduction(String name);
+  public CompletableFuture<IProduction> createProduction(String name);
 
   /**
    * add this production to procedural memory and check for duplicates
@@ -50,7 +50,7 @@ public interface IProceduralModule extends IModule
    * @param production
    * @return
    */
-  public Future<IProduction> addProduction(IProduction production);
+  public CompletableFuture<IProduction> addProduction(IProduction production);
 
   /**
    * return the named production
@@ -58,13 +58,13 @@ public interface IProceduralModule extends IModule
    * @param name
    * @return
    */
-  public Future<IProduction> getProduction(String name);
+  public CompletableFuture<IProduction> getProduction(String name);
   
   /**
    * return all the productions
    * @return
    */
-  public Future<Collection<IProduction>> getProductions();
+  public CompletableFuture<Collection<IProduction>> getProductions();
 
   /**
    * find the set of production instantiations that can fire based on the state
@@ -73,7 +73,7 @@ public interface IProceduralModule extends IModule
    * @param buffers
    * @return
    */
-  public Future<Collection<IInstantiation>> getConflictSet(
+  public CompletableFuture<Collection<IInstantiation>> getConflictSet(
       Collection<IActivationBuffer> buffers);
 
   /**
@@ -85,9 +85,11 @@ public interface IProceduralModule extends IModule
    * @param firingTime TODO
    * @return
    */
-  public Future<Double> fireProduction(IInstantiation instantiation, double firingTime);
+  public CompletableFuture<Double> fireProduction(IInstantiation instantiation,
+      double firingTime);
 
-  public Future<IInstantiation> selectInstantiation(Collection<IInstantiation> instantiations);
+  public CompletableFuture<IInstantiation> selectInstantiation(
+      Collection<IInstantiation> instantiations);
   
   public void addListener(IProceduralModuleListener listener, Executor executor);
 

@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -157,7 +158,7 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
   private boolean isPartialMatchingEnabled(IDeclarativeModule dm,
       Collection<? extends ISlot> slots)
   {
-    dm = (IDeclarativeModule) dm.getAdapter(IDeclarativeModule4.class);
+    dm = dm.getAdapter(IDeclarativeModule4.class);
     if (dm instanceof IDeclarativeModule4)
       return RetrievalRequestDelegate.isPartialMatchEnabled(
           (IDeclarativeModule4) dm, slots);
@@ -192,7 +193,7 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
     ActivationPolicy accessibility = RetrievalRequestDelegate
         .getActivationPolicy(ACCESSIBILITY_SLOT, slots);
     boolean wasIndexed = RetrievalRequestDelegate.isIndexRetrievalEnabled(
-        (DefaultRetrievalModule6) dm.getAdapter(DefaultRetrievalModule6.class),
+        dm.getAdapter(DefaultRetrievalModule6.class),
         slots);
 
     if (isPartialMatchingEnabled(dm, slots))
@@ -386,7 +387,8 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
     return errorChunk;
   }
 
-  public Future<IChunk> retrieveChunk(final ChunkTypeRequest chunkPattern)
+  public CompletableFuture<IChunk> retrieveChunk(
+      final ChunkTypeRequest chunkPattern)
   {
     return delayedFuture(new Callable<IChunk>() {
 

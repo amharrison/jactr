@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
@@ -469,7 +470,8 @@ public class DefaultProceduralModule6 extends AbstractModule implements
     return production;
   }
 
-  public Future<IProduction> addProduction(final IProduction production)
+  public CompletableFuture<IProduction> addProduction(
+      final IProduction production)
   {
     Callable<IProduction> callable = new Callable<IProduction>() {
 
@@ -603,7 +605,7 @@ public class DefaultProceduralModule6 extends AbstractModule implements
     return production;
   }
 
-  public Future<IProduction> createProduction(final String name)
+  public CompletableFuture<IProduction> createProduction(final String name)
   {
     Callable<IProduction> callable = new Callable<IProduction>() {
 
@@ -719,7 +721,7 @@ public class DefaultProceduralModule6 extends AbstractModule implements
     return keepers;
   }
 
-  public Future<Collection<IInstantiation>> getConflictSet(
+  public CompletableFuture<Collection<IInstantiation>> getConflictSet(
       final Collection<IActivationBuffer> buffers)
   {
     Callable<Collection<IInstantiation>> callable = new Callable<Collection<IInstantiation>>() {
@@ -742,7 +744,7 @@ public class DefaultProceduralModule6 extends AbstractModule implements
     return rtn;
   }
 
-  public Future<IProduction> getProduction(final String name)
+  public CompletableFuture<IProduction> getProduction(final String name)
   {
     Callable<IProduction> callable = new Callable<IProduction>() {
 
@@ -760,7 +762,7 @@ public class DefaultProceduralModule6 extends AbstractModule implements
     return _selector.select(instantiations);
   }
 
-  public Future<IInstantiation> selectInstantiation(
+  public CompletableFuture<IInstantiation> selectInstantiation(
       final Collection<IInstantiation> instantiations)
   {
     Callable<IInstantiation> callable = new Callable<IInstantiation>() {
@@ -807,7 +809,8 @@ public class DefaultProceduralModule6 extends AbstractModule implements
     return instantiation.getActionLatency();
   }
 
-  public Future<Double> fireProduction(final IInstantiation instantiation,
+  public CompletableFuture<Double> fireProduction(
+      final IInstantiation instantiation,
       final double firingTime)
   {
     Callable<Double> callable = new Callable<Double>() {
@@ -937,7 +940,7 @@ public class DefaultProceduralModule6 extends AbstractModule implements
     }
   }
 
-  public Future<Collection<IProduction>> getProductions()
+  public CompletableFuture<Collection<IProduction>> getProductions()
   {
     return delayedFuture(new Callable<Collection<IProduction>>() {
 

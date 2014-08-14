@@ -15,8 +15,8 @@ package org.jactr.core.module.declarative;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
 
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunktype.IChunkType;
@@ -59,9 +59,11 @@ public interface IDeclarativeModule extends IModule
    * @param name
    * @return
    */
-  public Future<IChunkType> createChunkType(Collection<IChunkType> parents, String name);
+  public CompletableFuture<IChunkType> createChunkType(
+      Collection<IChunkType> parents, String name);
 
-  public Future<IChunkType> createChunkType(IChunkType parent, String name);
+  public CompletableFuture<IChunkType> createChunkType(IChunkType parent,
+      String name);
 
   /**
    * add the chunktype to the model. this chunktype should have been created by
@@ -72,7 +74,7 @@ public interface IDeclarativeModule extends IModule
    * @param chunkType
    * @return
    */
-  public Future<IChunkType> addChunkType(IChunkType chunkType);
+  public CompletableFuture<IChunkType> addChunkType(IChunkType chunkType);
 
   /**
    * return the named chunktype. Case insensitive, but preserving
@@ -80,14 +82,14 @@ public interface IDeclarativeModule extends IModule
    * @param name
    * @return
    */
-  public Future<IChunkType> getChunkType(String name);
+  public CompletableFuture<IChunkType> getChunkType(String name);
 
   /**
    * return all the chunk types in this model
    * 
    * @return
    */
-  public Future<Collection<IChunkType>> getChunkTypes();
+  public CompletableFuture<Collection<IChunkType>> getChunkTypes();
 
   /**
    * create a chunk to later be inserted.
@@ -97,7 +99,7 @@ public interface IDeclarativeModule extends IModule
    * @param name
    * @return
    */
-  public Future<IChunk> createChunk(IChunkType parent, String name);
+  public CompletableFuture<IChunk> createChunk(IChunkType parent, String name);
   
   
   /**
@@ -130,9 +132,10 @@ public interface IDeclarativeModule extends IModule
    * @param sourceChunk
    * @return
    */
-  public Future<IChunk> copyChunk(IChunk sourceChunk);
+  public CompletableFuture<IChunk> copyChunk(IChunk sourceChunk);
 
-  public Future<IChunk> copyChunk(IChunk sourceChunk, boolean copySubsymbolics);
+  public CompletableFuture<IChunk> copyChunk(IChunk sourceChunk,
+      boolean copySubsymbolics);
 
   /**
    * add this chunk to the model and optionally check for duplicates so that it
@@ -143,7 +146,7 @@ public interface IDeclarativeModule extends IModule
    * @return a future wrapper of the actual chunk reference that was installed.
    *         if the chunk was actually merged, the original chunk is returned
    */
-  public Future<IChunk> addChunk(IChunk chunk);
+  public CompletableFuture<IChunk> addChunk(IChunk chunk);
 
   /**
    * because encoding might be async, we need a method to determine if a given
@@ -160,14 +163,14 @@ public interface IDeclarativeModule extends IModule
    * @param name
    * @return
    */
-  public Future<IChunk> getChunk(String name);
+  public CompletableFuture<IChunk> getChunk(String name);
 
   /**
    * return all chunks. This can be a <b>very</b> expensive operation
    * 
    * @return
    */
-  public Future<Collection<IChunk>> getChunks();
+  public CompletableFuture<Collection<IChunk>> getChunks();
 
   /**
    * return the number of chunks in the model. this might be an estimate
@@ -187,7 +190,8 @@ public interface IDeclarativeModule extends IModule
    *          filter function, may be null
    * @return
    */
-  public Future<Collection<IChunk>> findExactMatches(ChunkTypeRequest request,
+  public CompletableFuture<Collection<IChunk>> findExactMatches(
+      ChunkTypeRequest request,
       Comparator<IChunk> sorter, IChunkFilter filter);
 
   /**
@@ -199,7 +203,8 @@ public interface IDeclarativeModule extends IModule
    * @param filter TODO
    * @return
    */
-  public Future<Collection<IChunk>> findPartialMatches(ChunkTypeRequest request,
+  public CompletableFuture<Collection<IChunk>> findPartialMatches(
+      ChunkTypeRequest request,
       Comparator<IChunk> sorter, IChunkFilter filter);
 
   /**

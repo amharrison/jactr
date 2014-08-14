@@ -8,8 +8,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -469,7 +469,8 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
    * @see org.jactr.core.module.declarative.IDeclarativeModule#createChunk(org.jactr.core.chunktype.IChunkType,
    *      java.lang.String)
    */
-  public Future<IChunk> createChunk(final IChunkType parent, final String name)
+  public CompletableFuture<IChunk> createChunk(final IChunkType parent,
+      final String name)
   {
     if (parent == null)
       throw new NullPointerException("IChunkType cannot be null");
@@ -531,7 +532,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
    * @return
    * @see org.jactr.core.module.declarative.IDeclarativeModule#addChunk(org.jactr.core.chunk.IChunk)
    */
-  public Future<IChunk> addChunk(final IChunk chunk)
+  public CompletableFuture<IChunk> addChunk(final IChunk chunk)
   {
     if (chunk.isEncoded())
     {
@@ -543,7 +544,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
     ISymbolicChunk sc = chunk.getSymbolicChunk();
     Collection<? extends ISlot> slots = sc.getSlots();
 
-    Future<Collection<IChunk>> matches = null;
+    CompletableFuture<Collection<IChunk>> matches = null;
 
     /*
      * we don't do merge searches for slotless chunks.
@@ -572,7 +573,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
           });
     }
 
-    final Future<Collection<IChunk>> fMatches = matches;
+    final CompletableFuture<Collection<IChunk>> fMatches = matches;
 
     return delayedFuture(new Callable<IChunk>() {
 
@@ -627,12 +628,12 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
   /**
    * copy the specified chunk, by default this will also copy subsymbolics
    */
-  public Future<IChunk> copyChunk(IChunk sourceChunk)
+  public CompletableFuture<IChunk> copyChunk(IChunk sourceChunk)
   {
     return copyChunk(sourceChunk, true);
   }
 
-  public Future<IChunk> copyChunk(final IChunk sourceChunk,
+  public CompletableFuture<IChunk> copyChunk(final IChunk sourceChunk,
       final boolean copySubsymbolics)
   {
     if (sourceChunk == null)
@@ -694,7 +695,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
    * @return
    * @see org.jactr.core.module.declarative.IDeclarativeModule#getChunk(java.lang.String)
    */
-  public Future<IChunk> getChunk(final String name)
+  public CompletableFuture<IChunk> getChunk(final String name)
   {
     Callable<IChunk> callable = new Callable<IChunk>() {
 
@@ -712,7 +713,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
    * @return
    * @see org.jactr.core.module.declarative.IDeclarativeModule#getChunks()
    */
-  public Future<Collection<IChunk>> getChunks()
+  public CompletableFuture<Collection<IChunk>> getChunks()
   {
     Callable<Collection<IChunk>> callable = new Callable<Collection<IChunk>>() {
 
@@ -738,7 +739,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
    *      java.lang.String)
    */
 
-  public Future<IChunkType> createChunkType(
+  public CompletableFuture<IChunkType> createChunkType(
       final Collection<IChunkType> parents, final String name)
   {
     return delayedFuture(new Callable<IChunkType>() {
@@ -750,7 +751,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
     }, getExecutor());
   }
 
-  public Future<IChunkType> createChunkType(final IChunkType parent,
+  public CompletableFuture<IChunkType> createChunkType(final IChunkType parent,
       final String name)
   {
     if (parent != null)
@@ -801,7 +802,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
    * @return
    * @see org.jactr.core.module.declarative.IDeclarativeModule#addChunkType(org.jactr.core.chunktype.IChunkType)
    */
-  public Future<IChunkType> addChunkType(final IChunkType chunkType)
+  public CompletableFuture<IChunkType> addChunkType(final IChunkType chunkType)
   {
     if (chunkType.isEncoded())
     {
@@ -836,7 +837,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
    * @return
    * @see org.jactr.core.module.declarative.IDeclarativeModule#getChunkType(java.lang.String)
    */
-  public Future<IChunkType> getChunkType(final String name)
+  public CompletableFuture<IChunkType> getChunkType(final String name)
   {
     Callable<IChunkType> callable = new Callable<IChunkType>() {
 
@@ -856,7 +857,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
    * @return
    * @see org.jactr.core.module.declarative.IDeclarativeModule#getChunkTypes()
    */
-  public Future<Collection<IChunkType>> getChunkTypes()
+  public CompletableFuture<Collection<IChunkType>> getChunkTypes()
   {
     Callable<Collection<IChunkType>> callable = new Callable<Collection<IChunkType>>() {
 

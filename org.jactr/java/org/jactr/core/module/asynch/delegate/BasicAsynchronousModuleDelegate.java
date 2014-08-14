@@ -4,7 +4,7 @@ package org.jactr.core.module.asynch.delegate;
  * default logging
  */
 import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,13 +49,15 @@ public abstract class BasicAsynchronousModuleDelegate<M extends IAsynchronousMod
 
   
 
-  public Future<R> process(final IRequest request, final double requestTime, final Object... parameters)
+  public CompletableFuture<R> process(final IRequest request,
+      final double requestTime, final Object... parameters)
   {
     boolean canProcess = shouldProcess(request, parameters);
 
     if (canProcess)
     {
-      Future<R> rtn = AbstractModule.delayedFuture(new Callable<R>() {
+      CompletableFuture<R> rtn = AbstractModule.delayedFuture(
+          new Callable<R>() {
 
         public R call() throws Exception
         {

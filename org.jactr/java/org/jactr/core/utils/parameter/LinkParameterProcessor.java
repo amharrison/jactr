@@ -4,6 +4,7 @@ package org.jactr.core.utils.parameter;
  * default logging
  */
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
@@ -23,6 +24,37 @@ public class LinkParameterProcessor extends
   static private final transient Log LOGGER = LogFactory
                                                 .getLog(LinkParameterProcessor.class);
 
+  /**
+   * full constructor for others to overload.
+   * 
+   * @param parameterName
+   * @param fromString
+   * @param setFunction
+   * @param toString
+   * @param getFunction
+   * @param actrProcessor
+   * @param sourceChunk
+   */
+  public LinkParameterProcessor(String parameterName,
+      Function<String, IAssociativeLink> fromString,
+      Consumer<IAssociativeLink> setFunction,
+      Function<IAssociativeLink, String> toString,
+      Supplier<IAssociativeLink> getFunction,
+      final ACTRParameterProcessor actrProcessor, final IChunk sourceChunk)
+  {
+    super(parameterName, fromString, setFunction, toString, getFunction);
+  }
+
+  /**
+   * link parameter handler with string transform functions supporting "(iLink
+   * count strength fNiCj)"
+   * 
+   * @param parameterName
+   * @param setFunction
+   * @param getFunction
+   * @param actrProcessor
+   * @param sourceChunk
+   */
   public LinkParameterProcessor(String parameterName,
       Consumer<IAssociativeLink> setFunction,
       Supplier<IAssociativeLink> getFunction,
