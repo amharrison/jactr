@@ -100,7 +100,7 @@ public class DefaultReferences implements IOptimizedReferences
   synchronized public double getEarliestReferenceTime()
   {
     if (_arrayOfDoubles.size() != 0)
-      if (_nextInsertionPoint < _arrayOfDoubles.size())
+      if (_nextInsertionPoint >= _arrayOfDoubles.size())
         return _arrayOfDoubles.get(0);
       else
         return _arrayOfDoubles.get(_nextInsertionPoint);
