@@ -60,6 +60,7 @@ public class ChunkUtilities
    * 
    * @author harrison
    */
+  @FunctionalInterface
   public interface IChunkModifier
   {
     public void modify(IChunk chunk, IActivationBuffer buffer);

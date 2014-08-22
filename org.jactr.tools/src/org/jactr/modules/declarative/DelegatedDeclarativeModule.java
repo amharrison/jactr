@@ -8,8 +8,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -156,34 +156,36 @@ public class DelegatedDeclarativeModule implements IDeclarativeModule,
 
 
   @SuppressWarnings("unchecked")
-  public Future<IChunkType> createChunkType(IChunkType parent, String name)
+  public CompletableFuture<IChunkType> createChunkType(IChunkType parent,
+      String name)
   {
     return createChunkType(parent == null ? Collections.EMPTY_LIST
         : Collections.singleton(parent), name);
   }
 
-  public Future<IChunkType> createChunkType(Collection<IChunkType> parents,
+  public CompletableFuture<IChunkType> createChunkType(
+      Collection<IChunkType> parents,
       String name)
   {
     return _delegate.createChunkType(parents, name);
   }
 
-  public Future<IChunkType> addChunkType(IChunkType chunkType)
+  public CompletableFuture<IChunkType> addChunkType(IChunkType chunkType)
   {
     return _delegate.addChunkType(chunkType);
   }
 
-  public Future<IChunkType> getChunkType(String name)
+  public CompletableFuture<IChunkType> getChunkType(String name)
   {
     return _delegate.getChunkType(name);
   }
 
-  public Future<Collection<IChunkType>> getChunkTypes()
+  public CompletableFuture<Collection<IChunkType>> getChunkTypes()
   {
     return _delegate.getChunkTypes();
   }
 
-  public Future<IChunk> createChunk(IChunkType parent, String name)
+  public CompletableFuture<IChunk> createChunk(IChunkType parent, String name)
   {
     return _delegate.createChunk(parent, name);
   }
@@ -204,17 +206,18 @@ public class DelegatedDeclarativeModule implements IDeclarativeModule,
     _delegate.setAssociativeLinkageSystem(linkageSystem);
   }
 
-  public Future<IChunk> copyChunk(IChunk sourceChunk)
+  public CompletableFuture<IChunk> copyChunk(IChunk sourceChunk)
   {
     return _delegate.copyChunk(sourceChunk);
   }
 
-  public Future<IChunk> copyChunk(IChunk sourceChunk, boolean copySubsymbolics)
+  public CompletableFuture<IChunk> copyChunk(IChunk sourceChunk,
+      boolean copySubsymbolics)
   {
     return _delegate.copyChunk(sourceChunk, copySubsymbolics);
   }
 
-  public Future<IChunk> addChunk(IChunk chunk)
+  public CompletableFuture<IChunk> addChunk(IChunk chunk)
   {
     return _delegate.addChunk(chunk);
   }
@@ -224,12 +227,12 @@ public class DelegatedDeclarativeModule implements IDeclarativeModule,
     return _delegate.willEncode(chunk);
   }
 
-  public Future<IChunk> getChunk(String name)
+  public CompletableFuture<IChunk> getChunk(String name)
   {
     return _delegate.getChunk(name);
   }
 
-  public Future<Collection<IChunk>> getChunks()
+  public CompletableFuture<Collection<IChunk>> getChunks()
   {
     return _delegate.getChunks();
   }
@@ -239,13 +242,14 @@ public class DelegatedDeclarativeModule implements IDeclarativeModule,
     return _delegate.getNumberOfChunks();
   }
 
-  public Future<Collection<IChunk>> findExactMatches(ChunkTypeRequest request,
+  public CompletableFuture<Collection<IChunk>> findExactMatches(
+      ChunkTypeRequest request,
       Comparator<IChunk> sorter, IChunkFilter filter)
   {
     return _delegate.findExactMatches(request, sorter, filter);
   }
 
-  public Future<Collection<IChunk>> findPartialMatches(
+  public CompletableFuture<Collection<IChunk>> findPartialMatches(
       ChunkTypeRequest request, Comparator<IChunk> sorter,
       IChunkFilter filter)
   {

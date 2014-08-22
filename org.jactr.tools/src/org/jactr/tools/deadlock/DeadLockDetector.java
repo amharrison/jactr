@@ -73,6 +73,7 @@ public class DeadLockDetector implements IInstrument
      * flags the model time as having changed
      */
     _modelListener = new ModelListenerAdaptor() {
+      @Override
       public void cycleStarted(ModelEvent me)
       {
         touch(me); // accidental pun
@@ -97,7 +98,7 @@ public class DeadLockDetector implements IInstrument
     model.removeListener(_modelListener);
   }
 
-  synchronized private void check()
+  private void check()
   {
     IController controller = ACTRRuntime.getRuntime().getController();
     if (controller == null || !controller.isRunning()

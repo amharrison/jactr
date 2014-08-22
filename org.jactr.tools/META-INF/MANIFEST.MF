@@ -102,6 +102,7 @@ Export-Package: org.apache.commons.math,
  org.jactr.tools.itr.ortho.exec,
  org.jactr.tools.itr.ortho.impl,
  org.jactr.tools.itr.pspace,
+ org.jactr.tools.loop,
  org.jactr.tools.marker,
  org.jactr.tools.marker.impl,
  org.jactr.tools.marker.markerof,
@@ -138,3 +139,4 @@ Eclipse-BuddyPolicy: registered
 Ant-Version: Apache Ant 1.7.0
 Bundle-ClassPath: tools.jar,
  lib/commons-math-2.1.jar
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8

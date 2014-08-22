@@ -147,6 +147,18 @@ http://jactr.org/node/144</description>
             Slows model execution down so that each model cycle runs at for least MinimumCycleRealTime. This is useful if your model is running too face to trace or is maxing out your processor.
          </description>
       </instrument>
+      <instrument
+            class="org.jactr.tools.loop.ProductionLoopDetector"
+            hidden="false"
+            name="Simple Loop Detector">
+         <parameter
+               name="TerminateOnDetection"
+               value="false">
+         </parameter>
+         <description>
+            Detects simple production loops (same production, firing within defaultAction time of each other). Logs it, and can optionally terminate the model.
+         </description>
+      </instrument>
    </extension>
    <extension
          point="org.jactr.tools.iterative">
