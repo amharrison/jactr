@@ -11,6 +11,7 @@ import org.jactr.core.chunk.IChunk;
  * 
  * @author harrison
  */
+@FunctionalInterface
 public interface IChunkFilter
 {
 

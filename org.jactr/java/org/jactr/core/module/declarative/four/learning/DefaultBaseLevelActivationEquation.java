@@ -74,7 +74,7 @@ public class DefaultBaseLevelActivationEquation implements
   {
     if (_declarativeModule == null)
     {
-      _declarativeModule = (IDeclarativeModule4) _model.getDeclarativeModule()
+      _declarativeModule = _model.getDeclarativeModule()
           .getAdapter(IDeclarativeModule4.class);
       if (_declarativeModule == null)
         throw new RuntimeException(this.getClass().getSimpleName()
@@ -186,9 +186,11 @@ public class DefaultBaseLevelActivationEquation implements
        */
 
       long nMinusM = referenceList.getNumberOfReferences() - times.length;
-      double defActT0 = Math.max(defAct, (now - ssc.getCreationTime()));
-      double defActTnm = Math.max(defAct, (times.length == 0 ? 0
-          : times[times.length - 1]));
+      double defActT0 = Math.max(defAct, now - ssc.getCreationTime());
+
+      double defActTnm = Math.max(defAct,
+          now - referenceList.getEarliestReferenceTime());
+
       // t0 - tn-m to the 1-d
       double numerator = 0;
       double denom = 0;

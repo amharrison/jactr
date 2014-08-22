@@ -30,6 +30,7 @@ public class RunnableTimedEvent extends AbstractTimedEvent
     _onAbort = onAbort;
   }
   
+  @Override
   public void fire(double currentTime)
   {
     super.fire(currentTime);
@@ -37,10 +38,23 @@ public class RunnableTimedEvent extends AbstractTimedEvent
       _onFire.run();
   }
   
+  @Override
   public void abort()
   {
     super.abort();
     if(_onAbort!=null)
       _onAbort.run();
+  }
+
+  @Override
+  public String toString()
+  {
+    /*
+     * no need to synchornize
+     */
+    if (_toString == null)
+      _toString = String.format("RunnableTE[%s](@ %.2f)", _onFire
+          .getClass().getName(), _endTime);
+    return _toString;
   }
 }

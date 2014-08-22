@@ -70,6 +70,12 @@ public class ImmutableReferences implements IReferences
     //noop
   }
 
+  @Override
+  public double getEarliestReferenceTime()
+  {
+    return _references.getEarliestReferenceTime();
+  }
+
 }
 
 

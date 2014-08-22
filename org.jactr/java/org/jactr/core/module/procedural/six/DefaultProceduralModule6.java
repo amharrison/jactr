@@ -792,16 +792,14 @@ public class DefaultProceduralModule6 extends AbstractModule implements
         Logger.log(model, Logger.Stream.PROCEDURAL, "Firing " + instantiation);
       }
 
+      setNumberOfProductionsFired(_productionsFired + 1);
+
       instantiation.fire(firingTime);
 
       fireProductionFired(instantiation);
-
-      setNumberOfProductionsFired(_productionsFired + 1);
     }
     catch (ModelTerminatedException mte)
     {
-      setNumberOfProductionsFired(_productionsFired + 1);
-
       if (LOGGER.isDebugEnabled())
         LOGGER.debug("Model has terminated naturally");
       return Double.NaN;

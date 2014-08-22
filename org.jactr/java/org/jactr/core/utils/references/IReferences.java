@@ -51,6 +51,7 @@ public interface IReferences
    */
   public double getLastReferenceTime();
   
+  public double getEarliestReferenceTime();
   
   /**
    * add a reference time and increment the reference count

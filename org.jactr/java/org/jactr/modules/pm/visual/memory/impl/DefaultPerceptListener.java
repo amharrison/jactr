@@ -224,7 +224,7 @@ public class DefaultPerceptListener implements IActivePerceptListener
         /*
          * do the assignment on the model thread, not here
          */
-        buffer.addSourceChunk(visualLocation);
+        // buffer.addSourceChunk(visualLocation);
         model.getTimedEventQueue().enqueue(
             new RunnableTimedEvent(start, new Runnable() {
 

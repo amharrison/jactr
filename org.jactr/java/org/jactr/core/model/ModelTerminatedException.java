@@ -35,4 +35,18 @@ public class ModelTerminatedException extends RuntimeException
   static private final Log  LOGGER           = LogFactory
                                                  .getLog(ModelTerminatedException.class);
 
+  public ModelTerminatedException()
+  {
+    super("Model terminated");
+  }
+
+  public ModelTerminatedException(String message)
+  {
+    super(message);
+  }
+
+  public ModelTerminatedException(String message, Throwable thrown)
+  {
+    super(message, thrown);
+  }
 }

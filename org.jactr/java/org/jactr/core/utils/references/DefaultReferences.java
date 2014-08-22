@@ -57,8 +57,8 @@ public class DefaultReferences implements IOptimizedReferences
     {
       _arrayOfDoubles.set(insertionPoint, time);
       if (LOGGER.isDebugEnabled())
-        LOGGER.debug("overwriting reference time @ " + insertionPoint + " : " +
-            time);
+        LOGGER.debug("overwriting reference time @ " + insertionPoint + " : "
+            + time);
     }
     else
     {
@@ -97,10 +97,24 @@ public class DefaultReferences implements IOptimizedReferences
     _nextInsertionPoint = 0;
   }
 
-  synchronized public double getLastReferenceTime()
+  synchronized public double getEarliestReferenceTime()
   {
     if (_arrayOfDoubles.size() != 0)
-      return _arrayOfDoubles.get(Math.max(_nextInsertionPoint - 1, 0));
+      if (_nextInsertionPoint < _arrayOfDoubles.size())
+        return _arrayOfDoubles.get(0);
+      else
+        return _arrayOfDoubles.get(_nextInsertionPoint);
+    return Double.NaN;
+  }
+
+  synchronized public double getLastReferenceTime()
+  {
+    int lastIndex = _nextInsertionPoint;
+    if (_arrayOfDoubles.size() != 0)
+    {
+      if (lastIndex == 0) lastIndex += _arrayOfDoubles.size();
+      return _arrayOfDoubles.get(lastIndex - 1);
+    }
     return Double.NaN;
   }
 
@@ -169,8 +183,8 @@ public class DefaultReferences implements IOptimizedReferences
       clear();
 
       if (LOGGER.isDebugEnabled())
-        LOGGER.debug("reclaiming times lastPos:" + lastPosition + " values:" +
-            values.length + " count:" + currentCount);
+        LOGGER.debug("reclaiming times lastPos:" + lastPosition + " values:"
+            + values.length + " count:" + currentCount);
 
       /*
        * add oldest to newest
