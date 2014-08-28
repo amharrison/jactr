@@ -33,6 +33,7 @@ public class ChunkTypeRequest extends SlotBasedRequest
 
   private IChunkType                 _chunkType;
 
+  @SuppressWarnings("unchecked")
   public ChunkTypeRequest(IChunkType chunkType)
   {
     this(chunkType, Collections.EMPTY_LIST);
@@ -108,4 +109,29 @@ public class ChunkTypeRequest extends SlotBasedRequest
     sb.append("]");
     return sb.toString();
   }
+
+  @Override
+  public int hashCode()
+  {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + (_chunkType == null ? 0 : _chunkType.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj)
+  {
+    if (this == obj) return true;
+    if (!super.equals(obj)) return false;
+    if (getClass() != obj.getClass()) return false;
+    ChunkTypeRequest other = (ChunkTypeRequest) obj;
+    if (_chunkType == null)
+    {
+      if (other._chunkType != null) return false;
+    }
+    else if (!_chunkType.equals(other._chunkType)) return false;
+    return true;
+  }
+
 }

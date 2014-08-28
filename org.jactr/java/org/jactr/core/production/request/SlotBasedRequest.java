@@ -623,4 +623,28 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
     return container;
   }
 
+  @Override
+  public int hashCode()
+  {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + (_slots == null ? 0 : _slots.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj)
+  {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    SlotBasedRequest other = (SlotBasedRequest) obj;
+    if (_slots == null)
+    {
+      if (other._slots != null) return false;
+    }
+    else if (!_slots.equals(other._slots)) return false;
+    return true;
+  }
+
 }
