@@ -189,6 +189,6 @@ public class DefaultChunkSymbolGrounder implements ISymbolGrounder
       if (symbol == null) symbol = percept.getIdentifier().toString();
     }
 
-    return symbol.toLowerCase();
+    return symbol; // toLower cases problems since jactr is case respecting
   }
 }
