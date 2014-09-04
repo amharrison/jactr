@@ -46,11 +46,11 @@ public class ChunkTypeValueMap<I> extends AbstractTypeValueMap<IChunk, I>
     {
       IChunk chunk = (IChunk) value;
       if (!chunk.isEncoded())
-        if (LOGGER.isWarnEnabled())
+        if (LOGGER.isDebugEnabled())
           LOGGER
-              .warn(String
+              .debug(String
                   .format(
-                      "%s has not been encoded. Indexing could get wonky if it ends up merged. Suggest encoding first.",
+                      "Indexable slot value %s has not been encoded. If it is scheduled to be encoded, no worries. But it if is never encoded, retrievals using it may fail",
                       chunk));
       /**
        * we can fix this, when needed, by adding a listener to unencoded chunks.

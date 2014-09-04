@@ -65,19 +65,14 @@ public class DefaultMutableSlot extends BasicSlot implements IMutableSlot
     return result;
   }
 
+  /**
+   * however, we still want equals to include the value, so we delegate to
+   * super.
+   */
   @Override
   public boolean equals(Object obj)
   {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
-    BasicSlot other = (BasicSlot) obj;
-    if (getName() == null)
-    {
-      if (other.getName() != null) return false;
-    }
-    else if (!getName().equals(other.getName())) return false;
-    return true;
+    return super.equals(obj);
   }
 
 }
