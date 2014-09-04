@@ -126,7 +126,7 @@ public abstract class AbstractCapacityBuffer6 extends
       /*
        * remove the first..
        */
-      IChunk toRemove = getSourceChunk();
+      IChunk toRemove = getRemovalCandidate();
       if (LOGGER.isDebugEnabled() || Logger.hasLoggers(model))
       {
         sb.append(toRemove.toString());
@@ -137,6 +137,34 @@ public abstract class AbstractCapacityBuffer6 extends
         Logger.log(model, Logger.Stream.BUFFER, msg);
       }
       removeSourceChunk(toRemove);
+    }
+  }
+
+  /**
+   * return the chunk that is a candidate for removal. By default, this checks
+   * the ejection policy. If it is a LEAST*, it returns the oldest chunk, if it
+   * is a MOST*, it returns to oldest. Other implementations may overload this
+   * in order to do more detailed calculations
+   * 
+   * @return
+   */
+  protected IChunk getRemovalCandidate()
+  {
+    if (_sourceChunks.size() == 0) return null;
+
+    switch (getEjectionPolicy())
+    {
+      case LeastRecentlyAdded:
+      case LeastRecentlyMatched:
+      case LeastRecentlyUsed:
+        return _sourceChunks.get(_sourceChunks.firstKey());
+      case MostRecentlyAdded:
+      case MostRecentlyMatched:
+      case MostRecentlyUsed:
+        return _sourceChunks.get(_sourceChunks.lastKey());
+      default:
+        throw new IllegalActivationBufferStateException(
+            "EjectionPolicy is invalid");
     }
   }
 
