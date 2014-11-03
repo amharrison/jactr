@@ -97,7 +97,7 @@ public abstract class AbstractCapacityBuffer6 extends
    * 
    * @return
    */
-  protected Map<Double, IChunk> getTimesAndChunks()
+  protected SortedMap<Double, IChunk> getTimesAndChunks()
   {
     return _sourceChunks;
   }
