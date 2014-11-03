@@ -226,37 +226,38 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
       /*
        * currently in a buffer
        */
+      boolean removedFired = false;
+
       if (BufferUtilities.getContainingBuffers(oldChunk, true).size() != 0)
-      {
         if (_memory.hasListeners())
+        {
           _memory.dispatch(new ActivePerceptEvent(_memory,
               ActivePerceptEvent.Type.REMOVED, identifier, oldChunk));
-      }
-      else
-      {
-        /*
-         * is it part of a search result?
-         */
-        FastList<PerceptualSearchResult> results = FastList.newInstance();
-        try
-        {
-          _memory.getRecentSearchResults(results);
-          for (PerceptualSearchResult result : results)
-            if (result.getPerceptIdentifier().equals(identifier))
-            {
-              result.invalidate();
-              if (_memory.hasListeners())
-                _memory.dispatch(new ActivePerceptEvent(_memory,
-                    ActivePerceptEvent.Type.REMOVED, identifier, oldChunk));
-              break;
-            }
-        }
-        finally
-        {
-          FastList.recycle(results);
+          removedFired = true;
         }
 
+      /*
+       * is it part of a search result?
+       */
+      FastList<PerceptualSearchResult> results = FastList.newInstance();
+      try
+      {
+        _memory.getRecentSearchResults(results);
+        for (PerceptualSearchResult result : results)
+          if (result.getPerceptIdentifier().equals(identifier))
+          {
+            result.invalidate();
+            if (!removedFired && _memory.hasListeners())
+              _memory.dispatch(new ActivePerceptEvent(_memory,
+                  ActivePerceptEvent.Type.REMOVED, identifier, oldChunk));
+            break;
+          }
       }
+      finally
+      {
+        FastList.recycle(results);
+      }
+
     }
     else if (LOGGER.isDebugEnabled())
       LOGGER.debug(String.format("%s doesn't care about %s, ignoring removal",
@@ -405,8 +406,8 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
 
     if (chunk == null && createIfAbsent)
     {
-      IAgent agent = ACTRRuntime.getRuntime().getConnector().getAgent(
-          _memory.getModule().getModel());
+      IAgent agent = ACTRRuntime.getRuntime().getConnector()
+          .getAgent(_memory.getModule().getModel());
 
       if (agent == null) return null;
 
