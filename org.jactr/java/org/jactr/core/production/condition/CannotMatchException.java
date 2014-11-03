@@ -13,6 +13,7 @@
 
 package org.jactr.core.production.condition;
 
+import org.jactr.core.production.condition.match.GeneralMatchFailure;
 import org.jactr.core.production.condition.match.IMatchFailure;
 
 /**
@@ -34,13 +35,13 @@ public class CannotMatchException extends Exception
   public CannotMatchException(String message)
   {
     super(message);
-    _cause = null;
+    _cause = new GeneralMatchFailure(null, message);
   }
 
   public CannotMatchException(String message, Exception e)
   {
     super(message, e);
-    _cause = null;
+    _cause = new GeneralMatchFailure(null, message);
   }
 
   /**
