@@ -21,6 +21,7 @@ import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.commonreality.time.impl.BasicClock;
 import org.jactr.core.buffer.IActivationBuffer;
 import org.jactr.core.model.ICycleProcessor;
 import org.jactr.core.model.IModel;
@@ -165,7 +166,8 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
     double nextProductionFiringTime = _nextPossibleProductionFiringTime;
     double nextEventFiringTime = _nextPossibleProductionFiringTime;
 
-    if (!queue.isEmpty()) nextEventFiringTime = queue.getNextEndTime();
+    if (!queue.isEmpty()) nextEventFiringTime = queue.getNextEndTime(); // already
+                                                                        // constrained
 
     double nextWaitTime = Math.min(nextProductionFiringTime,
         nextEventFiringTime);
@@ -192,11 +194,11 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
             return Double.NaN; // signal quit
   }
 }
-else /*
-      * we only skip cycles if no events have fired. If events have fired, then
-      * productions might be able to fire..
-      */
-if (model.isCycleSkippingEnabled() /* && !eventsHaveFired */)
+/*
+ * we only skip cycles if no events have fired. If events have fired, then
+ * productions might be able to fire..
+ */
+else if (model.isCycleSkippingEnabled() /* && !eventsHaveFired */)
 {
   if (eventsHaveFired)
     nextWaitTime = Math.min(nextEventFiringTime, nextProductionFiringTime);
@@ -226,7 +228,15 @@ if (model.isCycleSkippingEnabled() /* && !eventsHaveFired */)
      */
     if (nextEventFiringTime != nextProductionFiringTime
         && Math.abs(nextProductionFiringTime - nextEventFiringTime) < TEMPORAL_TOLERANCE)
+    {
       nextWaitTime = Math.max(nextProductionFiringTime, nextEventFiringTime);
+      if (LOGGER.isWarnEnabled())
+        LOGGER
+            .warn(String
+                .format(
+                    "Dangerously close timing : nextProd (%.5f) and nextEvent (%.5f) are insanely close, using larger (%.5f)",
+                    nextProductionFiringTime, nextEventFiringTime, nextWaitTime));
+    }
 
     if (nextWaitTime <= now)
     {
@@ -237,7 +247,7 @@ if (model.isCycleSkippingEnabled() /* && !eventsHaveFired */)
         LOGGER
             .warn(String
                 .format(
-                    "nextWaitTime (%.4f) is less than or equal to the time (%.4f), incrementing to (%.4f). Please report to amharrison@gmail.com",
+                    "nextWaitTime (%.5f) is less than or equal to the time (%.5f), incrementing to (%.5f). Please report to amharrison@gmail.com",
                     nextWaitTime, now, newWaitTime));
 
       nextWaitTime = newWaitTime;
@@ -320,7 +330,8 @@ if (model.isCycleSkippingEnabled() /* && !eventsHaveFired */)
         firingDuration = procMod.fireProduction(instantiation, currentTime)
             .get();
 
-        _nextPossibleProductionFiringTime = currentTime + firingDuration;
+        _nextPossibleProductionFiringTime = BasicClock
+            .constrainPrecision(currentTime + firingDuration);
       }
       catch (ExecutionException e)
       {
@@ -328,8 +339,9 @@ if (model.isCycleSkippingEnabled() /* && !eventsHaveFired */)
             e.getCause());
       }
     else
-      _nextPossibleProductionFiringTime = currentTime
-          + procMod.getDefaultProductionFiringTime();
+      _nextPossibleProductionFiringTime = BasicClock
+          .constrainPrecision(currentTime
+              + procMod.getDefaultProductionFiringTime());
 
     return firingDuration;
   }
