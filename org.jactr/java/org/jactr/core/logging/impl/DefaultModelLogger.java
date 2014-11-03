@@ -13,19 +13,13 @@
  */
 package org.jactr.core.logging.impl;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -86,22 +80,28 @@ public class DefaultModelLogger implements IInstrument, ILogger, IParameterized
     _outputStreams = new TreeMap<String, ILogger>();
     _logToStream = new TreeMap<String, String>();
     _listeningTo = new ArrayList<IModel>();
-
-    _commonStreams.put("err", new PrintWriter(System.err, true));
-    _commonStreams.put("out", new PrintWriter(System.out));
+    createCommonStreams();
 
     _modelListener = new ModelListenerAdaptor() {
+      @Override
       public void cycleStopped(ModelEvent me)
       {
         if (LOGGER.isDebugEnabled()) LOGGER.debug("Flushing");
         flush();
       }
 
+      @Override
       public void modelStopped(ModelEvent me)
       {
         flush();
       }
     };
+  }
+
+  private void createCommonStreams()
+  {
+    _commonStreams.put("err", new PrintWriter(System.err, true));
+    _commonStreams.put("out", new PrintWriter(System.out));
   }
 
   public void log(LogEvent log)
@@ -174,6 +174,7 @@ public class DefaultModelLogger implements IInstrument, ILogger, IParameterized
     }
     else
     {
+      value = value.trim();
       createStream(key, value);
       _logToStream.put(key, value);
     }
@@ -185,6 +186,8 @@ public class DefaultModelLogger implements IInstrument, ILogger, IParameterized
        */
       _commonStreams.clear();
       _outputStreams.clear();
+
+      createCommonStreams();
 
       for (Map.Entry<String, String> entry : _logToStream.entrySet())
         createStream(entry.getKey(), entry.getValue());
