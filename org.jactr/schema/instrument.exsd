@@ -2,9 +2,9 @@
 <!-- Schema file written by PDE -->
 <schema targetNamespace="org.jactr" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
-      <appinfo>
+      <appInfo>
          <meta.schema plugin="org.jactr" id="instruments" name="Instruments"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          A class that implements IInstrument and can be attached to models (passively) in order to document what the models are doing
       </documentation>
@@ -12,9 +12,9 @@
 
    <element name="extension">
       <annotation>
-         <appinfo>
+         <appInfo>
             <meta.element />
-         </appinfo>
+         </appInfo>
       </annotation>
       <complexType>
          <sequence>
@@ -39,9 +39,9 @@
                <documentation>
                   
                </documentation>
-               <appinfo>
+               <appInfo>
                   <meta.attribute translatable="true"/>
-               </appinfo>
+               </appInfo>
             </annotation>
          </attribute>
       </complexType>
@@ -71,15 +71,22 @@ must include an &quot;attach&quot; parameter.
                <documentation>
                   
                </documentation>
-               <appinfo>
+               <appInfo>
                   <meta.attribute kind="java" basedOn="org.jactr.instrument.IInstrument"/>
-               </appinfo>
+               </appInfo>
             </annotation>
          </attribute>
          <attribute name="hidden" type="boolean" use="default" value="false">
             <annotation>
                <documentation>
                   whether or not the instrument should be visible to the end user
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="requiresClasspath" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  Whether or not this instrument requires access to your project classpath. Enabled by adding this bundle under the  Eclipse-RegisterBuddy header in Manifest.mf
                </documentation>
             </annotation>
          </attribute>
@@ -119,18 +126,18 @@ must include an &quot;attach&quot; parameter.
    </element>
 
    <annotation>
-      <appinfo>
+      <appInfo>
          <meta.section type="since"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          [Enter the first release in which this extension point appears.]
       </documentation>
    </annotation>
 
    <annotation>
-      <appinfo>
+      <appInfo>
          <meta.section type="examples"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          &lt;extension point=&quot;org.jactr.instruments&quot;&gt;
       &lt;instrument
@@ -145,18 +152,18 @@ must include an &quot;attach&quot; parameter.
    </annotation>
 
    <annotation>
-      <appinfo>
+      <appInfo>
          <meta.section type="apiInfo"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          [Enter API information here.]
       </documentation>
    </annotation>
 
    <annotation>
-      <appinfo>
+      <appInfo>
          <meta.section type="implementation"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          [Enter information about supplied implementation of this extension point.]
       </documentation>

@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Schema file written by PDE -->
-<schema targetNamespace="org.jactr">
+<schema targetNamespace="org.jactr" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appInfo>
          <meta.schema plugin="org.jactr" id="extension" name="Model Extension"/>
@@ -12,6 +12,9 @@
 
    <element name="extension">
       <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
          <documentation>
             The extension
          </documentation>
@@ -74,6 +77,13 @@
                </appInfo>
             </annotation>
          </attribute>
+         <attribute name="requiresClasspath" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  Whether or not this extension requires access to your project classpath. Enabled by adding this bundle under the  Eclipse-RegisterBuddy header in Manifest.mf
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 
@@ -116,13 +126,5 @@
       </documentation>
    </annotation>
 
-   <annotation>
-      <appInfo>
-         <meta.section type="copyright"/>
-      </appInfo>
-      <documentation>
-         
-      </documentation>
-   </annotation>
 
 </schema>
