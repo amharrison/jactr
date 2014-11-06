@@ -358,6 +358,7 @@ public class AttendToRequestDelegate extends AbstractRequestDelegate
     }
 
     _module.getModel().getTimedEventQueue().enqueue(_pendingHarvest);
+
   }
 
   /**
@@ -428,6 +429,7 @@ public class AttendToRequestDelegate extends AbstractRequestDelegate
     buffer.setProcessorChunk(freeChunk);
     buffer.setPreparationChunk(freeChunk);
 
+    if (_searchResult != null) _searchResult.invalidate();
     _searchResult = null;
   }
 
