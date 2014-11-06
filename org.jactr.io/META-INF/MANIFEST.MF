@@ -48,4 +48,4 @@ Bundle-ClassPath: .,
 Bundle-Vendor: jactr.org
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.jactr.io.activator.Activator
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
