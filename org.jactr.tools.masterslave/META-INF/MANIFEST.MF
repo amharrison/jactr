@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Masterslave
 Bundle-SymbolicName: org.jactr.tools.masterslave;singleton:=true
 Bundle-Version: 1.0.1.qualifier
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: org.jactr;bundle-version="1.2.15",
  org.jactr.io;bundle-version="1.0.9",
  org.jactr.tools;bundle-version="1.0.6",
