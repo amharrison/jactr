@@ -116,7 +116,7 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
     super(moduleName);
     _eventDispatcher = new ACTREventDispatcher<IRetrievalModule, IRetrievalModuleListener>();
     _retrievalTimeEquation = new DefaultRetrievalTimeEquation(this);
-    _finstManager = new DeclarativeFINSTManager(this);
+    setFINSTManager(new DeclarativeFINSTManager(this));
   }
 
   @Override
@@ -128,11 +128,22 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
     _retrievalTimeEquation = null;
   }
 
-  protected @Override
-  Collection<IActivationBuffer> createBuffers()
+  protected @Override Collection<IActivationBuffer> createBuffers()
   {
     _retrievalBuffer = new DefaultRetrievalBuffer6(getName(), this);
     return Collections.singleton((IActivationBuffer) _retrievalBuffer);
+  }
+
+  public DeclarativeFINSTManager getFINSTManager()
+  {
+    return _finstManager;
+  }
+
+  public void setFINSTManager(DeclarativeFINSTManager manager)
+  {
+    if (manager == null)
+      throw new IllegalArgumentException("FINST manager cannot be null");
+    _finstManager = manager;
   }
 
   public boolean hasBeenRetrieved(IChunk chunk)
@@ -193,8 +204,7 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
     ActivationPolicy accessibility = RetrievalRequestDelegate
         .getActivationPolicy(ACCESSIBILITY_SLOT, slots);
     boolean wasIndexed = RetrievalRequestDelegate.isIndexRetrievalEnabled(
-        dm.getAdapter(DefaultRetrievalModule6.class),
-        slots);
+        dm.getAdapter(DefaultRetrievalModule6.class), slots);
 
     if (isPartialMatchingEnabled(dm, slots))
     {
