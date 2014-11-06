@@ -6,12 +6,14 @@ package org.jactr.core.module.declarative.four;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
+import org.jactr.core.chunk.basic.AbstractSubsymbolicChunk;
 import org.jactr.core.chunk.four.ISubsymbolicChunk4;
 import org.jactr.core.model.IModel;
 
 /**
  * Noop base level act equation that passes back the chunk's base level if it is
- * defined, if not, it passes back base level constant
+ * defined, if not, it passes back base level constant. Assumes
+ * AbstractSubsymbolicChunk
  * 
  * @author harrison
  */
@@ -33,11 +35,26 @@ public class DefaultBaseLevelActivationEquation implements
 
   public double computeBaseLevelActivation(IModel model, IChunk c)
   {
-    double base = ((ISubsymbolicChunk4) c.getSubsymbolicChunk().getAdapter(
-        ISubsymbolicChunk4.class))
+    double base = c.getSubsymbolicChunk().getAdapter(
+        ISubsymbolicChunk4.class)
         .getBaseLevelActivation();
     if (Double.isNaN(base)) base = _declarativeModule.getBaseLevelConstant();
 
+    return base;
+  }
+
+  @Override
+  public String getName()
+  {
+    return "base-static";
+  }
+
+  @Override
+  public double computeAndSetActivation(IChunk chunk, IModel model)
+  {
+    double base = computeBaseLevelActivation(model, chunk);
+    ((AbstractSubsymbolicChunk) chunk.getSubsymbolicChunk())
+        .setBaseLevelActivation(base);
     return base;
   }
 

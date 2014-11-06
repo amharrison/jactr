@@ -29,6 +29,7 @@ import org.jactr.core.chunk.ISubsymbolicChunk;
 import org.jactr.core.chunk.IllegalChunkStateException;
 import org.jactr.core.chunk.event.ChunkEvent;
 import org.jactr.core.event.ParameterEvent;
+import org.jactr.core.model.IModel;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.utils.DefaultAdaptable;
 import org.jactr.core.utils.parameter.CollectionParameterHandler;
@@ -41,36 +42,38 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
   /**
    * logger definition
    */
-  static private final Log                 LOGGER                         = LogFactory
-                                                                              .getLog(AbstractSubsymbolicChunk.class);
+  static private final Log                   LOGGER                         = LogFactory
+                                                                                .getLog(AbstractSubsymbolicChunk.class);
 
-  protected IChunk                         _parentChunk;
+  protected IChunk                           _parentChunk;
 
-  protected IReferences                    _referenceList;
+  protected IReferences                      _referenceList;
 
-  protected double                         _creationTime;                                                             // encoding
+  protected double                           _creationTime;                                                             // encoding
 
   // time
 
-  protected double                         _baseLevelActivation           = Double.NaN;
+  protected double                           _baseLevelActivation           = Double.NaN;
 
-  protected double                         _spreadingActivation;
+  protected double                           _spreadingActivation;
 
-  protected double                         _randomActivation;
+  protected double                           _randomActivation;
 
-  protected Map<IActivationBuffer, Double> _sourceActivation;
+  protected Map<IActivationBuffer, Double>   _sourceActivation;
 
-  protected double                         _totalActivation;
+  protected double                           _totalActivation;
 
-  protected double                         _timesInContext;
+  protected double                           _timesInContext;
 
-  protected double                         _timesNeeded;
+  protected double                           _timesNeeded;
 
-  protected double                         _lastActivationComputationTime = -1;
+  protected double                           _lastActivationComputationTime = -1;
 
-  protected Map<String, String>            _unknownParameters;
+  private Collection<IActivationParticipant> _activationParticipants        = new ArrayList<IActivationParticipant>();
 
-  static private boolean                   _setSourceWarned               = false;
+  protected Map<String, String>              _unknownParameters;
+
+  static private boolean                     _setSourceWarned               = false;
 
   public AbstractSubsymbolicChunk()
   {
@@ -128,6 +131,24 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
       throw new IllegalChunkStateException("Chunk has already been encoded");
 
     setCreationTime(when);
+  }
+
+  public void addActivationParticipant(IActivationParticipant participant)
+  {
+    _activationParticipants.add(participant);
+  }
+
+  public void removeActivationParticipant(IActivationParticipant participant)
+  {
+    _activationParticipants.remove(participant);
+  }
+
+  public Collection<IActivationParticipant> getActivationParticipants(
+      Collection<IActivationParticipant> container)
+  {
+    if (container == null) container = new ArrayList<IActivationParticipant>();
+    container.addAll(_activationParticipants);
+    return container;
   }
 
   public double getActivation()
@@ -645,41 +666,39 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
 
     if (now > _lastActivationComputationTime)
     {
-      _lastActivationComputationTime = now;
       calculateValues();
+      _lastActivationComputationTime = now;
     }
   }
 
   protected void calculateValues()
   {
-    double base = computeBaseLevelActivation();
-    double spread = computeSpreadingActivation();
-    double noise = computeRandomActivation();
-    double total = (Double.isNaN(base) || Double.isInfinite(base) ? 0 : base)
-        + (Double.isNaN(spread) || Double.isInfinite(spread) ? 0 : spread)
-        + (Double.isNaN(noise) || Double.isInfinite(noise) ? 0 : noise);
+    IModel model = getParentChunk().getModel();
+    IChunk self = getParentChunk();
 
-    if (LOGGER.isDebugEnabled())
-      LOGGER.debug(String.format(
-          "%s base:%.2f spread:%.2f noise:%.2f total:%.2f", _parentChunk, base,
-          spread, noise, total));
+    double total = 0;
+    for (IActivationParticipant actCalc : _activationParticipants)
+    {
+      double act = actCalc.computeAndSetActivation(self, model);
+      total += Double.isNaN(act) || Double.isInfinite(act) ? 0 : act;
+      if (LOGGER.isDebugEnabled())
+        LOGGER
+            .debug(String.format("%s %s = %.2f", self, actCalc.getName(), act));
+    }
 
-    setRandomActivation(noise);
-    setBaseLevelActivation(base);
-    setSpreadingActivation(spread);
     setActivation(total);
   }
 
-  abstract protected double computeBaseLevelActivation();
+  // abstract protected double computeBaseLevelActivation();
 
   /**
    * return the spreading activation value
    * 
    * @return
    */
-  abstract protected double computeSpreadingActivation();
+  // abstract protected double computeSpreadingActivation();
 
-  abstract protected double computeRandomActivation();
+  // abstract protected double computeRandomActivation();
 
   public IChunk getParentChunk()
   {

@@ -17,6 +17,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISubsymbolicChunk;
+import org.jactr.core.chunk.basic.AbstractSubsymbolicChunk;
 import org.jactr.core.model.IModel;
 import org.jactr.core.module.declarative.four.IBaseLevelActivationEquation;
 import org.jactr.core.module.declarative.four.IDeclarativeModule4;
@@ -254,5 +255,20 @@ public class DefaultBaseLevelActivationEquation implements
     if (LOGGER.isDebugEnabled())
       LOGGER.debug(c + ".BaseLevelActivation = " + baseLevelActivation);
     return baseLevelActivation;
+  }
+
+  @Override
+  public String getName()
+  {
+    return "base4";
+  }
+
+  @Override
+  public double computeAndSetActivation(IChunk chunk, IModel model)
+  {
+    double base = computeBaseLevelActivation(model, chunk);
+    ((AbstractSubsymbolicChunk) chunk.getSubsymbolicChunk())
+        .setBaseLevelActivation(base);
+    return base;
   }
 }

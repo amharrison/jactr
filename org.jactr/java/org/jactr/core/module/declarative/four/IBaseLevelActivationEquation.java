@@ -14,6 +14,7 @@
 package org.jactr.core.module.declarative.four;
 
 import org.jactr.core.chunk.IChunk;
+import org.jactr.core.chunk.basic.IActivationParticipant;
 import org.jactr.core.model.IModel;
 
 /**
@@ -24,7 +25,7 @@ import org.jactr.core.model.IModel;
  * @author harrison
  * @created April 18, 2003
  */
-public interface IBaseLevelActivationEquation
+public interface IBaseLevelActivationEquation extends IActivationParticipant
 {
 
   /**

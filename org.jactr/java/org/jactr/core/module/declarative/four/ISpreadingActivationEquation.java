@@ -4,6 +4,7 @@ package org.jactr.core.module.declarative.four;
  * default logging
  */
 import org.jactr.core.chunk.IChunk;
+import org.jactr.core.chunk.basic.IActivationParticipant;
 import org.jactr.core.model.IModel;
 
 /**
@@ -11,7 +12,7 @@ import org.jactr.core.model.IModel;
  * 
  * @author harrison
  */
-public interface ISpreadingActivationEquation
+public interface ISpreadingActivationEquation extends IActivationParticipant
 {
 
   public double computeSpreadingActivation(IModel model, IChunk c);

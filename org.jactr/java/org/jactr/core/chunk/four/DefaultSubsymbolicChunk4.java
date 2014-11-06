@@ -420,47 +420,50 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
       IBaseLevelActivationEquation equation)
   {
     _baseLevelActivationEquation = equation;
+    addActivationParticipant(equation);
   }
 
   public void setRandomActivationEquation(IRandomActivationEquation equation)
   {
     _randomActivationEquation = equation;
+    addActivationParticipant(equation);
   }
 
   public void setSpreadingActivationEquation(
       ISpreadingActivationEquation equation)
   {
     _spreadingActivationEquation = equation;
+    addActivationParticipant(equation);
   }
 
-  @Override
-  protected double computeBaseLevelActivation()
-  {
-    if (_baseLevelActivationEquation == null) return _baseLevelActivation;
-
-    return _baseLevelActivationEquation.computeBaseLevelActivation(
-        _parentChunk.getModel(), _parentChunk);
-  }
-
-  @Override
-  protected double computeSpreadingActivation()
-  {
-    if (_spreadingActivationEquation != null)
-      return _spreadingActivationEquation.computeSpreadingActivation(
-          _parentChunk.getModel(), _parentChunk);
-
-    return _spreadingActivation;
-
-  }
-
-  @Override
-  protected double computeRandomActivation()
-  {
-    if (_randomActivationEquation != null)
-      return _randomActivationEquation.computeRandomActivation(
-          _parentChunk.getModel(), _parentChunk);
-    return 0;
-  }
+  // @Override
+  // protected double computeBaseLevelActivation()
+  // {
+  // if (_baseLevelActivationEquation == null) return _baseLevelActivation;
+  //
+  // return _baseLevelActivationEquation.computeBaseLevelActivation(
+  // _parentChunk.getModel(), _parentChunk);
+  // }
+  //
+  // @Override
+  // protected double computeSpreadingActivation()
+  // {
+  // if (_spreadingActivationEquation != null)
+  // return _spreadingActivationEquation.computeSpreadingActivation(
+  // _parentChunk.getModel(), _parentChunk);
+  //
+  // return _spreadingActivation;
+  //
+  // }
+  //
+  // @Override
+  // protected double computeRandomActivation()
+  // {
+  // if (_randomActivationEquation != null)
+  // return _randomActivationEquation.computeRandomActivation(
+  // _parentChunk.getModel(), _parentChunk);
+  // return 0;
+  // }
 
   @Override
   public void getOutboundLinks(Collection<IAssociativeLink> container)

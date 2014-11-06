@@ -11,6 +11,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISubsymbolicChunk;
+import org.jactr.core.chunk.basic.AbstractSubsymbolicChunk;
 import org.jactr.core.chunk.four.ISubsymbolicChunk4;
 import org.jactr.core.chunk.four.Link4;
 import org.jactr.core.chunk.link.IAssociativeLink;
@@ -30,7 +31,7 @@ public class DefaultSpreadingActivationEquation implements
   public double computeSpreadingActivation(IModel model, IChunk c)
   {
     double spread = 0.0;
-    ISubsymbolicChunk4 ssc4 = (ISubsymbolicChunk4) c.getSubsymbolicChunk()
+    ISubsymbolicChunk4 ssc4 = c.getSubsymbolicChunk()
         .getAdapter(ISubsymbolicChunk4.class);
 
     Collection<IAssociativeLink> collection = _linkCollection.get();
@@ -62,6 +63,21 @@ public class DefaultSpreadingActivationEquation implements
       LOGGER.debug(String.format("%s spreading activation = %.2f", c, spread));
     if (Double.isNaN(spread) || Double.isInfinite(spread)) spread = 0;
 
+    return spread;
+  }
+
+  @Override
+  public String getName()
+  {
+    return "spread4";
+  }
+
+  @Override
+  public double computeAndSetActivation(IChunk chunk, IModel model)
+  {
+    double spread = computeSpreadingActivation(model, chunk);
+    ((AbstractSubsymbolicChunk) chunk.getSubsymbolicChunk())
+        .setSpreadingActivation(spread);
     return spread;
   }
 
