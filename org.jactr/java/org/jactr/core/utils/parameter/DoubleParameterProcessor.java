@@ -9,16 +9,17 @@ import java.util.function.Supplier;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class NumberParameterProcessor extends ParameterProcessor<Number>
+public class DoubleParameterProcessor extends
+ ParameterProcessor<Double>
 {
   /**
    * Logger definition
    */
   static private final transient Log LOGGER = LogFactory
-                                                .getLog(NumberParameterProcessor.class);
+                                                .getLog(DoubleParameterProcessor.class);
 
-  public NumberParameterProcessor(String parameterName,
-      Consumer<Number> setFunction, Supplier<Number> getFunction)
+  public DoubleParameterProcessor(String parameterName,
+      Consumer<Double> setFunction, Supplier<Double> getFunction)
   {
     super(parameterName, Double::parseDouble, setFunction, Number::toString,
         getFunction);

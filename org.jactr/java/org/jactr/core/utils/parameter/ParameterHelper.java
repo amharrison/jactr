@@ -15,12 +15,12 @@ public class ParameterHelper
   /**
    * Logger definition
    */
-  static private final transient Log            LOGGER = LogFactory
-                                                           .getLog(ParameterHelper.class);
+  static private final transient Log               LOGGER = LogFactory
+                                                              .getLog(ParameterHelper.class);
 
   final private Map<String, ParameterProcessor<?>> _parameterProcessors;
 
-  final private Map<String, String>             _deferredParameters;
+  final private Map<String, String>                _deferredParameters;
 
   public ParameterHelper()
   {
@@ -53,7 +53,12 @@ public class ParameterHelper
       processor.setParameter(value);
     }
     else
+    {
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug(String.format(
+            "%s not currently known. Saving as deferred", name));
       _deferredParameters.put(name, value);
+    }
   }
 
   public String getParameter(String name) throws ParameterException

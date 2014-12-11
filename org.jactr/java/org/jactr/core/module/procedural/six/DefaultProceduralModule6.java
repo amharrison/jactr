@@ -380,15 +380,10 @@ public class DefaultProceduralModule6 extends AbstractModule implements
               && ((IBufferAction) action).getBufferName().equals(bufferName))
           {
             /*
-             * if the action is a modify w/ no slots (i.e., touch to prevent
-             * harvesting), we can remove the modify and not add the remove.
+             * if there is a modify or a remove, we don't have to do anything.
              */
-            if (action instanceof ModifyAction
-                && !(action instanceof RemoveAction)
-                && ((ModifyAction) action).getSlots().size() == 0)
-              symProd.removeAction(action);
-
-            actionFound = true;
+            if (action instanceof RemoveAction
+                || action instanceof ModifyAction) actionFound = true;
             break;
           }
 

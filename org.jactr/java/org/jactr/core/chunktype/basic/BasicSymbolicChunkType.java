@@ -416,6 +416,12 @@ public class BasicSymbolicChunkType extends NotifyingSlotContainer implements
         LOGGER.debug(this + ": Removing chunk = " + chunk + " to " + _name);
 
     _chunks.remove(chunk);
+
+    if (_supertypeParents.size() > 0)
+      for (IChunkType parent : _supertypeParents)
+        if (parent.getSymbolicChunkType() instanceof IRemovableSymbolicChunkType)
+          ((IRemovableSymbolicChunkType) parent.getSymbolicChunkType())
+              .removeChunk(chunk);
   }
 
   /**
