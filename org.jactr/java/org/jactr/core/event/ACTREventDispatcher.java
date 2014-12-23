@@ -13,10 +13,8 @@
  */
 package org.jactr.core.event;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
@@ -26,7 +24,6 @@ import javolution.util.FastList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.concurrent.ExecutorServices;
-import org.jactr.core.utils.collections.CachedCollection;
 
 /**
  * class that handles the nitty gritty of tracking listeners, executors, and
@@ -39,20 +36,21 @@ public class ACTREventDispatcher<S, L>
   /**
    * logger definition
    */
-  static public final Log        LOGGER = LogFactory
-                                            .getLog(ACTREventDispatcher.class);
+  static public final Log LOGGER              = LogFactory
+                                                  .getLog(ACTREventDispatcher.class);
 
- 
-  private FastList<Pair>         _actualListeners;
+  private FastList<Pair>  _actualListeners;
+
+  private boolean         _haveEncounteredREE = false;
 
   public ACTREventDispatcher()
   {
-   
+
   }
 
   synchronized public void clear()
   {
-    if(_actualListeners!=null)
+    if (_actualListeners != null)
     {
       FastList.recycle(_actualListeners);
       _actualListeners = null;
@@ -61,8 +59,9 @@ public class ACTREventDispatcher<S, L>
 
   synchronized public void addListener(L listener, Executor executor)
   {
-    if(listener==null) throw new IllegalArgumentException("Listener must not be null");
-    
+    if (listener == null)
+      throw new IllegalArgumentException("Listener must not be null");
+
     if (executor == null) executor = ExecutorServices.INLINE_EXECUTOR;
 
     Pair p = new Pair(listener, executor);
@@ -94,22 +93,21 @@ public class ACTREventDispatcher<S, L>
   {
     return _actualListeners != null && _actualListeners.size() != 0;
   }
-  
 
   public void fire(IACTREvent<S, L> event)
   {
     FastList<Pair> container = null;
-    
-    synchronized(this)
+
+    synchronized (this)
     {
-      if(_actualListeners==null) return;
+      if (_actualListeners == null) return;
       container = FastList.newInstance();
       container.addAll(_actualListeners);
     }
-    
+
     for (Pair pair : container)
       pair.fire(event);
-    
+
     FastList.recycle(container);
   }
 
@@ -153,11 +151,29 @@ public class ACTREventDispatcher<S, L>
       }
       catch (RejectedExecutionException ree)
       {
-        if (LOGGER.isWarnEnabled())
-          LOGGER.warn(_executor + " rejected firing of event ");
-        /*
-         * we could, possibly.. set fire locally to
-         */
+
+        if (!_haveEncounteredREE)
+        {
+          if (LOGGER.isWarnEnabled())
+          {
+            LOGGER.warn(String.format(
+                "%s rejected processing of actr event (%s) by listener (%s).",
+                _executor, event.getClass().getSimpleName(), _listener
+                    .getClass().getName()));
+            LOGGER
+                .warn("This is normal during end-of-run processing if your model produced data faster than it could be processed,");
+            LOGGER
+                .warn("by the IDE or background tools. If you see this warning mid-run, something may be wrong, please see the exception.");
+            LOGGER
+                .warn(String
+                    .format(
+                        "Suppressing further rejection warnings for this event source (%s).",
+                        event.getSource().getClass().getName()));
+            LOGGER.warn(ree);
+          }
+
+          _haveEncounteredREE = true;
+        }
       }
     }
   }
