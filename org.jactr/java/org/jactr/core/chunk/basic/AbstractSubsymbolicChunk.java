@@ -237,6 +237,25 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
     }
   }
 
+  public double getSourceActivation(IActivationBuffer buffer)
+  {
+    Lock l = readLock();
+    try
+    {
+      l.lock();
+      if (_sourceActivation == null) return 0;
+
+      if (_sourceActivation.containsKey(buffer))
+        return _sourceActivation.get(buffer);
+      else
+        return 0;
+    }
+    finally
+    {
+      l.unlock();
+    }
+  }
+
   public double getSpreadingActivation()
   {
     Lock l = readLock();

@@ -174,6 +174,14 @@ public interface ISubsymbolicChunk extends
   public double getSourceActivation();
 
   /**
+   * return the buffer specific portion of source activation. 0 if undefined.
+   * 
+   * @param buffer
+   * @return
+   */
+  public double getSourceActivation(IActivationBuffer buffer);
+
+  /**
    * Return the current base level activation. This is a function of the current
    * model time and the recency and frequency of access of the chunk.
    * 
