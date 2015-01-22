@@ -41,12 +41,13 @@ import org.jactr.core.utils.parameter.ParameterHandler;
  */
 public class Link4 extends AbstractAssociativeLink
 {
-  
-  static public final String COUNT_PARAM = "Count";
-  static public final String FNICJ_PARAM = "FNiCj";
 
-  private static transient Log     LOGGER     = LogFactory.getLog(Link4.class
-                                                  .getName());
+  static public final String       COUNT_PARAM = "Count";
+
+  static public final String       FNICJ_PARAM = "FNiCj";
+
+  private static transient Log     LOGGER      = LogFactory.getLog(Link4.class
+                                                   .getName());
 
   /**
    * Number of times this link is used
@@ -56,7 +57,7 @@ public class Link4 extends AbstractAssociativeLink
   /**
    * prior strength
    */
-  private double                   _rStrength = 1;
+  private double                   _rStrength  = 1;
 
   /**
    * count of the times that i was accessed while j was in context
@@ -66,7 +67,7 @@ public class Link4 extends AbstractAssociativeLink
   /**
    * to permit lazy computation of strength
    */
-  private double                   _timeStamp = -1;
+  private double                   _timeStamp  = -1;
 
   private IAssociativeLinkEquation _linkEquation;
 
@@ -153,7 +154,6 @@ public class Link4 extends AbstractAssociativeLink
     _fnicj += 1.0;
     dirty();
   }
-  
 
   public void setFNICJ(double FNiCj)
   {
@@ -197,8 +197,7 @@ public class Link4 extends AbstractAssociativeLink
   @Override
   public String toString()
   {
-    return String.format("%s %f %s (%d, %f, %f)", getJChunk(), getStrength(),
-        getIChunk(), _count, _fnicj, _rStrength);
+    return String.format("j:%s - i:%s", getJChunk(), getIChunk());
   }
 
   /**
@@ -267,13 +266,14 @@ public class Link4 extends AbstractAssociativeLink
   }
 
   /**
-   * Gets the dirty attribute of the Link object
-   * current will recalculate only once per cycle.
+   * Gets the dirty attribute of the Link object current will recalculate only
+   * once per cycle.
+   * 
    * @return The dirty value
    */
   public boolean isDirty()
   {
-    return _timeStamp < 0 //getIChunk().getModel().getAge()
+    return _timeStamp < 0 // getIChunk().getModel().getAge()
         || Double.isNaN(_rStrength);
   }
 
@@ -292,13 +292,12 @@ public class Link4 extends AbstractAssociativeLink
   {
     _timeStamp = getIChunk().getModel().getAge();
   }
-  
-  
+
   @Override
   public void copy(IAssociativeLink link) throws IllegalArgumentException
   {
     super.copy(link);
-    if(link instanceof Link4)
+    if (link instanceof Link4)
     {
       Link4 l4 = (Link4) link;
       setRStrength(l4.getRStrength());
@@ -307,7 +306,7 @@ public class Link4 extends AbstractAssociativeLink
       l4.dirty();
     }
   }
-  
+
   @Override
   public Collection<String> getPossibleParameters()
   {
@@ -317,26 +316,27 @@ public class Link4 extends AbstractAssociativeLink
     rtn.add(FNICJ_PARAM);
     return rtn;
   }
-  
+
   @Override
   public String getParameter(String key)
   {
-    if(COUNT_PARAM.equalsIgnoreCase(key))
+    if (COUNT_PARAM.equalsIgnoreCase(key))
       return Integer.toString(getCount());
-    else if(FNICJ_PARAM.equalsIgnoreCase(key))
+    else if (FNICJ_PARAM.equalsIgnoreCase(key))
       return Double.toString(getFNICJ());
     else
       return super.getParameter(key);
   }
-  
+
   @Override
   public void setParameter(String key, String value)
   {
-    if(COUNT_PARAM.equalsIgnoreCase(key))
+    if (COUNT_PARAM.equalsIgnoreCase(key))
       setCount(ParameterHandler.numberInstance().coerce(value).intValue());
-    else if(FNICJ_PARAM.equalsIgnoreCase(key))
+    else if (FNICJ_PARAM.equalsIgnoreCase(key))
       setFNICJ(ParameterHandler.numberInstance().coerce(value).doubleValue());
-    else super.setParameter(key, value);
+    else
+      super.setParameter(key, value);
   }
 
 }
