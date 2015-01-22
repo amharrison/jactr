@@ -41,6 +41,6 @@ public class LinkParameterProbe extends AbstractParameterizedProbe<IAssociativeL
   protected AbstractParameterizedProbe<IAssociativeLink> newInstance(
       IAssociativeLink parameterized)
   {
-    return new LinkParameterProbe(String.format("j:%s i:%s", parameterized.getJChunk(), parameterized.getIChunk()), parameterized);
+    return new LinkParameterProbe(parameterized.toString(), parameterized);
   }
 }
