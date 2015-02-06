@@ -518,6 +518,9 @@ public class DefaultChunk extends DefaultAdaptable implements IChunk
   @Override
   public Object getAdapter(Class adapterClass)
   {
+    Object superRtn = super.getAdapter(adapterClass);
+    if (superRtn != null) return superRtn;
+
     if (ISymbolicChunk.class.equals(adapterClass))
       return getSymbolicChunk();
     else if (ISubsymbolicChunk.class.equals(adapterClass))
@@ -527,7 +530,16 @@ public class DefaultChunk extends DefaultAdaptable implements IChunk
     else if (ISubsymbolicChunk.class.isAssignableFrom(adapterClass))
       return getSubsymbolicChunk().getAdapter(adapterClass);
     else
-      return super.getAdapter(adapterClass);
+    {
+      // test to see if our sub or sym implement
+      Class clazz = getSymbolicChunk().getClass();
+      if (adapterClass.isAssignableFrom(clazz)) return getSymbolicChunk();
+
+      clazz = getSubsymbolicChunk().getClass();
+      if (adapterClass.isAssignableFrom(clazz)) return getSubsymbolicChunk();
+    }
+
+    return null;
   }
 
   @Override

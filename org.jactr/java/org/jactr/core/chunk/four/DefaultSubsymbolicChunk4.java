@@ -18,6 +18,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import javolution.util.FastList;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
@@ -25,6 +27,7 @@ import org.jactr.core.chunk.basic.AbstractSubsymbolicChunk;
 import org.jactr.core.chunk.link.IAssociativeLink;
 import org.jactr.core.event.ParameterEvent;
 import org.jactr.core.module.declarative.IDeclarativeModule;
+import org.jactr.core.module.declarative.associative.IAssociativeLinkContainer;
 import org.jactr.core.module.declarative.associative.IAssociativeLinkageSystem;
 import org.jactr.core.module.declarative.four.IBaseLevelActivationEquation;
 import org.jactr.core.module.declarative.four.IDeclarativeModule4;
@@ -85,8 +88,7 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
         writeLock().lock();
         IDeclarativeModule decMod = _parentChunk.getModel()
             .getDeclarativeModule();
-        IDeclarativeModule4 dm = decMod
-            .getAdapter(IDeclarativeModule4.class);
+        IDeclarativeModule4 dm = decMod.getAdapter(IDeclarativeModule4.class);
         if (dm == null)
         {
           if (LOGGER.isWarnEnabled())
@@ -356,10 +358,19 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
     String rtn = null;
     if (LINKS.equalsIgnoreCase(key))
     {
-      Collection<IAssociativeLink> associations = getIAssociations(null); // everyone
-      // we
-      // spread
-      // to
+      /*
+       * here we are using the adapter to get the link container, even though
+       * this class implements directly, we go through the adapter in case
+       * someone has needed to replace the container. Note also, we dont use
+       * this adaptable, but the chunk's. Should probably remove adaptable from
+       * content classes.
+       */
+      IAssociativeLinkContainer aslc = getParentChunk().getAdapter(
+          IAssociativeLinkContainer.class);
+
+      Collection<IAssociativeLink> associations = FastList.newInstance();
+      aslc.getOutboundLinks(associations); // everyone we spread to
+
       ACTRParameterHandler actrph = new ACTRParameterHandler(getParentChunk()
           .getModel());
 

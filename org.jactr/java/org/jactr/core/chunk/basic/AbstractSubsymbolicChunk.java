@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 
@@ -34,6 +35,7 @@ import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.utils.DefaultAdaptable;
 import org.jactr.core.utils.parameter.CollectionParameterHandler;
 import org.jactr.core.utils.parameter.ParameterHandler;
+import org.jactr.core.utils.parameter.ParameterHelper;
 import org.jactr.core.utils.references.IReferences;
 
 public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
@@ -73,14 +75,19 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
 
   protected Map<String, String>              _unknownParameters;
 
+  protected ParameterHelper                  _parameterHelper               = new ParameterHelper();
+
   static private boolean                     _setSourceWarned               = false;
 
   public AbstractSubsymbolicChunk()
   {
     // factory? really. this should be changed
     _referenceList = IReferences.Factory.get().newInstance();
-    _unknownParameters = new HashMap<String, String>();
+    _unknownParameters = new TreeMap<String, String>();
+    initializeParameters();
   }
+
+
 
   public void bind(IChunk wrapper)
   {
@@ -490,9 +497,18 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
           needed));
   }
 
+  protected void initializeParameters()
+  {
+    // parameter help hooks.
+
+    // _parameterHelper.addProcessor(null);
+  }
+
   public String getParameter(String key)
   {
     String rtn = null;
+    //short-term fix until everything is migrated to ParameterProcessor/Helper
+
     if (CREATION_TIME.equalsIgnoreCase(key))
       rtn = ParameterHandler.numberInstance().toString(getCreationTime());
     else if (TIMES_NEEDED.equalsIgnoreCase(key))

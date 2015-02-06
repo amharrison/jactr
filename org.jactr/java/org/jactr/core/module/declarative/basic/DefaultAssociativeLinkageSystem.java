@@ -104,12 +104,10 @@ public class DefaultAssociativeLinkageSystem implements
     return new LinkParameterProcessor(
         ISubsymbolicChunk4.LINKS,
         l -> {
-      IAssociativeLinkContainer container = sourceChunk.getSubsymbolicChunk().getAdapter(IAssociativeLinkContainer.class);
-      container.addLink(l);
+      addLink(l);
         },
         () -> {
           IAssociativeLinkContainer container = sourceChunk
-              .getSubsymbolicChunk()
               .getAdapter(IAssociativeLinkContainer.class);
           Collection<IAssociativeLink> lC = new ArrayList<IAssociativeLink>();
           container.getOutboundLinks(sourceChunk, lC);

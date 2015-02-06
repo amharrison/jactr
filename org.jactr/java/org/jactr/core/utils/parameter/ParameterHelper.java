@@ -28,6 +28,11 @@ public class ParameterHelper
     _deferredParameters = new TreeMap<String, String>();
   }
 
+  public boolean hasProcessor(String parameterName)
+  {
+    return _parameterProcessors.get(parameterName.toLowerCase()) != null;
+  }
+
   public void addProcessor(ParameterProcessor<?> processor)
   {
     ParameterProcessor<?> old = _parameterProcessors.put(processor
