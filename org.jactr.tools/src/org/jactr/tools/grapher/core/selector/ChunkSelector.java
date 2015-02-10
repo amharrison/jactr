@@ -23,6 +23,7 @@ import org.jactr.core.chunk.link.IAssociativeLink;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.event.IParameterEvent;
 import org.jactr.core.event.IParameterListener;
+import org.jactr.core.module.declarative.associative.IAssociativeLinkContainer;
 import org.jactr.tools.grapher.core.container.IProbeContainer;
 
 public class ChunkSelector extends AbstractNameSelector<IChunk>
@@ -52,7 +53,7 @@ public class ChunkSelector extends AbstractNameSelector<IChunk>
       {
         if (((ISubsymbolicChunk) pe.getSource()).getParentChunk().isEncoded())
           if (pe.getParameterName().equalsIgnoreCase(ISubsymbolicChunk4.LINKS))
-            checkLinks((ISubsymbolicChunk) pe.getSource());
+            checkLinks(((ISubsymbolicChunk) pe.getSource()).getParentChunk());
       }
 
     };
@@ -61,7 +62,7 @@ public class ChunkSelector extends AbstractNameSelector<IChunk>
       @Override
       public void chunkEncoded(ChunkEvent event)
       {
-        checkLinks(event.getSource().getSubsymbolicChunk());
+        checkLinks(event.getSource());
       }
 
     };
@@ -88,18 +89,21 @@ public class ChunkSelector extends AbstractNameSelector<IChunk>
     element.addListener(_pListener, executor);
     element.addListener(_cListener, executor);
 
-    if (element.isEncoded()) checkLinks(element.getSubsymbolicChunk());
+    if (element.isEncoded()) checkLinks(element);
 
     return rtnContainer;
   }
 
-  private void checkLinks(ISubsymbolicChunk chunk)
+  private void checkLinks(IChunk chunk)
   {
     FastList<IAssociativeLink> links = FastList.newInstance();
 
-    ((ISubsymbolicChunk4) chunk).getIAssociations(links);
+    IAssociativeLinkContainer alc = chunk
+        .getAdapter(IAssociativeLinkContainer.class);
+    alc.getOutboundLinks(links);
+
     for (IAssociativeLink link : links)
-      checkLink(link, getProbeContainer(chunk.getParentChunk()));
+      checkLink(link, getProbeContainer(chunk));
 
     FastList.recycle(links);
   }
