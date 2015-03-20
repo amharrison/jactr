@@ -21,6 +21,7 @@ SaveAsExtension : extension of the code generator to use. (default: jactr)
 StartDirectory : local working directory path to save the start state models to. Will be created if missing. (default: start/)
 StopDirectory : local working directory path to save the stop models to. Will be created if missing. (default: stop/)
 TrimModuleContributions : Don&apos;t include the injected content from modules and extensions in the generated code. (default: true).
+ASTGenerator: default or class name of Function&lt;IModel, CommonTree&gt; to generate a filtered ast for writing to file.
 
 http://jactr.org/node/144</description>
          <parameter
@@ -34,7 +35,11 @@ http://jactr.org/node/144</description>
                value="stop"/>
           <parameter
                name="TrimModuleContributions"
-               value="true"/>     
+               value="true"/>
+          <parameter
+                name="ASTGenerator"
+                value="default">
+          </parameter>     
       </instrument>
       <instrument
             class="org.jactr.tools.tracer.RuntimeTracer"
