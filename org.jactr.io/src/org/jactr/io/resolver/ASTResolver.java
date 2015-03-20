@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.function.Predicate;
 
 import javolution.util.FastList;
 
@@ -102,14 +103,26 @@ public class ASTResolver
   }
 
   /**
-   * create an AST description of the model and optionally, all its children
+   * create a version of the model.with the option to generate just the model
+   * header (fullResoltuion), or to filter out content when generating a full
+   * dump
    * 
    * @param model
    * @param fullResolution
+   *          if false, just the model & parameters is generated. filters are
+   *          ignored.
+   * @param productionFilter
+   * @param chunkTypeFilter
+   * @param chunkFilter
    * @return
    */
-  static public CommonTree toAST(IModel model, boolean fullResolution)
+  static public CommonTree toAST(IModel model, boolean fullResolution,
+      Predicate<IProduction> productionFilter,
+      Predicate<IChunkType> chunkTypeFilter, Predicate<IChunk> chunkFilter)
   {
+    if (productionFilter == null) productionFilter = p -> true;
+    if (chunkTypeFilter == null) chunkTypeFilter = c -> true;
+    if (chunkFilter == null) chunkFilter = c -> true;
 
     /**
      * lock so that we are the only one right now
@@ -163,10 +176,12 @@ public class ASTResolver
         {
           for (IChunkType ct : model.getDeclarativeModule().getChunkTypes()
               .get())
-          {
-            List<CommonTree> chunkTypesList = toOrderedAST(ct, resolved);
-            chunkTypes.addAll(chunkTypesList);
-          }
+            if (chunkTypeFilter.test(ct))
+            {
+              List<CommonTree> chunkTypesList = toOrderedAST(ct, resolved,
+                  chunkTypeFilter, chunkFilter);
+              chunkTypes.addAll(chunkTypesList);
+            }
         }
         catch (InterruptedException ie)
         {
@@ -176,6 +191,7 @@ public class ASTResolver
         {
           LOGGER.error("Execution ", e);
         }
+
         // now we can dump them
         for (CommonTree ctNode : chunkTypes)
           decWrapper.addChild(ctNode);
@@ -241,6 +257,18 @@ public class ASTResolver
   }
 
   /**
+   * create an AST description of the model and optionally, all its children
+   * 
+   * @param model
+   * @param fullResolution
+   * @return
+   */
+  static public CommonTree toAST(IModel model, boolean fullResolution)
+  {
+    return toAST(model, fullResolution, null, null, null);
+  }
+
+  /**
    * return a list of all the commonTrees for this chunktype and its parents
    * sorted in dependency order, with chunkType's commonTree last
    * 
@@ -249,7 +277,8 @@ public class ASTResolver
    */
   @SuppressWarnings("unchecked")
   static protected List<CommonTree> toOrderedAST(IChunkType chunkType,
-      Set<IChunkType> alreadyConverted)
+      Set<IChunkType> alreadyConverted, Predicate<IChunkType> chunkTypeFilter,
+      Predicate<IChunk> chunkFilter)
   {
     if (alreadyConverted.contains(chunkType))
     {
@@ -263,14 +292,19 @@ public class ASTResolver
         .getParents();
     // if (parent != null)
     for (IChunkType parent : parents)
-    {
-      if (LOGGER.isDebugEnabled()) LOGGER.debug("resolving parent " + parent);
-      rtn.addAll(toOrderedAST(parent, alreadyConverted));
-    }
+      if (chunkTypeFilter.test(parent))
+      {
+        if (LOGGER.isDebugEnabled())
+          LOGGER.debug("resolving parent " + parent);
+        rtn.addAll(toOrderedAST(parent, alreadyConverted, chunkTypeFilter,
+            chunkFilter));
+      }
 
     if (LOGGER.isDebugEnabled()) LOGGER.debug("Resolving " + chunkType);
     alreadyConverted.add(chunkType);
-    rtn.add(toAST(chunkType, true));
+
+    if (chunkTypeFilter.test(chunkType))
+      rtn.add(toAST(chunkType, chunkFilter));
     return rtn;
   }
 
@@ -324,6 +358,14 @@ public class ASTResolver
     return cd;
   }
 
+  static public CommonTree toAST(IChunkType chunkType, boolean fullResolution)
+  {
+    /*
+     * if we aren't doing full res, filter is null. if we are, accept all
+     */
+    return toAST(chunkType, !fullResolution ? null : (c) -> true);
+  }
+
   /**
    * return the AST describing the chunktype and optionally all it's immediate
    * chunks
@@ -332,7 +374,8 @@ public class ASTResolver
    * @param fullResolution
    * @return
    */
-  static public CommonTree toAST(IChunkType chunkType, boolean fullResolution)
+  static public CommonTree toAST(IChunkType chunkType,
+      Predicate<IChunk> chunkFilter)
   {
     ISymbolicChunkType sct = chunkType.getSymbolicChunkType();
     ISubsymbolicChunkType ssct = chunkType.getSubsymbolicChunkType();
@@ -352,7 +395,7 @@ public class ASTResolver
     // slots
     setSlots(ASTSupport.getFirstDescendantWithType(cd, JACTRBuilder.SLOTS), sct);
 
-    if (fullResolution)
+    if (chunkFilter != null)
     {
       CommonTree chunks = ASTSupport.getFirstDescendantWithType(cd,
           JACTRBuilder.CHUNKS);
@@ -361,7 +404,8 @@ public class ASTResolver
        * chunk type. leave descendants for the derived chunktypes to return
        */
       for (IChunk chunk : sct.getChunks())
-        if (chunk.isAStrict(chunkType)) chunks.addChild(toAST(chunk, false));
+        if (chunk.isAStrict(chunkType))
+          if (chunkFilter.test(chunk)) chunks.addChild(toAST(chunk, false));
     }
     return cd;
   }
@@ -544,8 +588,7 @@ public class ASTResolver
 
     if (action instanceof StopAction)
       actionNode = _support.createProxyActionTree(StopAction.class.getName());
-    else
-    if (action instanceof ProxyAction)
+    else if (action instanceof ProxyAction)
     {
       // proxy just a tracked node with the text as the class name
       String className = ((ProxyAction) action).getDelegateClassName();
