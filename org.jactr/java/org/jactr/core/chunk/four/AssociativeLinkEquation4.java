@@ -3,12 +3,15 @@ package org.jactr.core.chunk.four;
 /*
  * default logging
  */
+import javolution.util.FastList;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.link.IAssociativeLink;
 import org.jactr.core.chunk.link.IAssociativeLinkEquation;
 import org.jactr.core.model.IModel;
+import org.jactr.core.module.declarative.associative.IAssociativeLinkContainer;
 import org.jactr.core.module.declarative.four.learning.IDeclarativeLearningModule4;
 
 /**
@@ -44,10 +47,8 @@ public class AssociativeLinkEquation4 implements IAssociativeLinkEquation
     if (!_declarativeLearningModule.isAssociativeLearningEnabled())
       return link4.getStrength();
 
-    ISubsymbolicChunk4 j = (ISubsymbolicChunk4) jChunk.getSubsymbolicChunk()
-        .getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 i = (ISubsymbolicChunk4) iChunk.getSubsymbolicChunk()
-        .getAdapter(ISubsymbolicChunk4.class);
+    ISubsymbolicChunk4 j = jChunk.getAdapter(ISubsymbolicChunk4.class);
+    ISubsymbolicChunk4 i = iChunk.getAdapter(ISubsymbolicChunk4.class);
 
     double numerator = _declarativeLearningModule.getAssociativeLearning()
         * link4.getRStrength();
@@ -92,10 +93,13 @@ public class AssociativeLinkEquation4 implements IAssociativeLinkEquation
         .getNumberOfChunks();
 
     int fan = 0;
-    ISubsymbolicChunk4 ssc4 = (ISubsymbolicChunk4) jChunk.getSubsymbolicChunk()
-        .getAdapter(ISubsymbolicChunk4.class);
+    IAssociativeLinkContainer alc = jChunk
+        .getAdapter(IAssociativeLinkContainer.class);
 
-    if (ssc4 != null) fan = ssc4.getNumberOfIAssociations();
+    ISubsymbolicChunk4 ssc4 = jChunk.getSubsymbolicChunk().getAdapter(
+        ISubsymbolicChunk4.class);
+
+    if (ssc4 != null) fan = (int) alc.getNumberOfOutboundLinks();
 
     double dRji = 0;
     if (fan > 0)
@@ -121,17 +125,19 @@ public class AssociativeLinkEquation4 implements IAssociativeLinkEquation
   {
     try
     {
+      FastList<IAssociativeLink> links = FastList.newInstance();
       for (IChunk chunk : model.getDeclarativeModule().getChunks().get())
       {
-        ISubsymbolicChunk4 ssc4 = (ISubsymbolicChunk4) chunk
-            .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
-        if (ssc4 != null)
-          for (IAssociativeLink link : ssc4.getIAssociations(null))
-          {
-            if (LOGGER.isDebugEnabled())
-              LOGGER.debug("Reseting strength of " + link);
-            ((Link4) link).setStrength(computeDefaultStrength(link));
-          }
+        IAssociativeLinkContainer alc = chunk
+            .getAdapter(IAssociativeLinkContainer.class);
+        links.clear();
+        alc.getOutboundLinks(links);
+        for (IAssociativeLink link : links)
+        {
+          if (LOGGER.isDebugEnabled())
+            LOGGER.debug("Reseting strength of " + link);
+          ((Link4) link).setStrength(computeDefaultStrength(link));
+        }
       }
     }
     catch (Exception e)

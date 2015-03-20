@@ -12,11 +12,11 @@ import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.event.IChunkListener;
 import org.jactr.core.chunk.four.AssociativeLinkEquation4;
-import org.jactr.core.chunk.four.ISubsymbolicChunk4;
 import org.jactr.core.chunk.four.Link4;
 import org.jactr.core.chunk.link.IAssociativeLink;
 import org.jactr.core.chunk.link.IAssociativeLinkEquation;
 import org.jactr.core.model.IModel;
+import org.jactr.core.module.declarative.associative.IAssociativeLinkContainer;
 import org.jactr.core.module.declarative.associative.IAssociativeLinkageSystem;
 import org.jactr.core.module.declarative.basic.DefaultAssociativeLinkageSystem;
 import org.jactr.core.module.declarative.event.DeclarativeModuleEvent;
@@ -80,11 +80,7 @@ public class DefaultAssociativeLinkageSystem4 extends
             .getAssociativeLinkageSystem();
 
         if (linkageSystem != null)
-        {
-          ISubsymbolicChunk4 ssc4 = iChunk
-              .getAdapter(ISubsymbolicChunk4.class);
-          ssc4.addLink(linkageSystem.createLink(iChunk, iChunk));
-        }
+          linkageSystem.addLink(linkageSystem.createLink(iChunk, iChunk));
 
         /*
          * chunks with default slot values will by-pass the normal chain of
@@ -183,62 +179,109 @@ public class DefaultAssociativeLinkageSystem4 extends
    * @param value
    * @param valueIsOld
    */
-  protected void linkSlotValue(IChunk iChunk, IChunk value, boolean valueIsOld)
+  protected void linkSlotValue(IChunk iChunk, IChunk jChunk, boolean valueIsOld)
   {
-    if (!(value.getSubsymbolicChunk() instanceof ISubsymbolicChunk4))
-    {
-      if (LOGGER.isWarnEnabled())
-        LOGGER.warn("old value " + value
-            + " doesn't have a ISubsymbolicChunk4, nothing to be done");
-      return;
-    }
 
-    ISubsymbolicChunk4 sscI = iChunk.getSubsymbolicChunk()
-        .getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 sscJ = value.getSubsymbolicChunk()
-        .getAdapter(ISubsymbolicChunk4.class);
-    IAssociativeLink sJI = sscJ.getIAssociation(iChunk);
+    IAssociativeLinkContainer iContainer = iChunk
+        .getAdapter(IAssociativeLinkContainer.class);
+    IAssociativeLinkContainer jContainer = jChunk
+        .getAdapter(IAssociativeLinkContainer.class);
+
+    FastList<IAssociativeLink> links = FastList.newInstance();
+    iContainer.getInboundLinks(jChunk, links);
 
     if (!valueIsOld)
     {
       // add
-      if (sJI == null)
+      if (links.size() == 0)
       {
-        sJI = createLink(iChunk, value);
+        IAssociativeLink sJI = createLink(iChunk, jChunk);
         if (LOGGER.isDebugEnabled())
-          LOGGER.debug("Adding link between " + iChunk + " and " + value
+          LOGGER.debug("Adding link between " + iChunk + " and " + jChunk
               + " : " + sJI);
-        // since we are the linkage system, we can assume this is correct and
-        // not
-        // use linkageSystem.addLink
-        sscI.addLink(sJI);
-        sscJ.addLink(sJI);
+
+        iContainer.addLink(sJI);
+        jContainer.addLink(sJI);
       }
       else
       {
-        ((Link4) sJI).increment(); // not new, but we need to increment the
-        // link
+        // hopefully just one
+        Link4 sJI = (Link4) links.iterator().next();
+
+        sJI.increment(); // not new, but we need to increment the
+
         if (LOGGER.isDebugEnabled())
           LOGGER.debug("Link already established between " + iChunk + " and "
-              + value + " incrementing : " + sJI);
+              + jChunk + " incrementing : " + sJI);
       }
     }
-    else if (sJI != null)
+    else if(links.size()!=0)
     {
-      // remove
-      ((Link4) sJI).decrement();
-      if (((Link4) sJI).getCount() == 0)
+      /*
+       * remove the old value.. decrement and remove if necessary
+       */
+      //hopefully just one
+      Link4 sJI = (Link4) links.iterator().next();
+      sJI.decrement();
+      if (sJI.getCount() == 0)
       {
         if (LOGGER.isDebugEnabled())
-          LOGGER.debug("Removing link between " + iChunk + " and " + value
+          LOGGER.debug("Removing link between " + iChunk + " and " + jChunk
               + " : " + sJI);
-        sscI.removeLink(sJI);
-        sscJ.removeLink(sJI);
+        iContainer.removeLink(sJI);
+        jContainer.removeLink(sJI);
       }
       else if (LOGGER.isDebugEnabled())
         LOGGER.debug("Multiple links established between " + iChunk + " and "
-            + value + " decrementing : " + sJI);
+            + jChunk + " decrementing : " + sJI);
     }
+
+    // ISubsymbolicChunk4 sscI = iChunk.getSubsymbolicChunk()
+    // .getAdapter(ISubsymbolicChunk4.class);
+    // ISubsymbolicChunk4 sscJ = value.getSubsymbolicChunk()
+    // .getAdapter(ISubsymbolicChunk4.class);
+    // IAssociativeLink sJI = sscJ.getIAssociation(iChunk);
+    //
+    // if (!valueIsOld)
+    // {
+    // // add
+    // if (sJI == null)
+    // {
+    // sJI = createLink(iChunk, value);
+    // if (LOGGER.isDebugEnabled())
+    // LOGGER.debug("Adding link between " + iChunk + " and " + value
+    // + " : " + sJI);
+    // // since we are the linkage system, we can assume this is correct and
+    // // not
+    // // use linkageSystem.addLink
+    // sscI.addLink(sJI);
+    // sscJ.addLink(sJI);
+    // }
+    // else
+    // {
+    // ((Link4) sJI).increment(); // not new, but we need to increment the
+    // // link
+    // if (LOGGER.isDebugEnabled())
+    // LOGGER.debug("Link already established between " + iChunk + " and "
+    // + value + " incrementing : " + sJI);
+    // }
+    // }
+    // else if (sJI != null)
+    // {
+    // // remove
+    // ((Link4) sJI).decrement();
+    // if (((Link4) sJI).getCount() == 0)
+    // {
+    // if (LOGGER.isDebugEnabled())
+    // LOGGER.debug("Removing link between " + iChunk + " and " + value
+    // + " : " + sJI);
+    // sscI.removeLink(sJI);
+    // sscJ.removeLink(sJI);
+    // }
+    // else if (LOGGER.isDebugEnabled())
+    // LOGGER.debug("Multiple links established between " + iChunk + " and "
+    // + value + " decrementing : " + sJI);
+    // }
 
   }
 }

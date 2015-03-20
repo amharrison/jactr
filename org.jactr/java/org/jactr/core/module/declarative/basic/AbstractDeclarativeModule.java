@@ -385,6 +385,13 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
     _chunkConfigurator = configurator;
   }
 
+  /**
+   * the default from this class is to return a ChainedChunkConfigurator. It is
+   * preferrable to use this configurator and add yours to it, allowing more
+   * than one to be installed and used.
+   * 
+   * @return
+   */
   public IChunkConfigurator getChunkConfigurator()
   {
     if (_chunkConfigurator == null)

@@ -22,8 +22,8 @@ public class DefaultAdaptable implements IAdaptable
   /**
    * Logger definition
    */
-  static private final transient Log LOGGER = LogFactory
-                                                .getLog(DefaultAdaptable.class);
+  static private final transient Log             LOGGER     = LogFactory
+                                                                .getLog(DefaultAdaptable.class);
 
   final private Map<Class<?>, IAdaptableFactory> _adapters  = new HashMap<Class<?>, IAdaptableFactory>();
 
@@ -31,39 +31,67 @@ public class DefaultAdaptable implements IAdaptable
 
   final private Map<Class<?>, SoftReference<?>>  _softCache = new HashMap<Class<?>, SoftReference<?>>();
 
-  
   @SuppressWarnings("unchecked")
   public <T> T getAdapter(Class<T> adapterClass)
   {
     if (adapterClass.isAssignableFrom(getClass())) return (T) this;
-    
+
     // check our hard cache
     Object adapter = _hardCache.get(adapterClass);
-    if (adapter != null) return (T) adapter;
 
-    SoftReference<?> reference = _softCache.get(adapterClass);
-    if (reference != null) adapter = reference.get();
-
-    if (adapter != null) return (T) adapter;
+    if (adapter == null)
+    {
+      SoftReference<?> reference = _softCache.get(adapterClass);
+      if (reference != null) adapter = reference.get();
+    }
 
     /*
      * nothing was cached, let's dig deeper.
      */
     IAdaptableFactory factory = _adapters.get(adapterClass);
-    if (factory != null)
+    if (adapter == null && factory != null)
     {
       adapter = factory.adapt(this);
+
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug(String.format("Created %s for %s from %s", adapter,
+            adapterClass.getSimpleName(), factory.getClass().getSimpleName()));
+
       if (factory.shouldCache())
         _hardCache.put(adapterClass, adapter);
       else if (factory.shouldSoftCache())
         _softCache.put(adapterClass, new SoftReference<Object>(adapter));
     }
-    
+
+    if (LOGGER.isDebugEnabled())
+      LOGGER.debug(String.format("Returning %s.%d for %s adaptation of %s.%d",
+          adapter, adapter != null ? adapter.hashCode() : 0,
+          adapterClass.getSimpleName(), this, hashCode()));
 
     return (T) adapter;
   }
-  
-  
+
+  /**
+   * replaces the this adapters and caches with those from adaptable. This is
+   * used during representation merging. i.e., a merged chunk would adopt the
+   * master's adaptable contents
+   * 
+   * @param adaptable
+   */
+  protected void adopt(DefaultAdaptable adaptable)
+  {
+    if (LOGGER.isDebugEnabled())
+      LOGGER.debug(String.format("%s.%d Adopting adaptables from %s.%d", this,
+          hashCode(), adaptable, adaptable.hashCode()));
+
+    _adapters.clear();
+    _hardCache.clear();
+    _softCache.clear();
+    _adapters.putAll(adaptable._adapters);
+    _hardCache.putAll(adaptable._hardCache);
+    _softCache.putAll(adaptable._softCache);
+  }
+
   public void addAdapterFactory(IAdaptableFactory factory, Class<?>[] forClasses)
   {
     for (Class<?> c : forClasses)

@@ -69,6 +69,9 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
   public Collection<IInstantiation> call() throws Exception
   {
     List<IInstantiation> keepers = new ArrayList<IInstantiation>();
+    boolean debugEnabled = LOGGER.isDebugEnabled();
+    boolean hasLoggers = Logger.hasLoggers(_model); // this can be relatively
+                                                    // costly to repeat
 
     StringBuilder message = new StringBuilder();
 
@@ -83,8 +86,7 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
       {
         Collection<VariableBindings> provisionalBindings = computeProvisionalBindings(production);
 
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug("Instantiating " + production);
+        if (debugEnabled) LOGGER.debug("Instantiating " + production);
 
         Collection<IInstantiation> instantiations = _instantiator.instantiate(
             production, provisionalBindings);
@@ -98,13 +100,13 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
 
           if (Double.isNaN(utility)) utility = p.getUtility();
 
-          if (LOGGER.isDebugEnabled())
+          if (debugEnabled)
             LOGGER.debug(production + " utility: " + utility + " noise:"
                 + noise + " expected utility: " + (utility + noise));
 
           p.setExpectedUtility(utility + noise);
 
-          if (LOGGER.isDebugEnabled() || Logger.hasLoggers(_model))
+          if (debugEnabled || hasLoggers)
           {
             message.delete(0, message.length());
             message.append("Instantiated ").append(production)
@@ -113,9 +115,8 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
                 .append(" noise)");
 
             String msg = message.toString();
-            if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
-            if (Logger.hasLoggers(_model))
-              Logger.log(_model, Logger.Stream.PROCEDURAL, msg);
+            if (debugEnabled) LOGGER.debug(msg);
+            if (hasLoggers) Logger.log(_model, Logger.Stream.PROCEDURAL, msg);
           }
 
           keepers.add(instantiation);
@@ -124,11 +125,11 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
       catch (CannotInstantiateException cie)
       {
 
-        if (LOGGER.isDebugEnabled() || Logger.hasLoggers(_model))
+        if (debugEnabled || hasLoggers)
         {
           String msg = cie.getMessage();
-          LOGGER.debug(msg);
-          Logger.log(_model, Logger.Stream.PROCEDURAL, msg);
+          if (debugEnabled) LOGGER.debug(msg);
+          if (hasLoggers) Logger.log(_model, Logger.Stream.PROCEDURAL, msg);
         }
       }
 
@@ -153,8 +154,14 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
     provisionalBindings.add(initialBinding);
 
     /*
+     * reusable
+     */
+    Map<IChunk, Collection<VariableBindings>> keyedProvisionalBindings = new HashMap<IChunk, Collection<VariableBindings>>();
+    /*
      * with all the buffers this production should match against, we snag their
-     * sources
+     * source chunks, these will be the values bound to =bufferName. for each
+     * source chunk in a given buffer, we have to create an additional set of
+     * provisional bindings
      */
     for (ICondition condition : production.getSymbolicProduction()
         .getConditions())
@@ -166,25 +173,35 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
 
         Collection<IChunk> sourceChunks = buffer.getSourceChunks();
 
+        /*
+         * nothing there? nothing to bind.
+         */
         if (sourceChunks.size() == 0) continue;
-
-        Map<IChunk, Collection<VariableBindings>> keyedProvisionalBindings = new HashMap<IChunk, Collection<VariableBindings>>();
 
         /*
          * if there are more than one source chunk, we need to duplicate all the
          * provisional bindings, add the binding for the source chunk and then
          * merge the duplicates back into the provisional set
          */
+        // reset
+        keyedProvisionalBindings.clear();
+
         for (IChunk source : sourceChunks)
         {
           Collection<VariableBindings> bindings = provisionalBindings;
-          // more than one, duplicate.
+          // we've already processed at least 1 source chunk
+          // we need to copy ALL the existing bindings, since we are doing
+          // full permutations. As we do so, we bind =bufferName to source
           if (keyedProvisionalBindings.size() != 0)
-            bindings = copyBindings(provisionalBindings);
+            bindings = copyAndBinding(provisionalBindings, buffer, source);
+          else
+            // otherwise, we just add the binding (bindings.size =1)
+            for (VariableBindings binding : bindings)
+              binding.bind("=" + buffer.getName(), source, buffer);
 
-          // add binding to all bindings
-          for (VariableBindings binding : bindings)
-            binding.bind("=" + buffer.getName(), source, buffer);
+          // // add binding to all bindings
+          // for (VariableBindings binding : bindings)
+          // binding.bind("=" + buffer.getName(), source, buffer);
 
           // store
           keyedProvisionalBindings.put(source, bindings);
@@ -206,13 +223,24 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
     return returnedProvisionalBindings;
   }
 
-  private Collection<VariableBindings> copyBindings(
-      Collection<VariableBindings> src)
+  /**
+   * we make a full copy of this collection, deeply including the bindings, and
+   * while we are at it, we will add this binding
+   * 
+   * @param src
+   * @return
+   */
+  private Collection<VariableBindings> copyAndBinding(
+      Collection<VariableBindings> src, IActivationBuffer buffer, IChunk source)
   {
     Collection<VariableBindings> rtn = new ArrayList<VariableBindings>(
         src.size());
     for (VariableBindings map : src)
+    {
+      VariableBindings clone = map.clone();
+      clone.bind("=" + buffer.getName().toLowerCase(), clone, source);
       rtn.add(map.clone());
+    }
     return rtn;
   }
 

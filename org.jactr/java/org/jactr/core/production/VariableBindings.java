@@ -52,6 +52,16 @@ public class VariableBindings
     return rtn;
   }
 
+  public void clear()
+  {
+    _bindings.clear();
+  }
+
+  public void copy(VariableBindings bindings)
+  {
+    _bindings.putAll(bindings._bindings);
+  }
+
   public Set<String> getVariables()
   {
     return Collections.unmodifiableSet(_bindings.keySet());

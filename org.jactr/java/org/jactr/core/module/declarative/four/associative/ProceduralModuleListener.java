@@ -121,8 +121,8 @@ public class ProceduralModuleListener extends ProceduralModuleListenerAdaptor
       /*
        * all chunks that were matched were needed..
        */
-      ISubsymbolicChunk4 sscMatched = (ISubsymbolicChunk4) matchedChunk
-          .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
+      ISubsymbolicChunk4 sscMatched = matchedChunk
+          .getAdapter(ISubsymbolicChunk4.class);
 
       sscMatched.incrementTimesNeeded(1);
 
@@ -141,8 +141,8 @@ public class ProceduralModuleListener extends ProceduralModuleListenerAdaptor
           if (slot.getValue() instanceof IChunk)
           {
             IChunk jChunk = (IChunk) slot.getValue();
-            ISubsymbolicChunk4 sscJ = (ISubsymbolicChunk4) jChunk
-                .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
+            ISubsymbolicChunk4 sscJ = jChunk
+                .getAdapter(ISubsymbolicChunk4.class);
             sscJ.incrementTimesInContext(1);
 
             /*
@@ -157,7 +157,9 @@ public class ProceduralModuleListener extends ProceduralModuleListenerAdaptor
               // skip ourselves
               if (iChunk.equals(matchedChunk)) continue;
 
-              Link4 link = (Link4) sscJ.getIAssociation(iChunk);
+              // Link4 link = (Link4) sscJ.getIAssociation(iChunk);
+              Link4 link = (Link4) ChunkListener.getAssociativeLink(jChunk,
+                  iChunk, true);
 
               /*
                * the link exists. It might not.. should we create one here?

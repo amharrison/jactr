@@ -3,14 +3,16 @@ package org.jactr.core.chunk.six;
 /*
  * default logging
  */
+import javolution.util.FastList;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
-import org.jactr.core.chunk.four.ISubsymbolicChunk4;
 import org.jactr.core.chunk.four.Link4;
 import org.jactr.core.chunk.link.IAssociativeLink;
 import org.jactr.core.chunk.link.IAssociativeLinkEquation;
 import org.jactr.core.model.IModel;
+import org.jactr.core.module.declarative.associative.IAssociativeLinkContainer;
 import org.jactr.core.module.declarative.six.learning.IDeclarativeLearningModule6;
 
 public class AssociativeLinkEquation6 implements IAssociativeLinkEquation
@@ -49,9 +51,9 @@ public class AssociativeLinkEquation6 implements IAssociativeLinkEquation
     // this may underestimate, to be completely correct, we need to iterate over
     // all the i associations
     // and sum their counts.
-    double numerator = ((ISubsymbolicChunk4) link.getJChunk()
-        .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class))
-        .getNumberOfIAssociations();
+
+    double numerator = link.getJChunk()
+        .getAdapter(IAssociativeLinkContainer.class).getNumberOfOutboundLinks();
 
     double denominator = ((Link4) link).getCount();
 
@@ -62,7 +64,7 @@ public class AssociativeLinkEquation6 implements IAssociativeLinkEquation
       LOGGER.debug(String.format(
           "Sji j:%s i:%s slotsj %.2f / slotsji %.2f = %.2f, yields Sji %.2f",
           link.getJChunk(), link.getIChunk(), numerator, denominator,
-          (numerator / denominator), strength));
+          numerator / denominator, strength));
 
     return strength;
   }
@@ -71,17 +73,19 @@ public class AssociativeLinkEquation6 implements IAssociativeLinkEquation
   {
     try
     {
+      FastList<IAssociativeLink> links = FastList.newInstance();
       for (IChunk chunk : model.getDeclarativeModule().getChunks().get())
       {
-        ISubsymbolicChunk4 ssc4 = (ISubsymbolicChunk4) chunk
-            .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
-        if (ssc4 != null)
-          for (IAssociativeLink link : ssc4.getIAssociations(null))
-          {
-            if (LOGGER.isDebugEnabled())
-              LOGGER.debug("Reseting strength of " + link);
-            ((Link4) link).setStrength(computeDefaultStrength(link));
-          }
+        IAssociativeLinkContainer alc = chunk
+            .getAdapter(IAssociativeLinkContainer.class);
+        links.clear();
+        alc.getOutboundLinks(links);
+        for (IAssociativeLink link : links)
+        {
+          if (LOGGER.isDebugEnabled())
+            LOGGER.debug("Reseting strength of " + link);
+          ((Link4) link).setStrength(computeDefaultStrength(link));
+        }
       }
     }
     catch (Exception e)

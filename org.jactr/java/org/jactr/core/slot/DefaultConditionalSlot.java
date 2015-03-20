@@ -94,7 +94,7 @@ public class DefaultConditionalSlot extends DefaultMutableSlot implements
 
     if (LOGGER.isDebugEnabled())
     {
-      StringBuffer sb = new StringBuffer("Test value : ");
+      StringBuilder sb = new StringBuilder("Test value : ");
       sb.append(test);
       if (test != null)
       {

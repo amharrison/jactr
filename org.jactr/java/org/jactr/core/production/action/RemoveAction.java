@@ -24,6 +24,7 @@ import org.jactr.core.logging.Logger;
 import org.jactr.core.model.IModel;
 import org.jactr.core.production.CannotInstantiateException;
 import org.jactr.core.production.IInstantiation;
+import org.jactr.core.production.IProduction;
 import org.jactr.core.production.VariableBindings;
 import org.jactr.core.queue.ITimedEvent;
 import org.jactr.core.queue.timedevents.AbstractTimedEvent;
@@ -110,7 +111,8 @@ public class RemoveAction extends ModifyAction implements IBufferAction
     IChunk bc = getBoundChunk();
     if (bc == null) bc = ab.getSourceChunk();
 
-    timedEvent = new RemoveActionTimedEvent(firingTime, fireAt, ab, bc,
+    timedEvent = new RemoveActionTimedEvent(instantiation.getProduction(),
+        firingTime, fireAt, ab, bc,
         getSlots());
 
     model.getTimedEventQueue().enqueue(timedEvent);
@@ -129,12 +131,16 @@ public class RemoveAction extends ModifyAction implements IBufferAction
 
     final String                      _label;
 
-    public RemoveActionTimedEvent(double now, double removeTime,
+    final private IProduction         _instantiation;
+
+    public RemoveActionTimedEvent(IProduction instantiation, double now,
+        double removeTime,
         IActivationBuffer buffer, IChunk chunk,
         Collection<? extends ISlot> slots)
     {
       super();
       setTimes(now, removeTime);
+      _instantiation = instantiation;
       _buffer = buffer;
       _chunkToRemove = chunk;
       _slotsToChange = new ArrayList<ISlot>(slots);
@@ -170,7 +176,8 @@ public class RemoveAction extends ModifyAction implements IBufferAction
           if (LOGGER.isWarnEnabled() || Logger.hasLoggers(model))
           {
             String msg = _chunkToRemove + " is no longer in " + _buffer
-                + " cannot remove";
+                + " cannot remove. Requested by "
+                + _instantiation.getSymbolicProduction().getName();
             Logger.log(model, Logger.Stream.EXCEPTION, msg);
             LOGGER.warn(msg);
           }

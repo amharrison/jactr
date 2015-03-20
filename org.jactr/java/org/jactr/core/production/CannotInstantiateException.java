@@ -67,6 +67,11 @@ public class CannotInstantiateException extends Exception
     setProduction(production);
   }
 
+  /**
+   * @param production
+   * @param cmes
+   *          collection of exceptions that is <b>copied</b>
+   */
   public CannotInstantiateException(IProduction production,
       Collection<CannotMatchException> cmes)
   {

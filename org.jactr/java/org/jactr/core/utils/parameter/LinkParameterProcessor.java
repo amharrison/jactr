@@ -39,8 +39,7 @@ public class LinkParameterProcessor extends
       Function<String, IAssociativeLink> fromString,
       Consumer<IAssociativeLink> setFunction,
       Function<IAssociativeLink, String> toString,
-      Supplier<IAssociativeLink> getFunction,
-      final ACTRParameterProcessor actrProcessor, final IChunk sourceChunk)
+      Supplier<IAssociativeLink> getFunction)
   {
     super(parameterName, fromString, setFunction, toString, getFunction);
   }
@@ -123,6 +122,8 @@ public class LinkParameterProcessor extends
           return sb.toString();
         }, getFunction);
   }
+
+
 
   static protected String getLink4Parameters(IAssociativeLink link)
   {

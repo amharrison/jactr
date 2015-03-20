@@ -10,7 +10,7 @@ import org.jactr.core.model.IModel;
 /**
  * snippet of code that allows one to add/remove/replace elements in the
  * activation calculations. It is assumed that activation sources are
- * independent.
+ * independent. This is also a stateless class as it will be used for all chunks
  * 
  * @author harrison
  */
@@ -26,7 +26,8 @@ public interface IActivationParticipant
 
   /**
    * as the name implies, not only should this compute the activation, but also
-   * set the appropriate internal member variable.
+   * set the appropriate internal member variable. The chunk's write lock will
+   * have already been acquired.
    * 
    * @param chunk
    * @param model
