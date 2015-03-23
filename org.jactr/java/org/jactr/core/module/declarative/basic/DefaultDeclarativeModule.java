@@ -62,6 +62,7 @@ import org.jactr.core.module.declarative.basic.type.ISubsymbolicChunkTypeFactory
 import org.jactr.core.module.declarative.basic.type.ISymbolicChunkTypeFactory;
 import org.jactr.core.module.declarative.basic.type.NoOpChunkTypeConfigurator;
 import org.jactr.core.module.declarative.basic.type.NoOpChunkTypeNamer;
+import org.jactr.core.module.declarative.search.ISearchSystem;
 import org.jactr.core.module.declarative.search.filter.IChunkFilter;
 import org.jactr.core.module.declarative.search.filter.ILoggedChunkFilter;
 import org.jactr.core.module.declarative.search.local.DefaultSearchSystem;
@@ -466,6 +467,11 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
       addChunkTypeToParents(chunkType, parent.getSymbolicChunkType()
           .getParents());
     }
+  }
+
+  public ISearchSystem getSearchSystem()
+  {
+    return _searchSystem;
   }
 
   protected Collection<IChunk> findExactMatchesInternal(

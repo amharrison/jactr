@@ -230,7 +230,7 @@ else if (model.isCycleSkippingEnabled() /* && !eventsHaveFired */)
         && Math.abs(nextProductionFiringTime - nextEventFiringTime) < TEMPORAL_TOLERANCE)
     {
       nextWaitTime = Math.max(nextProductionFiringTime, nextEventFiringTime);
-      if (LOGGER.isWarnEnabled())
+      if (LOGGER.isDebugEnabled())
         LOGGER
             .warn(String
                 .format(

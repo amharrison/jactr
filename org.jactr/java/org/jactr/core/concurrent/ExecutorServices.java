@@ -71,8 +71,9 @@ public class ExecutorServices
         Executors.newSingleThreadScheduledExecutor(new GeneralThreadFactory(
             "jACT-R Periodic")));
 
-    addExecutor(POOL, Executors.newFixedThreadPool(Runtime.getRuntime()
-        .availableProcessors(), new GeneralThreadFactory("jACT-R Pool")));
+    addExecutor(POOL, Executors.newFixedThreadPool(
+        (int) Math.ceil(Runtime.getRuntime().availableProcessors() / 2.0),
+            new GeneralThreadFactory("jACT-R Pool")));
   }
 
   static public void removeExecutor(String name)

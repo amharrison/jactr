@@ -54,6 +54,7 @@ import org.jactr.core.module.random.six.DefaultRandomModule;
 import org.jactr.core.production.IInstantiation;
 import org.jactr.core.production.IProduction;
 import org.jactr.core.production.ISymbolicProduction;
+import org.jactr.core.production.action.AddAction;
 import org.jactr.core.production.action.IAction;
 import org.jactr.core.production.action.IBufferAction;
 import org.jactr.core.production.action.ModifyAction;
@@ -383,7 +384,8 @@ public class DefaultProceduralModule6 extends AbstractModule implements
              * if there is a modify or a remove, we don't have to do anything.
              */
             if (action instanceof RemoveAction
-                || action instanceof ModifyAction) actionFound = true;
+                || action instanceof ModifyAction
+                || action instanceof AddAction) actionFound = true;
             break;
           }
 
@@ -803,8 +805,7 @@ public class DefaultProceduralModule6 extends AbstractModule implements
   }
 
   public CompletableFuture<Double> fireProduction(
-      final IInstantiation instantiation,
-      final double firingTime)
+      final IInstantiation instantiation, final double firingTime)
   {
     Callable<Double> callable = new Callable<Double>() {
       public Double call()

@@ -117,11 +117,12 @@ public class DefaultSearchSystem implements ISearchSystem
 
   private Map<String, Collection<ITypeValueMap<?, IChunk>>> _slotMap;
 
-  private IDeclarativeModule                                _module;
+  protected final IDeclarativeModule                        _module;
 
-  private ChunkNameComparator                               _chunkNameComparator = new ChunkNameComparator();
+  protected ChunkNameComparator                             _chunkNameComparator = new ChunkNameComparator();
 
-  private IChunkFilter                                      _defaultFilter       = new AcceptAllFilter();
+  protected IChunkFilter                                    _defaultFilter       = new AcceptAllFilter();
+
 
   private boolean                                           _enableNotFilters    = Boolean
                                                                                      .getBoolean("jactr.search.enableNotFilters");
@@ -133,12 +134,36 @@ public class DefaultSearchSystem implements ISearchSystem
   private boolean                                           _testNotFilter       = Boolean
                                                                                      .getBoolean("jactr.search.testNotFilters");
 
+  private ISearchDelegate                                   _exactSearch         = new ExactSingleThreadedSearchDelegate();
+
+  private ISearchDelegate                                   _partialSearch       = new PartialSingleThreadedSearchDelegate();
+
   public DefaultSearchSystem(IDeclarativeModule module)
   {
     _slotMap = new TreeMap<String, Collection<ITypeValueMap<?, IChunk>>>();
     // _eventDispatcher = new ACTREventDispatcher<IDeclarativeModule,
     // ISearchListener>();
     _module = module;
+  }
+
+  public void setExactDelegate(ISearchDelegate exact)
+  {
+    _exactSearch = exact;
+  }
+
+  public void setPartialDelegate(ISearchDelegate partial)
+  {
+    _partialSearch = partial;
+  }
+
+  public ISearchDelegate getExactDelegate()
+  {
+    return _exactSearch;
+  }
+
+  public ISearchDelegate getPartialDelegate()
+  {
+    return _partialSearch;
   }
 
   public void clear()
@@ -202,12 +227,21 @@ public class DefaultSearchSystem implements ISearchSystem
   public SortedSet<IChunk> findExact(ChunkTypeRequest pattern,
       Comparator<IChunk> sortRule, IChunkFilter filter)
   {
-    SortedSet<IChunk> candidates = findExactSingleThreaded(pattern, sortRule,
-        filter);
-
-    return candidates;
+    // SortedSet<IChunk> candidates = findExactSingleThreaded(pattern, sortRule,
+    // filter);
+    //
+    // return candidates;
+    return _exactSearch.find(pattern, sortRule, filter, this);
   }
 
+  /**
+   * old test code for threaded search, migrated to
+   * {@link ExactParallelSearchDelegate}
+   * 
+   * @param pattern
+   * @return
+   */
+  @Deprecated
   protected Collection<IChunk> findExactPooledThreads(ChunkTypeRequest pattern)
   {
     /*
@@ -281,6 +315,8 @@ public class DefaultSearchSystem implements ISearchSystem
   }
 
   /**
+   * Moved to
+   * {@link ExactSingleThreadedSearchDelegate#sortPattern(IChunkType, Collection, List, DefaultSearchSystem)}
    * sort the slots by the guessed size of the result set. This is only used by
    * findExact. We also convert not's into filters instead whereever possible
    * 
@@ -288,6 +324,7 @@ public class DefaultSearchSystem implements ISearchSystem
    * @param originalSlots
    * @return
    */
+  @Deprecated
   protected IChunkFilter sortPattern(IChunkType chunkType,
       Collection<? extends ISlot> originalSlots, List<ISlot> container)
   {
@@ -339,12 +376,15 @@ public class DefaultSearchSystem implements ISearchSystem
   }
 
   /**
+   * Moved to
+   * {@link ExactSingleThreadedSearchDelegate#sortPatternOriginal(IChunkType, Collection, DefaultSearchSystem)}
    * sort the slots by the guessed size of the result set.
    * 
    * @param chunkType
    * @param slots
    * @return
    */
+  @Deprecated
   protected List<ISlot> sortPatternOriginal(IChunkType chunkType,
       Collection<? extends ISlot> slots)
   {
@@ -359,6 +399,16 @@ public class DefaultSearchSystem implements ISearchSystem
     return sorted;
   }
 
+  /**
+   * old single threaded search. moved to
+   * {@link ExactSingleThreadedSearchDelegate}
+   * 
+   * @param pattern
+   * @param sortRule
+   * @param filter
+   * @return
+   */
+  @Deprecated
   protected SortedSet<IChunk> findExactSingleThreaded(ChunkTypeRequest pattern,
       Comparator<IChunk> sortRule, IChunkFilter filter)
   {
@@ -463,6 +513,22 @@ public class DefaultSearchSystem implements ISearchSystem
   }
 
   public SortedSet<IChunk> findFuzzy(ChunkTypeRequest pattern,
+      Comparator<IChunk> sortRule, IChunkFilter filter)
+  {
+    return _partialSearch.find(pattern, sortRule, filter, this);
+    // return findFuzzyInternal(pattern, sortRule, filter);
+  }
+
+  /**
+   * moved to {@link PartialSingleThreadedSearchDelegate} default fuzzy search.
+   * 
+   * @param pattern
+   * @param sortRule
+   * @param filter
+   * @return
+   */
+  @Deprecated
+  protected SortedSet<IChunk> findFuzzyInternal(ChunkTypeRequest pattern,
       Comparator<IChunk> sortRule, IChunkFilter filter)
   {
 
@@ -697,7 +763,7 @@ public class DefaultSearchSystem implements ISearchSystem
 
   /**
    * wrappers for the set logic so that we can easily clean up of the temporary
-   * collections
+   * collections. Specifically, recycling the candidates collection if possible.
    * 
    * @param rtnSet
    * @param candidates
@@ -714,6 +780,12 @@ public class DefaultSearchSystem implements ISearchSystem
     }
   }
 
+  /**
+   * retain all and recycle the candidates
+   * 
+   * @param rtnSet
+   * @param candidates
+   */
   protected void cleanRetainAll(Collection<IChunk> rtnSet,
       Collection<IChunk> candidates)
   {
@@ -721,6 +793,12 @@ public class DefaultSearchSystem implements ISearchSystem
     recycleCollection(candidates);
   }
 
+  /**
+   * removeall from rtnSet and recycle candidates
+   * 
+   * @param rtnSet
+   * @param candidates
+   */
   protected void cleanRemoveAll(Collection<IChunk> rtnSet,
       Collection<IChunk> candidates)
   {

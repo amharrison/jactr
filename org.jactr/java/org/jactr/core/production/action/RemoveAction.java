@@ -112,8 +112,7 @@ public class RemoveAction extends ModifyAction implements IBufferAction
     if (bc == null) bc = ab.getSourceChunk();
 
     timedEvent = new RemoveActionTimedEvent(instantiation.getProduction(),
-        firingTime, fireAt, ab, bc,
-        getSlots());
+        firingTime, fireAt, ab, bc, getSlots());
 
     model.getTimedEventQueue().enqueue(timedEvent);
 
@@ -134,8 +133,7 @@ public class RemoveAction extends ModifyAction implements IBufferAction
     final private IProduction         _instantiation;
 
     public RemoveActionTimedEvent(IProduction instantiation, double now,
-        double removeTime,
-        IActivationBuffer buffer, IChunk chunk,
+        double removeTime, IActivationBuffer buffer, IChunk chunk,
         Collection<? extends ISlot> slots)
     {
       super();
@@ -170,16 +168,25 @@ public class RemoveAction extends ModifyAction implements IBufferAction
         if (LOGGER.isDebugEnabled())
           LOGGER.debug("Removing " + _chunkToRemove + " from " + _buffer);
 
+        /*
+         * we have to test for identity here and not symbolic with
+         * buffer.contains(IChunk)
+         */
         if (!_buffer.getSourceChunks().contains(_chunkToRemove))
         {
           IModel model = _chunkToRemove.getModel();
           if (LOGGER.isWarnEnabled() || Logger.hasLoggers(model))
           {
-            String msg = _chunkToRemove + " is no longer in " + _buffer
-                + " cannot remove. Requested by "
-                + _instantiation.getSymbolicProduction().getName();
-            Logger.log(model, Logger.Stream.EXCEPTION, msg);
-            LOGGER.warn(msg);
+            String msg = String
+                .format(
+                    "%s is not longer in %s, cannot complete remove requested by %s. Perhaps another thread has cleared this buffer?",
+                    _chunkToRemove, _buffer.getName(), _instantiation
+                        .getSymbolicProduction().getName());
+
+            if (Logger.hasLoggers(model))
+              Logger.log(model, Logger.Stream.EXCEPTION, msg);
+
+            if (LOGGER.isWarnEnabled()) LOGGER.warn(msg);
           }
           return;
         }

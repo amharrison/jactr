@@ -393,6 +393,14 @@ http://jactr.org/node/144</description>
             Provides a drop-in replacement of the production instantiator that can cache failed instantiations until the production can possibly be instantiated. This can cut conflict resolution processing time by an order of magnitude (depending on the production patterns used). EnableCaching=true turns it on. ValidateInstantiations=true will verify the correctness of the cache (negating any performance improvements, but a useful test to ensure it's correctness).
          </description>
       </model-extension>
+      <model-extension
+            class="org.jactr.extensions.search.performance.DefaultSearchSystemOptimizer"
+            name="LocalSearchProfiler"
+            requiresClasspath="false">
+         <description>
+            description body text
+         </description>
+      </model-extension>
    </extension>
    <extension
          point="org.jactr.io.astparticipants">
