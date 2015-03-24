@@ -22,14 +22,20 @@ public class DefaultAdaptable implements IAdaptable
   /**
    * Logger definition
    */
-  static private final transient Log             LOGGER     = LogFactory
-                                                                .getLog(DefaultAdaptable.class);
+  static private final transient Log             LOGGER    = LogFactory
+                                                               .getLog(DefaultAdaptable.class);
 
-  final private Map<Class<?>, IAdaptableFactory> _adapters  = new HashMap<Class<?>, IAdaptableFactory>();
+  final private Map<Class<?>, IAdaptableFactory> _adapters = new HashMap<Class<?>, IAdaptableFactory>();
 
-  final private Map<Class<?>, Object>            _hardCache = new HashMap<Class<?>, Object>();
+  private Map<Class<?>, Object>                  _hardCache;                                            // =
+                                                                                                         // new
+                                                                                                         // HashMap<Class<?>,
+                                                                                                         // Object>();
 
-  final private Map<Class<?>, SoftReference<?>>  _softCache = new HashMap<Class<?>, SoftReference<?>>();
+  private Map<Class<?>, SoftReference<?>>        _softCache;                                            // =
+                                                                                                         // new
+                                                                                                         // HashMap<Class<?>,
+                                                                                                         // SoftReference<?>>();
 
   @SuppressWarnings("unchecked")
   public <T> T getAdapter(Class<T> adapterClass)
@@ -37,11 +43,13 @@ public class DefaultAdaptable implements IAdaptable
     if (adapterClass.isAssignableFrom(getClass())) return (T) this;
 
     // check our hard cache
-    Object adapter = _hardCache.get(adapterClass);
+    Object adapter = null;
+    if (_hardCache != null) adapter = _hardCache.get(adapterClass);
 
     if (adapter == null)
     {
-      SoftReference<?> reference = _softCache.get(adapterClass);
+      SoftReference<?> reference = null;
+      if (_softCache != null) reference = _softCache.get(adapterClass);
       if (reference != null) adapter = reference.get();
     }
 
@@ -58,9 +66,17 @@ public class DefaultAdaptable implements IAdaptable
             adapterClass.getSimpleName(), factory.getClass().getSimpleName()));
 
       if (factory.shouldCache())
+      {
+        if (_hardCache == null) _hardCache = new HashMap<Class<?>, Object>();
+
         _hardCache.put(adapterClass, adapter);
+      }
       else if (factory.shouldSoftCache())
+      {
+        if (_softCache == null)
+          _softCache = new HashMap<Class<?>, SoftReference<?>>();
         _softCache.put(adapterClass, new SoftReference<Object>(adapter));
+      }
     }
 
     if (LOGGER.isDebugEnabled())

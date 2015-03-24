@@ -72,7 +72,7 @@ public class DefaultSubsymbolicChunk5 extends DefaultSubsymbolicChunk4
   public DefaultSubsymbolicChunk5()
   {
     super();
-    _similarityMap = new HashMap<IChunk, Double>();
+    // _similarityMap = new HashMap<IChunk, Double>(); //make this lazy
   }
 
   @Override
@@ -131,6 +131,8 @@ public class DefaultSubsymbolicChunk5 extends DefaultSubsymbolicChunk4
     try
     {
       writeLock().lock();
+      if (_similarityMap == null)
+        _similarityMap = new HashMap<IChunk, Double>();
       _similarityMap.put(c, value);
     }
     finally
@@ -229,6 +231,8 @@ public class DefaultSubsymbolicChunk5 extends DefaultSubsymbolicChunk4
     try
     {
       readLock().lock();
+      if (_similarityMap == null) return Double.NaN;
+
       Double rtn = _similarityMap.get(c);
       if (rtn == null) return Double.NaN;
       return rtn.doubleValue();
@@ -253,6 +257,7 @@ public class DefaultSubsymbolicChunk5 extends DefaultSubsymbolicChunk4
     try
     {
       readLock().lock();
+      if (_similarityMap != null)
       for (Map.Entry<IChunk, Double> entry : _similarityMap.entrySet())
         container.add(new Object[] { entry.getKey(), entry.getValue() });
       return container;
@@ -317,6 +322,7 @@ public class DefaultSubsymbolicChunk5 extends DefaultSubsymbolicChunk4
     super.dispose();
 
     _lastPattern = null;
+    if (_similarityMap != null)
     _similarityMap.clear();
     _similarityMap = null;
 
@@ -334,7 +340,7 @@ public class DefaultSubsymbolicChunk5 extends DefaultSubsymbolicChunk4
     if (p == null) return 0;
 
     IModel parentModel = _parentChunk.getModel();
-    IDeclarativeModule5 idm = (IDeclarativeModule5) parentModel
+    IDeclarativeModule5 idm = parentModel
         .getDeclarativeModule().getAdapter(IDeclarativeModule5.class);
 
     if (idm == null && !_warnedSimilarity)

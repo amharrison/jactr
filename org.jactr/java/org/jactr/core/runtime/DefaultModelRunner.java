@@ -168,6 +168,13 @@ public class DefaultModelRunner implements Runnable
     double rtn = ACTRRuntime.getRuntime().getClock(_model)
         .waitForTime(waitForTime);
 
+    if (rtn < waitForTime)
+      LOGGER
+          .error(String
+              .format(
+                  "WARNING: Time discrepancy detected. Clock regression : %.10f(returned) < %.10f(desired). Should be >=",
+                  rtn, waitForTime));
+
     return rtn;
   }
 
@@ -242,7 +249,15 @@ public class DefaultModelRunner implements Runnable
         if (LOGGER.isDebugEnabled()) LOGGER.debug("set age to " + nextTime);
         _model.setAge(nextTime);
 
+        double priorTime = nextTime;
         nextTime = cycle(eventsHaveFired);
+
+        if (nextTime <= priorTime)
+          LOGGER
+              .error(String
+                  .format(
+                      "WARNING: Time discrepancy detected. Cycle time error : %.10f(next) <= %.10f(prior). Should be >",
+                      nextTime, priorTime));
 
         postCycle(nextTime);
 
