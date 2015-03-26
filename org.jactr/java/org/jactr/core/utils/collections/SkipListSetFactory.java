@@ -41,6 +41,12 @@ public class SkipListSetFactory
       {
         return new ConcurrentSkipListSet((Comparator) params[0]);
       }
+
+      @Override
+      protected void release(ConcurrentSkipListSet obj)
+      {
+        // noop
+      }
     };
   }
 

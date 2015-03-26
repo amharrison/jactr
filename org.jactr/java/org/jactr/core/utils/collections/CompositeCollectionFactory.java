@@ -45,6 +45,14 @@ public class CompositeCollectionFactory
                                                                      return new CompositeCollection();
                                                             }
 
+                                                                   @Override
+                                                                   protected void release(
+                                                                       CompositeCollection obj)
+                                                                   {
+                                                                     // noop
+
+                                                                   }
+
                                                           };
 
   static public CompositeCollection newInstance()

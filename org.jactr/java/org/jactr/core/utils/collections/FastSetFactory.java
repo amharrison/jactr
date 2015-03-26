@@ -15,29 +15,36 @@ public class FastSetFactory
   /**
    * Logger definition
    */
-  static private final transient Log             LOGGER   = LogFactory
-                                                              .getLog(FastSetFactory.class);
+  static private final transient Log        LOGGER   = LogFactory
+                                                         .getLog(FastSetFactory.class);
 
   static private RecyclableFactory<FastSet> _factory = new AbstractThreadLocalRecyclableFactory<FastSet>() {
 
-                                                            @SuppressWarnings({
-      "unchecked", "rawtypes"                              })
-                                                            @Override
-                                                            protected void cleanUp(
+                                                       @SuppressWarnings({
+      "unchecked", "rawtypes"                         })
+                                                       @Override
+                                                       protected void cleanUp(
                                                            FastSet obj)
-                                                            {
-                                                                obj.clear();
-                                                            }
+                                                       {
+                                                         obj.clear();
+                                                       }
 
-                                                            @Override
+                                                       @Override
                                                        protected FastSet instantiate(
-                                                                Object... params)
-                                                            {
+                                                           Object... params)
+                                                       {
                                                          return FastSet
-                                                                    .newInstance();
-                                                            }
+                                                             .newInstance();
+                                                       }
 
-                                                          };
+                                                       @Override
+                                                       protected void release(
+                                                           FastSet obj)
+                                                       {
+                                                         FastSet.recycle(obj);
+                                                       }
+
+                                                     };
 
   static public FastSet newInstance()
   {

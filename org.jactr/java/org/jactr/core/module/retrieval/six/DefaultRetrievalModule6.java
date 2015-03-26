@@ -215,12 +215,13 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
 
       _activationSorter.setChunkTypeRequest(cleanedPattern);
       filter = new PartialMatchActivationFilter(accessibility, cleanedPattern,
-          threshold, true);
+          threshold, Logger.hasLoggers(getModel()));
       fromDM = dm.findPartialMatches(cleanedPattern, _activationSorter, filter);
     }
     else
     {
-      filter = new ActivationFilter(accessibility, threshold, true);
+      filter = new ActivationFilter(accessibility, threshold,
+          Logger.hasLoggers(getModel()));
       fromDM = dm.findExactMatches(cleanedPattern, _activationSorter, filter);
     }
 

@@ -53,6 +53,14 @@ public class CompositeSetFactory
                                                               return new CompositeSet();
                                                             }
 
+                                                            @Override
+                                                            protected void release(
+                                                                CompositeSet obj)
+                                                            {
+                                                              // noop
+
+                                                            }
+
                                                           };
 
   static public CompositeSet newInstance()

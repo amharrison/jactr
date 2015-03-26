@@ -3,7 +3,7 @@ package org.jactr.core.utils.recyclable;
 /*
  * default logging
  */
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -66,10 +66,7 @@ public abstract class AbstractThreadLocalRecyclableFactory<T> implements
    * 
    * @param obj
    */
-  protected void release(T obj)
-  {
-    // noop
-  }
+  abstract protected void release(T obj);
 
   /**
    * instantiate a new T
@@ -83,7 +80,7 @@ public abstract class AbstractThreadLocalRecyclableFactory<T> implements
     List<T> rtn = _local.get();
     if (rtn == null)
     {
-      rtn = new LinkedList<T>();
+      rtn = new ArrayList<T>(_size);
       _local.set(rtn);
     }
     return rtn;

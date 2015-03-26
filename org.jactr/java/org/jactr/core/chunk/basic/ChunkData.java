@@ -56,7 +56,7 @@ public class ChunkData
   {
     _parameterEventDispatcher = new ACTREventDispatcher<IParameterized, IParameterListener>();
     _eventDispatcher = new ACTREventDispatcher<IChunk, IChunkListener>();
-    _metaData = new TreeMap<String, Object>(); // make lazy
+    _metaData = new TreeMap<String, Object>();
     _model = model;
   }
 

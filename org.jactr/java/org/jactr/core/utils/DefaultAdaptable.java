@@ -101,11 +101,21 @@ public class DefaultAdaptable implements IAdaptable
           hashCode(), adaptable, adaptable.hashCode()));
 
     _adapters.clear();
-    _hardCache.clear();
-    _softCache.clear();
+    if (_hardCache != null) _hardCache.clear();
+    if (_softCache != null) _softCache.clear();
     _adapters.putAll(adaptable._adapters);
-    _hardCache.putAll(adaptable._hardCache);
-    _softCache.putAll(adaptable._softCache);
+    if (adaptable._hardCache != null)
+    {
+      if (_hardCache == null) _hardCache = new HashMap<Class<?>, Object>();
+      _hardCache.putAll(adaptable._hardCache);
+    }
+    if (adaptable._softCache != null)
+    {
+      if (_softCache == null)
+        _softCache = new HashMap<Class<?>, SoftReference<?>>();
+
+      _softCache.putAll(adaptable._softCache);
+    }
   }
 
   public void addAdapterFactory(IAdaptableFactory factory, Class<?>[] forClasses)

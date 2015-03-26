@@ -15,29 +15,36 @@ public class FastMapFactory
   /**
    * Logger definition
    */
-  static private final transient Log             LOGGER   = LogFactory
-                                                              .getLog(FastMapFactory.class);
+  static private final transient Log        LOGGER   = LogFactory
+                                                         .getLog(FastMapFactory.class);
 
   static private RecyclableFactory<FastMap> _factory = new AbstractThreadLocalRecyclableFactory<FastMap>() {
 
-                                                            @SuppressWarnings({
-      "unchecked", "rawtypes"                              })
-                                                            @Override
-                                                            protected void cleanUp(
+                                                       @SuppressWarnings({
+      "unchecked", "rawtypes"                         })
+                                                       @Override
+                                                       protected void cleanUp(
                                                            FastMap obj)
-                                                            {
-                                                                obj.clear();
-                                                            }
+                                                       {
+                                                         obj.clear();
+                                                       }
 
-                                                            @Override
+                                                       @Override
                                                        protected FastMap instantiate(
-                                                                Object... params)
-                                                            {
+                                                           Object... params)
+                                                       {
                                                          return FastMap
-                                                                    .newInstance();
-                                                            }
+                                                             .newInstance();
+                                                       }
 
-                                                          };
+                                                       @Override
+                                                       protected void release(
+                                                           FastMap map)
+                                                       {
+                                                         FastMap.recycle(map);
+                                                       }
+
+                                                     };
 
   static public FastMap newInstance()
   {
