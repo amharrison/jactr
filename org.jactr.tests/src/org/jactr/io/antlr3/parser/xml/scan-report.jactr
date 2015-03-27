@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actr>
+ <model name="scan-report" version="6" >
+  <modules>
+   <module class="org.jactr.core.module.declarative.six.DefaultDeclarativeModule6" import="true">
+    <parameters>
+     <parameter name="ActivationNoise" value="0"/>
+     <parameter name="BaseLevelConstant" value="0"/>
+     <parameter name="ChunkConfiguratorClass" value="org.jactr.core.module.declarative.basic.chunk.NoOpChunkConfigurator"/>
+     <parameter name="ChunkFactoryClass" value="org.jactr.core.module.declarative.basic.chunk.DefaultChunkFactory"/>
+     <parameter name="ChunkNamerClass" value="org.jactr.core.module.declarative.basic.chunk.NoOpChunkNamer"/>
+     <parameter name="ChunkTypeConfiguratorClass" value="org.jactr.core.module.declarative.basic.type.NoOpChunkTypeConfigurator"/>
+     <parameter name="ChunkTypeFactoryClass" value="org.jactr.core.module.declarative.basic.type.DefaultChunkTypeFactory"/>
+     <parameter name="ChunkTypeNamerClass" value="org.jactr.core.module.declarative.basic.type.NoOpChunkTypeNamer"/>
+     <parameter name="EnablePartialMatching" value="false"/>
+     <parameter name="MaximumDifference" value="-1"/>
+     <parameter name="MaximumSimilarity" value="0"/>
+     <parameter name="MismatchPenalty" value="1"/>
+     <parameter name="PermanentActivationNoise" value="0"/>
+     <parameter name="SubsymbolicChunkFactoryClass" value="org.jactr.core.module.declarative.basic.chunk.DefaultSubsymbolicChunkFactory5"/>
+     <parameter name="SubsymbolicChunkTypeFactoryClass" value="org.jactr.core.module.declarative.basic.type.DefaultSubsymbolicChunkTypeFactory"/>
+     <parameter name="SymbolicChunkFactoryClass" value="org.jactr.core.module.declarative.basic.chunk.DefaultSymbolicChunkFactory"/>
+     <parameter name="SymbolicChunkTypeFactoryClass" value="org.jactr.core.module.declarative.basic.type.DefaultSymbolicChunkTypeFactory"/>
+    </parameters>
+   </module>
+   <module class="org.jactr.core.module.goal.six.DefaultGoalModule6" import="true"/>
+   <module class="org.jactr.core.module.imaginal.six.DefaultImaginalModule6" import="true">
+    <parameters>
+     <parameter name="AddDelayTime" value="0.2"/>
+     <parameter name="ModifyDelayTime" value="0.2"/>
+     <parameter name="RandomizeDelaysEnabled" value="false"/>
+    </parameters>
+   </module>
+   <module class="org.jactr.core.module.procedural.six.DefaultProceduralModule6" import="true">
+    <parameters>
+     <parameter name="DefaultProductionFiringTime" value="0.05"/>
+     <parameter name="ExpectedUtilityNoise" value="0"/>
+     <parameter name="NumberOfProductionsFired" value="0"/>
+    </parameters>
+   </module>
+   <module class="org.jactr.core.module.random.six.DefaultRandomModule" import="true">
+    <parameters>
+     <parameter name="RandomSeed" value=""/>
+     <parameter name="TimeRandomizer" value="3"/>
+    </parameters>
+   </module>
+   <module class="org.jactr.core.module.retrieval.six.DefaultRetrievalModule6" import="true">
+    <parameters>
+     <parameter name="EnableIndexedRetrievals" value="false"/>
+     <parameter name="FINSTDurationTime" value="3.0"/>
+     <parameter name="LatencyFactor" value="1"/>
+     <parameter name="NumberOfFINSTs" value="4"/>
+     <parameter name="RetrievalThreshold" value="0"/>
+    </parameters>
+   </module>
+   <module class="org.jactr.modules.pm.visual.six.DefaultVisualModule6" import="true">
+    <parameters>
+     <parameter name="EnableStickyAttention" value="false"/>
+     <parameter name="EnableStrictSynchronization" value="true"/>
+     <parameter name="EnableVisualBufferStuff" value="false"/>
+     <parameter name="FINSTDurationTime" value="3"/>
+     <parameter name="MovementTolerance" value="0.5"/>
+     <parameter name="NewFINSTOnsetDurationTime" value="0.5"/>
+     <parameter name="NumberOfFINSTs" value="4"/>
+     <parameter name="VisualEncodingTimeEquationClass" value="org.jactr.modules.pm.visual.six.DefaultEncodingTimeEquation"/>
+     <parameter name="VisualFieldHeight" value="120"/>
+     <parameter name="VisualFieldHorizontalResolution" value="160"/>
+     <parameter name="VisualFieldVerticalResolution" value="120"/>
+     <parameter name="VisualFieldWidth" value="160"/>
+     <parameter name="VisualPersistenceDelay" value="0"/>
+     <parameter name="VisualSearchTimeEquationClass" value="org.jactr.modules.pm.visual.six.DefaultSearchTimeEquation"/>
+     
+    </parameters>
+   </module>
+  </modules>
+  <declarative-memory>
+  
+  
+   <chunk-type name="person-type" parent="visual-object" />
+   
+   <chunk-type name="door-type" parent="visual-object" >
+    <slot name="is-open" equals="null" />
+   </chunk-type>
+   
+   <chunk-type name="patrol-goal">
+    <slot name="open-door" equals="null"/>
+    <slot name="person-near-door" equals="null"/> 
+   </chunk-type>
+  
+   <chunk-type name="perceptual-symbol" >
+    <slot name="token" equals="null"/>
+   </chunk-type>
+   
+   <chunk name="door" type="perceptual-symbol">
+    <slot name="token" equals="'door'"/>
+    <parameters>
+     <parameter name="CreationTime" value="-100"/>
+     <parameter name="ReferenceCount" value="200"/>
+    </parameters>
+   </chunk>
+   
+   <chunk name="bill" type="perceptual-symbol">
+    <slot name="token" equals="'bill'"/>
+    <parameters>
+     <parameter name="CreationTime" value="-100"/>
+     <parameter name="ReferenceCount" value="200"/>
+    </parameters>
+   </chunk>
+
+    
+    
+  </declarative-memory>
+  <procedural-memory>
+  
+   <production name="1.look-for-something">
+    <conditions>
+     <query buffer="visual-location">
+      <slot name="buffer" equals="empty"/>
+      <slot name="state" not="busy"/>
+     </query>
+     <query buffer="visual">
+      <slot name="buffer" equals="empty"/>
+      <slot name="state" not="busy"/>
+     </query>
+     
+    </conditions>
+    <actions>
+     <add buffer="visual-location" type="visual-location">
+      <slot name=":attended" not="true"/>
+     </add>
+    </actions>
+    <parameters>
+     <parameter name="Utility" value="-1"/>
+    </parameters>
+   </production>
+      
+     
+  <!--
+ production object-found
+ @previous 
+ @next  
+-->
+   <production name="2.attend-to-object">
+    <conditions>
+     <match buffer="visual-location" type="visual-location" />
+    </conditions>
+    <actions>
+     <add buffer="visual" type="attend-to">
+      <slot name="where" equals="=visual-location"/>
+     </add>
+     <remove buffer="visual-location"/>
+    </actions>
+    <parameters>
+     <parameter name="Utility" value="-1"/>
+    </parameters>
+   </production>
+  
+  
+   <production name="3a.harvest-person">
+    <conditions>
+     <match buffer="goal" type="patrol-goal"/>	
+     
+     <match buffer="visual" type="person-type">
+      <slot name="token" equals="=symbol"/>	
+     </match>
+    </conditions>
+    <actions>
+     <remove buffer="visual"/>
+     <output>"I saw person =symbol "</output>
+     <modify buffer="goal">
+      <slot name="person-near-door" equals="=symbol"/>
+     </modify>
+    </actions>
+    <parameters>
+     <parameter name="Utility" value="-1"/>
+    </parameters>
+   </production>
+   
+   
+   
+   <production name="3b.harvest-door">
+    <conditions>
+     
+     <match buffer="goal" type="patrol-goal"/>	
+     <match buffer="visual" type="door-type">
+      <slot name="token" equals="=symbol"/>
+      <slot name="is-open" equals="true"/>	
+     </match>
+    </conditions>
+    <actions>
+     <remove buffer="visual"/>
+     <output>"I saw person =symbol "</output>
+     <modify buffer="goal">
+      <slot name="open-door" equals="=symbol"/>
+     </modify>
+    </actions>
+    <parameters>
+     <parameter name="Utility" value="-1"/>
+    </parameters>
+   </production>
+   
+   
+   <production name="3c.harvest-object-quit">
+    <conditions>
+     <match buffer="visual" type="visual-object">
+      <slot name="token" equals="'quit'"/>	
+     </match>
+    </conditions>
+    <actions>
+     <remove buffer="visual"/>
+     <output>"I'm quitting'"</output>
+     <stop/>
+    </actions>
+    <parameters>
+     <parameter name="Utility" value="-1"/>
+    </parameters>
+   </production>  
+  
+  </procedural-memory>
+  
+  
+  
+  <!-- **************************************************
+       * Buffer definitions
+       ************************************************** 
+  -->
+  <buffer name="goal" >
+   <parameters>
+    <parameter name="Activation" value="1"/>
+    <parameter name="G" value="20"/>
+    <parameter name="StrictHarvestingEnabled" value="false"/>
+   </parameters>
+  </buffer>
+  <buffer name="imaginal" >
+   <parameters>
+    <parameter name="Activation" value="0"/>
+    <parameter name="G" value="0"/>
+    <parameter name="StrictHarvestingEnabled" value="true"/>
+   </parameters>
+  </buffer>
+  <buffer name="retrieval" >
+   <parameters>
+    <parameter name="Activation" value="0"/>
+    <parameter name="G" value="0"/>
+    <parameter name="StrictHarvestingEnabled" value="true"/>
+   </parameters>
+  </buffer>
+  <buffer name="visual-location" >
+   <parameters>
+    <parameter name="Activation" value="0"/>
+    <parameter name="G" value="0"/>
+    <parameter name="StrictHarvestingEnabled" value="true"/>
+   </parameters>
+  </buffer>
+  <buffer name="visual" >
+   <parameters>
+    <parameter name="Activation" value="0"/>
+    <parameter name="G" value="0"/>
+    <parameter name="StrictHarvestingEnabled" value="true"/>
+   </parameters>
+  </buffer>
+  
+  <parameters>
+   <parameter name="EnablePersistentExecution" value="true"/>
+   <parameter name="EnableUnusedCycleSkipping" value="false"/>
+  </parameters>
+ </model>
+</actr>
