@@ -33,6 +33,7 @@ import org.jactr.core.production.ISubsymbolicProduction;
 import org.jactr.core.production.ISymbolicProduction;
 import org.jactr.core.production.IllegalProductionStateException;
 import org.jactr.core.production.VariableBindings;
+import org.jactr.core.production.bindings.VariableBindingsFactory;
 import org.jactr.core.production.condition.CannotMatchException;
 import org.jactr.core.production.condition.IBufferCondition;
 import org.jactr.core.production.condition.ICondition;
@@ -191,14 +192,9 @@ public abstract class AbstractProduction extends DefaultAdaptable implements
        * this production should not be able to see so we will remove them from
        * the copied bindings
        */
+      // we will recycle this binding
+      VariableBindings tmpBindings = VariableBindingsFactory.newInstance();
 
-      // Collection<Map<String, Object>> attemptedMappings = new
-      // ArrayList<Map<String, Object>>(
-      // provisionalBindings.size());
-      // Collection<ICondition> cloned = new
-      // ArrayList<ICondition>(originals.size());
-
-      VariableBindings tmpBindings = new VariableBindings();
       for (VariableBindings variableBindings : provisionalBindings)
        try
         {
@@ -213,22 +209,7 @@ public abstract class AbstractProduction extends DefaultAdaptable implements
           for (String missing : missingBuffers)
             tmpBindings.unbind(missing);
 
-          /*
-           * now we check to see if this particular mapping has already been
-           * attempted, if so, skip.
-           */
-          // boolean alreadyAttempted = false;
-          // for (Map<String, Object> attempted : attemptedMappings)
-          // if (attempted.equals(variableBindings))
-          // {
-          // alreadyAttempted = true;
-          // break;
-          // }
-          //
-          // if (alreadyAttempted) continue;
-          //
-          // attemptedMappings.add(new TreeMap<String,
-          // Object>(variableBindings));
+
           if (debugEnabled)
             LOGGER.debug("Attempting resolution of " + sp.getName()
                 + " with provisional binding: " + tmpBindings);
@@ -286,8 +267,10 @@ public abstract class AbstractProduction extends DefaultAdaptable implements
             instantiations = new ArrayList<IInstantiation>(
                 provisionalBindings.size());
 
+          // an actual copy of the bindings, outside of recycling
+          // since we can't trace where these will go.
           IInstantiation instance = createInstantiation(this, cloned,
-              tmpBindings.clone());
+              tmpBindings);
 
           instantiations.add(instance);
         }
@@ -308,6 +291,8 @@ public abstract class AbstractProduction extends DefaultAdaptable implements
           cie.setProduction(this);
           throw cie;
         }
+
+      VariableBindingsFactory.recycle(tmpBindings);
 
       if (instantiations.size() == 0) throw new CannotInstantiateException(this, exceptions);
 
@@ -333,6 +318,7 @@ public abstract class AbstractProduction extends DefaultAdaptable implements
    * @param parent
    * @param boundConditions
    * @param bindings
+   *          will be copied.
    * @return
    */
   abstract protected IInstantiation createInstantiation(

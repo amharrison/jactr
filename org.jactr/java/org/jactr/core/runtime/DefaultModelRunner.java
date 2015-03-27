@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutorService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.time.IClock;
+import org.commonreality.time.impl.BasicClock;
 import org.jactr.core.buffer.IActivationBuffer;
 import org.jactr.core.logging.Logger;
 import org.jactr.core.model.ICycleProcessor;
@@ -152,7 +153,9 @@ public class DefaultModelRunner implements Runnable
    */
   protected double cycle(boolean eventsHaveFired)
   {
-    return _cycleRunner.cycle(_model, eventsHaveFired);
+    // make sure we're within the precision bounds bounds.
+    return BasicClock.constrainPrecision(_cycleRunner.cycle(_model,
+        eventsHaveFired));
   }
 
   /**

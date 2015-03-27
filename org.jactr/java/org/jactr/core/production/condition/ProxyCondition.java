@@ -11,6 +11,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.model.IModel;
 import org.jactr.core.production.VariableBindings;
+import org.jactr.core.production.bindings.VariableBindingsFactory;
 import org.jactr.core.production.condition.match.ExceptionMatchFailure;
 import org.jactr.core.production.condition.match.IMatchFailure;
 import org.jactr.core.production.request.SlotBasedRequest;
@@ -165,7 +166,7 @@ public class ProxyCondition extends AbstractSlotCondition
     }
 
     VariableBindings expandedBindings = null;
-
+    boolean canRecycleBindings = false;
     /*
      * if the delegate doesn't have slots of its own, we provide them as
      * expanded bindings, but this means it is a read only, no setting of
@@ -175,7 +176,9 @@ public class ProxyCondition extends AbstractSlotCondition
       expandedBindings = variableBindings;
     else
     {
-      expandedBindings = variableBindings.clone();
+      expandedBindings = VariableBindingsFactory.newInstance();
+      expandedBindings.copy(variableBindings);
+      canRecycleBindings = true;
 
       for (ISlot slot : getSlots())
       {
@@ -201,6 +204,11 @@ public class ProxyCondition extends AbstractSlotCondition
     {
       throw new CannotMatchException(new ExceptionMatchFailure(this,
           _delegateCondition.getClass().getName(), e));
+    }
+    finally
+    {
+      if (canRecycleBindings)
+        VariableBindingsFactory.recycle(expandedBindings);
     }
   }
 }

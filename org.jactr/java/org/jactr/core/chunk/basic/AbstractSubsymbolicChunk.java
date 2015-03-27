@@ -701,8 +701,8 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
 
     if (now > _lastActivationComputationTime)
     {
-      calculateValues();
       _lastActivationComputationTime = now;
+      calculateValues();
     }
   }
 

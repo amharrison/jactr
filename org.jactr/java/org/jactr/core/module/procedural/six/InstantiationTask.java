@@ -25,6 +25,7 @@ import org.jactr.core.production.CannotInstantiateException;
 import org.jactr.core.production.IInstantiation;
 import org.jactr.core.production.IProduction;
 import org.jactr.core.production.VariableBindings;
+import org.jactr.core.production.bindings.VariableBindingsFactory;
 import org.jactr.core.production.condition.IBufferCondition;
 import org.jactr.core.production.condition.ICondition;
 import org.jactr.core.production.condition.QueryCondition;
@@ -80,6 +81,9 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
         .newInstance();
 
     StringBuilder message = new StringBuilder();
+    if (debugEnabled)
+      LOGGER.debug(String.format("Attempting to instantiatie %s",
+          _productionsToInstantiate));
 
     for (IProduction production : _productionsToInstantiate)
       try
@@ -92,6 +96,7 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
 
         Collection<IInstantiation> instantiations = _instantiator.instantiate(
             production, provisionalBindings);
+
 
         for (IInstantiation instantiation : instantiations)
         {
@@ -126,7 +131,6 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
       }
       catch (CannotInstantiateException cie)
       {
-
         if (debugEnabled || hasLoggers)
         {
           String msg = cie.getMessage();
@@ -134,6 +138,17 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
           if (hasLoggers) Logger.log(_model, Logger.Stream.PROCEDURAL, msg);
         }
       }
+      catch (Exception e)
+      {
+        LOGGER.error(String.format("Could not instanitate %s ", production), e);
+      }
+
+    /*
+     * before recycling provisionalBinding collection, let's recycle the
+     * bindings
+     */
+    for (VariableBindings bindings : provisionalBindings)
+      VariableBindingsFactory.recycle(bindings);
 
     FastCollectionFactory.recycle(provisionalBindings);
     FastList.recycle(_productionsToInstantiate);
@@ -154,7 +169,7 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
     FastCollection<VariableBindings> provisionalBindings = FastCollectionFactory
         .newInstance();
 
-    VariableBindings initialBinding = new VariableBindings();
+    VariableBindings initialBinding = VariableBindingsFactory.newInstance();
     initialBinding.bind("=model", _model);
     provisionalBindings.add(initialBinding);
 
@@ -169,6 +184,7 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
      * source chunk in a given buffer, we have to create an additional set of
      * provisional bindings
      */
+    FastCollection<IChunk> sourceChunks = FastCollectionFactory.newInstance();
     for (ICondition condition : production.getSymbolicProduction()
         .getConditions())
       if (condition instanceof IBufferCondition
@@ -177,7 +193,8 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
         IActivationBuffer buffer = _model
             .getActivationBuffer(((IBufferCondition) condition).getBufferName());
 
-        Collection<IChunk> sourceChunks = buffer.getSourceChunks();
+        sourceChunks.clear();
+        buffer.getSourceChunks(sourceChunks);
 
         /*
          * nothing there? nothing to bind.
@@ -201,10 +218,6 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
             // otherwise, we just add the binding (bindings.size =1)
             for (VariableBindings binding : bindings)
               binding.bind("=" + buffer.getName(), source, buffer);
-
-          // // add binding to all bindings
-          // for (VariableBindings binding : bindings)
-          // binding.bind("=" + buffer.getName(), source, buffer);
 
           // store
           keyedProvisionalBindings.put(source, bindings);
@@ -231,6 +244,7 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
 
     bindingsContainer.addAll(provisionalBindings);
 
+    FastCollectionFactory.recycle(sourceChunks);
     FastCollectionFactory.recycle(provisionalBindings);
 
     return bindingsContainer;
@@ -248,10 +262,12 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
   {
     @SuppressWarnings("unchecked")
     FastCollection<VariableBindings> rtn = FastCollectionFactory.newInstance();
+
     for (VariableBindings map : src)
     {
-      VariableBindings clone = map.clone();
-      clone.bind("=" + buffer.getName().toLowerCase(), clone, source);
+      VariableBindings clone = VariableBindingsFactory.newInstance();
+      clone.copy(map);
+      clone.bind("=" + buffer.getName(), clone, source);
       rtn.add(clone);
     }
     return rtn;

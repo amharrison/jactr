@@ -7,7 +7,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.basic.AbstractSubsymbolicChunk;
-import org.jactr.core.chunk.four.ISubsymbolicChunk4;
 import org.jactr.core.model.IModel;
 
 /**
@@ -35,9 +34,7 @@ public class DefaultBaseLevelActivationEquation implements
 
   public double computeBaseLevelActivation(IModel model, IChunk c)
   {
-    double base = c.getSubsymbolicChunk().getAdapter(
-        ISubsymbolicChunk4.class)
-        .getBaseLevelActivation();
+    double base = c.getSubsymbolicChunk().getBaseLevelActivation();
     if (Double.isNaN(base)) base = _declarativeModule.getBaseLevelConstant();
 
     return base;

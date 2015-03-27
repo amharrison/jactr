@@ -55,6 +55,13 @@ public abstract class AbstractInstantiation extends AbstractProduction
   // action
   // latency
 
+  /**
+   * @param parent
+   * @param boundConditions
+   * @param variableBindings
+   *          will be copied locally.
+   * @throws CannotInstantiateException
+   */
   public AbstractInstantiation(AbstractProduction parent,
       Collection<ICondition> boundConditions,
  VariableBindings variableBindings)
@@ -62,7 +69,9 @@ public abstract class AbstractInstantiation extends AbstractProduction
   {
     super(parent.getModel());
     _production = parent;
-    _variableBindings = variableBindings;
+    _variableBindings = new VariableBindings(variableBindings); // ensure that
+                                                                // this is a
+                                                                // copy
     _variableBindings.bind("=instantiation", this);
 
     _symbolicProduction.setName(parent.getSymbolicProduction().getName());

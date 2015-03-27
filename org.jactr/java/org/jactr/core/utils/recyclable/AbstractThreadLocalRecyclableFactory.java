@@ -22,6 +22,16 @@ public abstract class AbstractThreadLocalRecyclableFactory<T> implements
 
   private ThreadLocal<List<T>>       _local = new ThreadLocal<List<T>>();
 
+  public AbstractThreadLocalRecyclableFactory()
+  {
+    this(10);
+  }
+
+  public AbstractThreadLocalRecyclableFactory(int maxCapacity)
+  {
+    setRecycleBinSize(maxCapacity);
+  }
+
   public T newInstance(Object... params)
   {
     List<T> bin = getRecycleBin();
@@ -36,11 +46,13 @@ public abstract class AbstractThreadLocalRecyclableFactory<T> implements
     cleanUp(obj);
 
     List<T> bin = getRecycleBin();
-    bin.add(obj);
 
-    while (bin.size() > _size)
-      release(bin.remove(0));
+    if (bin.size() < _size)
+      bin.add(obj);
+    else
+      release(obj);
   }
+
 
   public int getRecycleBinSize()
   {
