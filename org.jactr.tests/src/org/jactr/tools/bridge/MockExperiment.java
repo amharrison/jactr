@@ -17,13 +17,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.JOptionPane;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.time.IClock;
-import org.commonreality.time.impl.RealTimeClock;
+import org.commonreality.time.impl.RealtimeClock;
+import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.runtime.ACTRRuntime;
 
 /**
@@ -56,7 +58,9 @@ public class MockExperiment implements Runnable
     if (isSimulated)
       _timer = ACTRRuntime.getRuntime().getClock(null);
     else
-      _timer = new RealTimeClock();
+      _timer = new RealtimeClock(
+          (ScheduledExecutorService) ExecutorServices
+              .getExecutor(ExecutorServices.PERIODIC));
   }
 
   protected void setupResponses(int trials)
@@ -132,7 +136,7 @@ public class MockExperiment implements Runnable
        */
       double waitUntil = _timer.getTime() + showAfterSeconds;
       if (LOGGER.isDebugEnabled()) LOGGER.debug("Waiting until " + waitUntil);
-      double start = _timer.waitForTime(waitUntil);
+      double start = _timer.waitForTime(waitUntil).get();
 
       /*
        * this will block until the "user" enters some text and presses enter
@@ -144,7 +148,7 @@ public class MockExperiment implements Runnable
 
       log(now, response, now - start);
     }
-    catch (InterruptedException e)
+    catch (Exception e)
     {
       LOGGER.error("Exception ", e);
     }
