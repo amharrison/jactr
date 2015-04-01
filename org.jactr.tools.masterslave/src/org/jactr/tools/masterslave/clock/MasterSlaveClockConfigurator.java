@@ -102,9 +102,10 @@ public class MasterSlaveClockConfigurator implements IClockConfigurator
       WrappedClock wc = (WrappedClock) ACTRRuntime.getRuntime().getClock(
           mExt.getModel());
 
-      MasterSlaveClock master = (MasterSlaveClock) wc.getMasterClock();
+      // MasterSlaveClock master = (MasterSlaveClock) wc.getMasterClock();
+      MasterSlaveClock master = (MasterSlaveClock) wc.getDelegate();
 
-      master.addOwner(Thread.currentThread());
+      // master.addOwner(Thread.currentThread());
       WrappedClock wrapped = new WrappedClock(master);
 
       if (LOGGER.isDebugEnabled())
@@ -125,11 +126,10 @@ public class MasterSlaveClockConfigurator implements IClockConfigurator
     boolean released = false;
     if (clock instanceof WrappedClock)
     {
-      IClock master = ((WrappedClock) clock).getMasterClock();
+      IClock master = ((WrappedClock) clock).getDelegate();
       if (master instanceof MasterSlaveClock)
       {
-        MasterSlaveClock msc = (MasterSlaveClock) master;
-        msc.removeOwner(Thread.currentThread());
+        // msc.removeOwner(Thread.currentThread());
         released = true;
       }
     }

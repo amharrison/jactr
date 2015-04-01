@@ -18,6 +18,7 @@ import org.jactr.core.chunktype.IChunkType;
 import org.jactr.core.chunktype.ISymbolicChunkType;
 import org.jactr.core.extensions.IExtension;
 import org.jactr.core.model.IModel;
+import org.jactr.core.model.IllegalModelStateException;
 import org.jactr.core.model.basic.BasicModel;
 import org.jactr.core.production.IProduction;
 import org.jactr.core.queue.timedevents.RunnableTimedEvent;
@@ -75,8 +76,16 @@ public class MasterExtension implements IExtension
     return "master";
   }
 
+  @SuppressWarnings("unused")
   public void install(IModel model)
   {
+    if (true)
+      throw new IllegalModelStateException(
+          String
+              .format(
+                  "%s is currently nonfunctional until the underlying clock wrapper can be updated.",
+                  getClass().getSimpleName()));
+
     _model = model;
 
     /*
