@@ -20,7 +20,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.agents.IAgent;
 import org.commonreality.time.IClock;
-import org.commonreality.time.impl.SharedClock;
+import org.commonreality.time.impl.OwnedClock;
+import org.commonreality.time.impl.OwnedClock.OwnedAuthoritativeClock;
 import org.commonreality.time.impl.WrappedClock;
 import org.jactr.core.model.IModel;
 import org.jactr.core.reality.ACTRAgent;
@@ -35,7 +36,7 @@ public class LocalConnector implements IConnector
    */
   static private final Log  LOGGER = LogFactory.getLog(LocalConnector.class);
 
-  private final SharedClock _defaultClock;
+  private final OwnedClock    _defaultClock;
 
   private Map<IModel, IClock> _clocks;
 
@@ -43,7 +44,7 @@ public class LocalConnector implements IConnector
 
   public LocalConnector()
   {
-    _defaultClock = new SharedClock();
+    _defaultClock = new OwnedClock(0.05);
     _clocks = new ConcurrentHashMap<IModel, IClock>();
     setClockConfigurator(new IClockConfigurator() {
 
@@ -70,7 +71,10 @@ public class LocalConnector implements IConnector
    */
   public void connect(IModel model)
   {
-    _defaultClock.addOwner(Thread.currentThread());
+    OwnedAuthoritativeClock auth = (OwnedAuthoritativeClock) _defaultClock
+        .getAuthority().get();
+    // _defaultClock.addOwner(Thread.currentThread());
+    auth.addOwner(model);
 
     IClock clock = getClockConfigurator().getClockFor(model, _defaultClock);
 
@@ -82,17 +86,23 @@ public class LocalConnector implements IConnector
    */
   public void disconnect(IModel model)
   {
-    _defaultClock.removeOwner(Thread.currentThread());
+    OwnedAuthoritativeClock auth = (OwnedAuthoritativeClock) _defaultClock
+        .getAuthority().get();
+
+    auth.removeOwner(model);
+
+    // _defaultClock.removeOwner(Thread.currentThread());
     IClock defined = _clocks.remove(model);
 
     getClockConfigurator().release(model, defined);
 
-    if (_defaultClock.getOwners().size() == 0)
-    {
-      _defaultClock.setIgnoreDiscrepencies(true);
-      _defaultClock.setTime(0);
-      _defaultClock.setIgnoreDiscrepencies(false);
-    }
+    // FastList<Object> owners = FastList.newInstance();
+    // auth.getOwners(owners);
+    //
+    // // reset time if no one is connected
+    // if (owners.size() == 0) auth.requestAndWaitForTime(0, null);
+    //
+    // FastList.recycle(owners);
   }
 
   /**

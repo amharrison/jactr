@@ -16,10 +16,13 @@ package org.jactr.core.runtime;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.NumberFormat;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.commonreality.time.IAuthoritativeClock;
 import org.commonreality.time.IClock;
 import org.commonreality.time.impl.BasicClock;
 import org.jactr.core.buffer.IActivationBuffer;
@@ -84,9 +87,16 @@ public class DefaultModelRunner implements Runnable
 
     double timeShift = _model.getAge() - clock.getTime();
 
-    clock.setTimeShift(timeShift);
+    Optional<IAuthoritativeClock> auth = clock.getAuthority();
+    if (auth.isPresent())
+    {
+      auth.get().setLocalTimeShift(timeShift);
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug("Shifted clock to " + timeShift);
+    }
+    else if (LOGGER.isWarnEnabled()) LOGGER.warn(String.format("Cannot set time shift"));
 
-    if (LOGGER.isDebugEnabled()) LOGGER.debug("Shifted clock to " + timeShift);
+
 
     /**
      * let anyone who depends on commonreality know that we have connected
@@ -164,12 +174,25 @@ public class DefaultModelRunner implements Runnable
    * @param waitForTime
    * @throws InterruptedException
    */
-  protected double waitForClock(double waitForTime) throws InterruptedException
+  protected double waitForClock(double waitForTime)
+      throws InterruptedException, ExecutionException
   {
     if (Double.isNaN(waitForTime)) return 0;
 
-    double rtn = ACTRRuntime.getRuntime().getClock(_model)
-        .waitForTime(waitForTime);
+    IClock clock = ACTRRuntime.getRuntime().getClock(_model);
+    Optional<IAuthoritativeClock> auth = clock.getAuthority();
+
+    double rtn = waitForTime;
+    if (auth.isPresent())
+      rtn = auth.get().requestAndWaitForTime(waitForTime, _model).get();
+    else
+    {
+      LOGGER.warn("Cannot fully participant in time control ");
+      rtn = clock.waitForTime(waitForTime).get();
+    }
+
+    // double rtn = ACTRRuntime.getRuntime().getClock(_model)
+    // .waitForTime(waitForTime).get();
 
     if (rtn < waitForTime)
       LOGGER
@@ -281,6 +304,10 @@ public class DefaultModelRunner implements Runnable
     catch (InterruptedException ie)
     {
       // perfectly normal
+    }
+    catch (ExecutionException ee)
+    {
+      LOGGER.error("Execution exception ", ee);
     }
     finally
     {

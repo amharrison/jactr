@@ -179,14 +179,14 @@ public class RemoveAction extends ModifyAction implements IBufferAction
           {
             String msg = String
                 .format(
-                    "%s is not longer in %s, cannot complete remove requested by %s. Perhaps another thread has cleared this buffer?",
+                    "%s is not longer in %s, cannot complete remove requested by %s. Perhaps another thread has cleared this buffer? Not critical.",
                     _chunkToRemove, _buffer.getName(), _instantiation
                         .getSymbolicProduction().getName());
 
             if (Logger.hasLoggers(model))
               Logger.log(model, Logger.Stream.EXCEPTION, msg);
 
-            if (LOGGER.isWarnEnabled()) LOGGER.warn(msg);
+            if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
           }
           return;
         }

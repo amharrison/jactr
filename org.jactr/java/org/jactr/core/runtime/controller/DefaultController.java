@@ -57,13 +57,7 @@ public class DefaultController implements IController
       {
         super.modelAdded(event);
         if (isRunning())
-        {
-          if (LOGGER.isDebugEnabled())
-            LOGGER.debug(String.format("adding %s to a running runtime", event
-                .getModel()));
-
           startModel(event.getModel());
-        }
       }
 
       @Override
@@ -108,21 +102,21 @@ public class DefaultController implements IController
 
   public Collection<IModel> getRunningModels()
   {
-    ArrayList<IModel> models = new ArrayList<IModel>();
+    ArrayList<IModel> models = new ArrayList<IModel>(2);
     _state.getRunning(models);
     return models;
   }
 
   public Collection<IModel> getSuspendedModels()
   {
-    ArrayList<IModel> models = new ArrayList<IModel>();
+    ArrayList<IModel> models = new ArrayList<IModel>(2);
     _state.getSuspended(models);
     return models;
   }
 
   public Collection<IModel> getTerminatedModels()
   {
-    ArrayList<IModel> models = new ArrayList<IModel>();
+    ArrayList<IModel> models = new ArrayList<IModel>(2);
     _state.getTerminated(models);
     return models;
   }
@@ -344,6 +338,24 @@ public class DefaultController implements IController
 
       System.out.println(sb.toString());
       System.out.flush();
+
+      LOGGER.debug(String.format("Profiling stats for %s", model.getName()));
+      LOGGER.debug(String.format("Simulated processing cycles\t%d",
+          model.getCycle()));
+      LOGGER.debug(String.format("Total real time\t\t%.4fs",
+          prm.getTotalCycleTime()));
+      LOGGER.debug(String.format("Simulated time\t\t%.4fs",
+          prm.getSimulatedTime()));
+      LOGGER.debug(String.format("Avg sleep time (clock)\t%.4fms",
+          prm.getActualWaitTime() / prm.getTotalCycles() * 1000d));
+      LOGGER.debug(String.format("Avg event processing time\t%.4fms",
+          prm.getActualEventTime() / prm.getTotalCycles() * 1000d));
+      LOGGER.debug(String.format("Avg production cycle time\t%.4fms",
+          prm.getActualCycleTime() / prm.getTotalCycles() * 1000d));
+      LOGGER.debug(String.format("Avg production time + waits\t%.4fms",
+          prm.getTotalCycleTime() / prm.getTotalCycles() * 1000d));
+      LOGGER.debug(String.format("Realtime factor\t\t\t%.2fx",
+          prm.getRealTimeFactor()));
     }
   }
 
