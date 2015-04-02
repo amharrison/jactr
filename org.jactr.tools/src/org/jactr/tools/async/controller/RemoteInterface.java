@@ -16,6 +16,7 @@ package org.jactr.tools.async.controller;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 
 import org.antlr.runtime.CommonToken;
@@ -117,6 +118,10 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
   {
     ACTRRuntime runtime = ACTRRuntime.getRuntime();
     _handler = new RemoteIOHandler(runtime.getController());
+
+    // we can process the io with the background thread, it shouldn't add too
+    // much
+    setIOExecutorService((ExecutorService) getExecutor());
 
     _installedModels = new ArrayList<IModel>();
 

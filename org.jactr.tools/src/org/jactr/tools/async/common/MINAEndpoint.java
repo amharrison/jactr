@@ -105,7 +105,7 @@ public abstract class MINAEndpoint implements IParameterized
    * 
    * @param service
    */
-  synchronized public void setExecutorService(ExecutorService service)
+  synchronized public void setIOExecutorService(ExecutorService service)
   {
     _executorService = service;
     _usedDefaultExecutorService = false;
@@ -114,7 +114,7 @@ public abstract class MINAEndpoint implements IParameterized
   /**
    * return the executor service that mina is relying upon
    */
-  synchronized public ExecutorService getExecutorService()
+  synchronized public ExecutorService getIOExecutorService()
   {
     if (_executorService == null)
     {
@@ -285,7 +285,7 @@ public abstract class MINAEndpoint implements IParameterized
       throw new RuntimeException("Actual credentials must be set");
 
     _service.configure(_transport, _protocol, getIOHandler(),
-        getExecutorService());
+        getIOExecutorService());
 
     try
     {
