@@ -3,11 +3,8 @@ package org.jactr.core.buffer;
 /*
  * default logging
  */
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import javolution.util.FastList;
 
@@ -40,7 +37,7 @@ public class BufferUtilities
     try
     {
       chunk.getWriteLock().lock();
-      ConcurrentMap<IActivationBuffer, Double> containmentMap = (ConcurrentMap<IActivationBuffer, Double>) chunk
+      ConcurrentHashMap<IActivationBuffer, Double> containmentMap = (ConcurrentHashMap<IActivationBuffer, Double>) chunk
           .getMetaData(CONTAINMENT_MAP_META_KEY);
 
       if (containmentMap == null)
@@ -65,7 +62,8 @@ public class BufferUtilities
     try
     {
       chunk.getWriteLock().lock();
-      ConcurrentMap<IActivationBuffer, Double> containmentMap = (ConcurrentMap<IActivationBuffer, Double>) chunk
+      @SuppressWarnings("unchecked")
+      ConcurrentHashMap<IActivationBuffer, Double> containmentMap = (ConcurrentHashMap<IActivationBuffer, Double>) chunk
           .getMetaData(CONTAINMENT_MAP_META_KEY);
 
       if (containmentMap != null && containmentMap.remove(buffer) != null
@@ -90,8 +88,6 @@ public class BufferUtilities
   static public void getContainingBuffers(IChunk chunk, boolean isStrict,
       Collection<IActivationBuffer> container)
   {
-    ConcurrentMap<IActivationBuffer, Double> containmentMap = (ConcurrentMap<IActivationBuffer, Double>) chunk
-        .getMetaData(CONTAINMENT_MAP_META_KEY);
 
     if (!isStrict)
     {
@@ -110,7 +106,15 @@ public class BufferUtilities
           if (equals) container.add(buffer);
         }
     }
-    else if (containmentMap != null) container.addAll(containmentMap.keySet());
+    else
+    {
+      @SuppressWarnings("unchecked")
+      ConcurrentHashMap<IActivationBuffer, Double> containmentMap = (ConcurrentHashMap<IActivationBuffer, Double>) chunk
+          .getMetaData(CONTAINMENT_MAP_META_KEY);
+
+      if (containmentMap != null)
+        containmentMap.forEach((buffer, act) -> container.add(buffer));
+    }
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug(chunk + " is contained by " + container + ", isStrict="
