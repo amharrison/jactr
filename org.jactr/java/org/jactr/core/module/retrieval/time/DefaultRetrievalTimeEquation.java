@@ -95,7 +95,8 @@ public class DefaultRetrievalTimeEquation implements IRetrievalTimeEquation
       ChunkTypeRequest retrievalRequest)
   {
     FastList<ISlot> slots = FastList.newInstance();
-    retrievalRequest.getSlots(slots);
+    if(retrievalRequest != null)
+    	retrievalRequest.getSlots(slots);
     double latencyFactor = _retrievalModule.getLatencyFactor();
     double latencyExponent = _retrievalModule.getLatencyExponent();
     double threshold = RetrievalRequestDelegate.getThreshold(_retrievalModule,
