@@ -240,17 +240,17 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
     IChunk retrievalResult = selectRetrieval(results, dm.getErrorChunk(),
         pattern, cleanedPattern);
 
-    // now we can recycle the collection
-    if (results instanceof ConcurrentSkipListSet)
-      SkipListSetFactory.recycle((ConcurrentSkipListSet) results);
-
     // we should check to see if this is an indexed, as their time is immediate
     double retrievalTime = 0;
     if (!wasIndexed)
       retrievalTime = getRetrievalTimeEquation().computeRetrievalTime(
           retrievalResult, pattern);
 
-    fireCompleted(pattern, retrievalResult, retrievalTime);
+    fireCompleted(pattern, retrievalResult, retrievalTime, results);
+
+    // now we can recycle the collection
+    if (results instanceof ConcurrentSkipListSet)
+      SkipListSetFactory.recycle((ConcurrentSkipListSet) results);
 
     return retrievalResult;
   }
@@ -423,10 +423,10 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
   }
 
   protected void fireCompleted(ChunkTypeRequest pattern, IChunk chunk,
-      double retrievalTime)
+      double retrievalTime, Collection<IChunk> allCandidates)
   {
     _eventDispatcher.fire(new RetrievalModuleEvent(this, pattern, chunk,
-        retrievalTime));
+        retrievalTime, allCandidates));
   }
 
   public void addListener(IRetrievalModuleListener listener, Executor executor)

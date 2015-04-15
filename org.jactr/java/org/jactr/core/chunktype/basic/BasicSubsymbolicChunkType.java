@@ -129,6 +129,11 @@ public class BasicSubsymbolicChunkType extends DefaultAdaptable implements
   public void encode()
   {
     // noop
+    _isEncoded = true;
+  }
 
+  public boolean isDisposed()
+  {
+    return false;
   }
 }

@@ -32,4 +32,8 @@ public interface ISubsymbolicChunkType extends IParameterized, IAdaptable
   public void dispose();
 
   public void encode();
+  
+  public boolean isEncoded();
+
+  public boolean isDisposed();
 }
