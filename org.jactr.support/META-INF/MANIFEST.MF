@@ -6,11 +6,6 @@ Bundle-Version: 1.2.2.qualifier
 Bundle-Vendor: jactr.org
 Bundle-Localization: plugin
 Export-Package: 
- javax.measure,
- javax.measure.converter,
- javax.measure.quantity,
- javax.measure.unit,
- javax.realtime,
  javolution,
  javolution.context,
  javolution.io,
@@ -50,6 +45,20 @@ Export-Package:
  org.apache.commons.lang.time,
  org.apache.commons.logging,
  org.apache.commons.logging.impl,
+ org.jmock,
+ org.jmock.api,
+ org.jmock.auto,
+ org.jmock.auto.internal,
+ org.jmock.integration.junit4,
+ org.jmock.internal,
+ org.jmock.internal.matcher,
+ org.jmock.lib,
+ org.jmock.lib.action,
+ org.jmock.lib.concurrent,
+ org.jmock.lib.concurrent.internal,
+ org.jmock.lib.legacy,
+ org.jmock.lib.script,
+ org.jmock.syntax,
  org.jscience,
  org.jscience.economics.money,
  org.jscience.geography.coordinates,
@@ -59,21 +68,24 @@ Export-Package:
  org.jscience.mathematics.structure,
  org.jscience.mathematics.vector,
  org.jscience.physics.amount,
- org.jscience.physics.model,
- org.opengis.metadata,
- org.opengis.metadata.citation,
- org.opengis.metadata.extent,
- org.opengis.referencing,
- org.opengis.referencing.crs,
- org.opengis.referencing.cs,
- org.opengis.spatialschema.geometry,
- org.opengis.spatialschema.geometry.geometry,
- org.opengis.util
+ org.jscience.physics.model
 Bundle-ClassPath: lib/org/jactr/commons-primitives-1.0.jar,
  lib/org/commons-logging-1.1.1.jar,
- lib/javolution.jar,
  lib/jscience.jar,
  lib/org/jactr/commons-lang-2.5.jar,
  lib/org/jactr/commons-cli-1.2.jar,
- lib/org/jactr/commons-collections-3.2.1.jar
+ lib/org/jactr/commons-collections-3.2.1.jar,
+ lib/javolution.jar,
+ lib/jmock/jmock-2.6.0.jar,
+ lib/jmock/jmock-junit4-2.6.0.jar,
+ lib/jmock/jmock-legacy-2.6.0.jar,
+ lib/jmock/jmock-script-2.6.0.jar
 Require-Bundle: org.apache.log4j;visibility:=reexport
+ lib/org/jactr/commons-collections-3.2.1.jar,
+ lib/jmock/jmock-2.6.0.jar,
+ lib/jmock/jmock-junit4-2.6.0.jar,
+ lib/jmock/jmock-legacy-2.6.0.jar,
+ lib/jmock/jmock-script-2.6.0.jar
+Require-Bundle: org.apache.log4j;visibility:=reexport,
+ org.junit;bundle-version="4.0.0";visibility:=reexport
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
