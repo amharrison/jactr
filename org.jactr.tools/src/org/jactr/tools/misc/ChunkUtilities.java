@@ -275,18 +275,33 @@ public class ChunkUtilities
     public void modify(IChunk chunk, IActivationBuffer buffer)
     {
       ISymbolicChunk sc = chunk.getSymbolicChunk();
-      for (Map.Entry<String, Object> slot : _slots.entrySet())
-        try
-        {
-          IMutableSlot mSlot = (IMutableSlot) sc.getSlot(slot.getKey());
-          mSlot.setValue(slot.getValue());
-        }
-        catch (Exception e)
-        {
-          LOGGER.error(
-              String.format("Failed to set %s.%s = %s", sc.getName(),
-                  slot.getKey(), slot.getValue()), e);
-        }
+      // for (Map.Entry<String, Object> slot : _slots.entrySet())
+      // try
+      // {
+      // IMutableSlot mSlot = (IMutableSlot) sc.getSlot(slot.getKey());
+      // mSlot.setValue(slot.getValue());
+      // }
+      // catch (Exception e)
+      // {
+      // LOGGER.error(
+      // String.format("Failed to set %s.%s = %s", sc.getName(),
+      // slot.getKey(), slot.getValue()), e);
+      // }
+
+      _slots
+          .forEach((k, v) -> {
+            try
+            {
+              IMutableSlot mSlot = (IMutableSlot) sc.getSlot(k);
+              mSlot.setValue(v);
+            }
+            catch (Exception e)
+            {
+              LOGGER.error(
+                  String.format("Failed to set %s.%s = %s", sc.getName(), k, v),
+                  e);
+            }
+          });
     }
 
   }
