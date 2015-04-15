@@ -94,4 +94,5 @@ Bundle-ClassPath: lib/org/jactr/commons-primitives-1.0.jar,
  lib/jmock/jmock-junit4-2.6.0.jar,
  lib/jmock/jmock-legacy-2.6.0.jar,
  lib/jmock/jmock-script-2.6.0.jar
-Require-Bundle: org.apache.log4j;visibility:=reexport
+Require-Bundle: org.apache.log4j;visibility:=reexport,
+ org.junit;bundle-version="4.0.0";visibility:=reexport
