@@ -7,7 +7,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/org.jactr.launching"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.jactr.support"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.jactr.tools"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.commonreality.mina"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.commonreality"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.jactr.tools.shell"/>
@@ -16,5 +15,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/org.jactr.tools.masterslave"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.commonreality.sensors.xml"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.commonreality.mina.core"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
