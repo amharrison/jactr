@@ -141,7 +141,7 @@ public class MINATest extends TestCase
     controller.setProtocol(protocol);
     controller.setAddressInfo(addressInfo);
     controller.setCredentialInformation(credentials);
-    controller.setExecutorService(runtimeExecutor);
+    controller.setIOExecutorService(runtimeExecutor);
     controller.setSendOnSuspend(true);
 
     /*
@@ -153,7 +153,7 @@ public class MINATest extends TestCase
     remote.setProtocol(protocol);
     remote.setAddressInfo(addressInfo);
     remote.setCredentialInformation(credentials);
-    remote.setExecutorService(shadowExecutor);
+    remote.setIOExecutorService(shadowExecutor);
 
     addHandlers(remote.getHandler());
 
