@@ -181,7 +181,9 @@ public interface IDeclarativeModule extends IModule
 
   /**
    * search DM for all the chunks that match pattern, sorting using sorter, that
-   * are above activationThreshold
+   * are above activationThreshold. If the request contains meta slots
+   * (":slotName"), for instance if you reuse the ChunkTypePattern from a
+   * retrieval request, they must be removed first.
    * 
    * @param request
    * @param sorter

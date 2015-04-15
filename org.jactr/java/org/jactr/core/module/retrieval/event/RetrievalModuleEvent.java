@@ -13,6 +13,10 @@
  */
 package org.jactr.core.module.retrieval.event;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
@@ -42,6 +46,8 @@ public class RetrievalModuleEvent extends
 
   private double           _retrievalTime;
 
+  private Collection<IChunk> _allCandidates;
+
   public RetrievalModuleEvent(IRetrievalModule source, double simulationTime)
   {
     super(source, simulationTime);
@@ -55,13 +61,18 @@ public class RetrievalModuleEvent extends
   }
 
   public RetrievalModuleEvent(IRetrievalModule source, ChunkTypeRequest pattern,
- IChunk chunk, double retrievalTime)
+ IChunk chunk, double retrievalTime,
+      Collection<IChunk> allCandidates)
   {
     this(source, ACTRRuntime.getRuntime().getClock(source.getModel()).getTime());
     _type = Type.COMPLETED;
     _request = pattern;
     _chunk = chunk;
     _retrievalTime = retrievalTime;
+    if (allCandidates != null)
+      _allCandidates = new ArrayList<IChunk>(allCandidates);
+    else
+      _allCandidates = Collections.EMPTY_LIST;
   }
 
   /**
@@ -77,6 +88,11 @@ public class RetrievalModuleEvent extends
   public IChunk getChunk()
   {
     return _chunk;
+  }
+
+  public Collection<IChunk> getAllCandidates()
+  {
+    return _allCandidates;
   }
 
   public ChunkTypeRequest getChunkTypeRequest()
