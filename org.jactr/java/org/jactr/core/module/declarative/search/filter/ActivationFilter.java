@@ -61,21 +61,34 @@ public class ActivationFilter implements IChunkFilter, ILoggedChunkFilter
     double spread = ssc.getSpreadingActivation();
 
     boolean acceptChunk = referenceActivation >= _activationThreshold;
+    boolean newBest = false;
 
     if (referenceActivation > _highestActivationYet)
     {
       _bestChunkYet = chunk;
       _highestActivationYet = referenceActivation;
-
-      if (_message != null)
-        _message.append(String.format(
-            "%s.(%.2f=%.2f+%.2f) is best candidate yet \n", _bestChunkYet,
-            totalActivation, base, spread));
+      newBest = true;
     }
-    else if (_message != null)
-      _message.append(String.format(
-          "%s.(%.2f=%.2f+%.2f) doesn't have the highest activation \n", chunk,
-          totalActivation, base, spread));
+
+    if (_message != null)
+    {
+      String message = null;
+      if (newBest)
+        message = String.format("%s.(%.2f=%.2f+%.2f) is best candidate yet \n",
+            _bestChunkYet, totalActivation, base, spread);
+      else
+        message = String.format(
+            "%s.(%.2f=%.2f+%.2f) doesn't have the highest activation \n",
+            chunk, totalActivation, base, spread);
+
+      /*
+       * TextBuilder's aren't thread safe.
+       */
+      synchronized (_message)
+      {
+        _message.append(message);
+      }
+    }
 
     return acceptChunk;
   }

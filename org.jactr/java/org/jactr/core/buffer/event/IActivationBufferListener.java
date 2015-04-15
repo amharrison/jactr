@@ -18,7 +18,12 @@ import java.util.EventListener;
 import org.jactr.core.event.IParameterListener;
 
 /**
- * listen to changes in a specific buffer
+ * listen to changes in a specific buffer. If you are tracking a chunk within a
+ * buffer it is necessar to listen for the relevant
+ * {@link #sourceChunkAdded(ActivationBufferEvent)}, but also the
+ * {@link #sourceChunkRemoved(ActivationBufferEvent)} and
+ * {@link #sourceChunksCleared(ActivationBufferEvent)}. clearing will not fire
+ * off {@link #sourceChunkRemoved(ActivationBufferEvent)}
  * 
  * @author harrison
  * @created April 18, 2003
@@ -40,7 +45,9 @@ public interface IActivationBufferListener extends EventListener,
   public void sourceChunkRemoved(ActivationBufferEvent abe);
 
   /**
-   * called when all the chunks are removed from the buffer
+   * called when all the chunks are removed from the buffer. If a clear is
+   * called, this is the only event fired, not
+   * {@link #sourceChunkRemoved(ActivationBufferEvent)}
    */
   public void sourceChunksCleared(ActivationBufferEvent abe);
 

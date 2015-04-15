@@ -77,16 +77,17 @@ public abstract class AbstractAuralEncoder implements IPerceptualEncoder
   {
     IChunkType chunkType = getAuralObjectChunkType(memory);
     IChunk encoding = newChunk(chunkType, guessChunkName(afferentObject));
+
+    IModel model = memory.getModule().getModel();
+    if (Logger.hasLoggers(model))
+      Logger.log(model, Logger.Stream.AURAL, "Precoded " + encoding);
+
     /*
      * we are the only ones with access.. but just in case
      */
     try
     {
       encoding.getWriteLock().lock();
-
-      IModel model = memory.getModule().getModel();
-      if (Logger.hasLoggers(model))
-        Logger.log(model, Logger.Stream.AURAL, "Precoded " + encoding);
 
       updateSlots(afferentObject, encoding, (IAuralMemory) memory);
     }

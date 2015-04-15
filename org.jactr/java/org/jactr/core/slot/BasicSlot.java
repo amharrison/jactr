@@ -13,6 +13,8 @@
  */
 package org.jactr.core.slot;
 
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 
 /**
  * @author harrison TODO To change the template for this generated type comment
@@ -25,7 +27,12 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
 
   private String   _name;
 
-  private String   _toString;
+  /**
+   * we cache the toString representation since it will be called so frequently,
+   * however this creates a ton of strings that are actually relatively short
+   * lived, so we use references to hold onto it for a short term
+   */
+  private Reference<String> _toString;
 
   public BasicSlot(String name)
   {
@@ -170,9 +177,10 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
   {
     synchronized (this)
     {
-      if (_toString == null) _toString = createToString();
+      if (_toString == null)
+        _toString = new WeakReference<String>(createToString());
     }
-    return _toString;
+    return _toString.get();
   }
 
   protected void clearToString()

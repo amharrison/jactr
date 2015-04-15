@@ -111,6 +111,13 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
       nextWaitTime = calculateNextWaitTime(now, productionFiringTime,
           basicModel, eventsHaveFired);
 
+      if (nextWaitTime <= now)
+        LOGGER
+            .error(String
+                .format(
+                    "WARNING: Time discrepancy detected. Next cycle time : %.10f(next) <= %.10f(current). Should be >",
+                    nextWaitTime, now));
+
       if (LOGGER.isDebugEnabled())
         LOGGER.debug("nextWaitTime : " + nextWaitTime);
     }
@@ -230,7 +237,7 @@ else if (model.isCycleSkippingEnabled() /* && !eventsHaveFired */)
         && Math.abs(nextProductionFiringTime - nextEventFiringTime) < TEMPORAL_TOLERANCE)
     {
       nextWaitTime = Math.max(nextProductionFiringTime, nextEventFiringTime);
-      if (LOGGER.isWarnEnabled())
+      if (LOGGER.isDebugEnabled())
         LOGGER
             .warn(String
                 .format(

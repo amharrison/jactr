@@ -470,22 +470,9 @@ public class IterativeMain
            */
           if (_aggressiveGC) System.gc();
 
-          long free = Runtime.getRuntime().freeMemory();
-
           iteration(i, iterations, environment, url, listeners, log);
 
           if (_aggressiveGC) System.gc();
-
-          long delta = free - Runtime.getRuntime().freeMemory();
-
-          if (delta > 0)
-          {
-            System.gc();
-            delta = free - Runtime.getRuntime().freeMemory();
-          }
-
-          if (LOGGER.isDebugEnabled() && delta > 0)
-            LOGGER.debug("Potential leak of " + delta / 1024 + "k");
         }
         catch (TerminateIterativeRunException tire)
         {

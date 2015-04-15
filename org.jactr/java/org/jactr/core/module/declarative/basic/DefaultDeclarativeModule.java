@@ -62,6 +62,7 @@ import org.jactr.core.module.declarative.basic.type.ISubsymbolicChunkTypeFactory
 import org.jactr.core.module.declarative.basic.type.ISymbolicChunkTypeFactory;
 import org.jactr.core.module.declarative.basic.type.NoOpChunkTypeConfigurator;
 import org.jactr.core.module.declarative.basic.type.NoOpChunkTypeNamer;
+import org.jactr.core.module.declarative.search.ISearchSystem;
 import org.jactr.core.module.declarative.search.filter.IChunkFilter;
 import org.jactr.core.module.declarative.search.filter.ILoggedChunkFilter;
 import org.jactr.core.module.declarative.search.local.DefaultSearchSystem;
@@ -468,18 +469,25 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
     }
   }
 
+  public ISearchSystem getSearchSystem()
+  {
+    return _searchSystem;
+  }
+
   protected Collection<IChunk> findExactMatchesInternal(
       ChunkTypeRequest pattern, final Comparator<IChunk> sorter,
       IChunkFilter filter)
   {
+    TextBuilder logMessage = null;
+
     SortedSet<IChunk> candidates = _searchSystem.findExact(pattern, sorter,
         filter);
 
-    TextBuilder logMessage = null;
-
     if (filter instanceof ILoggedChunkFilter)
       logMessage = ((ILoggedChunkFilter) filter).getMessageBuilder();
-    else
+
+    // just incase a message builder wasn't created
+    if (logMessage == null && Logger.hasLoggers(getModel()))
       logMessage = new TextBuilder();
 
     if (LOGGER.isDebugEnabled())
@@ -490,58 +498,13 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
       logMessage.insert(0,
           String.format("Evaluating exact matches : %s \n", candidates));
 
-    // FastList<IChunk> finalChunks = new FastList<IChunk>();
-    // /*
-    // * we can't be sure that the sorting used is actually relevant to us so we
-    // * have to zip through the entire results
-    // */
-    // double highestActivation = Double.NEGATIVE_INFINITY;
-    // IChunk bestChunk = null;
-    // for (IChunk chunk : candidates)
-    // {
-    // /*
-    // * snag the activation and see if this is the highest chunk so far
-    // */
-    // double tmpAct = chunk.getSubsymbolicChunk().getActivation();
-    // double base = chunk.getSubsymbolicChunk().getBaseLevelActivation();
-    // double spread = chunk.getSubsymbolicChunk().getSpreadingActivation();
-    // if (tmpAct > highestActivation)
-    // {
-    // bestChunk = chunk;
-    // highestActivation = tmpAct;
-    // if (logMessage != null)
-    // logMessage.append(String.format(
-    // "%s has highest activation (%.2f=%.2f+%.2f)\n", bestChunk,
-    // tmpAct, base, spread));
-    // }
-    // else if (logMessage != null)
-    // logMessage.append(String.format(
-    // "%s doesn't have the highest activation (%.2f=%.2f+%.2f)\n", chunk,
-    // tmpAct, base, spread));
-    //
-    // /*
-    // * if we are selecting the best one only, don't add it to the list
-    // */
-    // if (!bestOne && tmpAct >= activationThreshold) finalChunks.add(chunk);
-    // }
-    //
-    // /*
-    // * here's the best one, assuming we only want one
-    // */
-    // if (bestOne && bestChunk != null
-    // && highestActivation >= activationThreshold)
-    // finalChunks.add(bestChunk);
-
-    // if (LOGGER.isDebugEnabled())
-    // LOGGER.debug("find exact matches returning " + finalChunks);
-
     if (Logger.hasLoggers(getModel()))
       Logger.log(getModel(), Logger.Stream.DECLARATIVE, logMessage.toString());
 
     // clean up
     // if (candidates instanceof FastSet) FastSet.recycle((FastSet) candidates);
 
-    logMessage.delete(0, logMessage.length());
+    // logMessage.delete(0, logMessage.length());
 
     return candidates;
   }

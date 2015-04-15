@@ -38,6 +38,15 @@ public class FastCollectionFactory
                                                                     .newInstance();
                                                             }
 
+                                                              @Override
+                                                              protected void release(
+                                                                  FastCollection obj)
+                                                              {
+                                                                if (obj instanceof FastList)
+                                                                  FastList
+                                                                      .recycle((FastList) obj);
+                                                              }
+
                                                           };
 
   static public FastCollection newInstance()

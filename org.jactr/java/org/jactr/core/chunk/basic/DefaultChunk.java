@@ -206,6 +206,8 @@ public class DefaultChunk extends DefaultAdaptable implements IChunk
         DefaultChunk mc = (DefaultChunk) masterChunk;
         _chunkData.dispose();
         _chunkData = mc._chunkData;
+        // adopt the adapter functionality
+        adopt(mc);
       }
       else
       {

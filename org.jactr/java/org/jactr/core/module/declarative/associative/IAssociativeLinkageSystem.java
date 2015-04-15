@@ -3,6 +3,8 @@ package org.jactr.core.module.declarative.associative;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.link.IAssociativeLink;
 import org.jactr.core.chunk.link.IAssociativeLinkEquation;
+import org.jactr.core.module.IModule;
+import org.jactr.core.module.declarative.IDeclarativeModule;
 import org.jactr.core.utils.IInstallable;
 import org.jactr.core.utils.parameter.LinkParameterHandler;
 import org.jactr.core.utils.parameter.LinkParameterProcessor;
@@ -14,7 +16,13 @@ import org.jactr.core.utils.parameter.LinkParameterProcessor;
 /**
  * entry point for all associative link handling in the system. It is preferred
  * that <b>all</b> handling of associations be taken care of through here. This
- * would include chunk level merging of associative links.
+ * would include chunk level merging of associative links. This is managed by
+ * the {@link IDeclarativeModule}, via
+ * {@link IDeclarativeModule#setAssociativeLinkageSystem(IAssociativeLinkageSystem)}
+ * . However, the linkage system must be set before the declarative module
+ * builds any chunks, typically via
+ * {@link IModule#install(org.jactr.core.model.IModel)}. To call from
+ * {@link IModule#initialize()} would be after the chunks have been created.
  */
 public interface IAssociativeLinkageSystem extends IInstallable
 {

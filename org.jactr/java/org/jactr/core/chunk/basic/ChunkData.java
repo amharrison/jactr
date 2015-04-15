@@ -28,8 +28,7 @@ import org.jactr.core.utils.parameter.IParameterized;
 /**
  * ChunkData contains blocks of code that are common to most chunk
  * implementations. <bR>
- * <bt>
- * TODO this class needs to use the locks it has
+ * <bt> TODO this class needs to use the locks it has
  * 
  * @author developer
  */
@@ -51,7 +50,7 @@ public class ChunkData
 
   private IModel                                                  _model;
 
-  final private ReentrantReadWriteLock                                  _lock      = new ReentrantReadWriteLock();
+  final private ReentrantReadWriteLock                            _lock      = new ReentrantReadWriteLock();
 
   public ChunkData(IModel model)
   {
@@ -67,7 +66,6 @@ public class ChunkData
     _eventDispatcher = null;
     _parameterEventDispatcher.clear();
     _parameterEventDispatcher = null;
-    _metaData.clear();
     _metaData = null;
     _hasBeenDisposed = true;
     _isEncoded = false;
@@ -129,17 +127,17 @@ public class ChunkData
   {
     _comment = comment;
   }
-  
+
   public Lock readLock()
   {
     return _lock.readLock();
   }
-  
+
   public Lock writeLock()
   {
     return _lock.writeLock();
   }
-  
+
   public ReentrantReadWriteLock getLock()
   {
     return _lock;

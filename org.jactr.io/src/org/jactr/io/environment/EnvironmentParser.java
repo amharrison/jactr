@@ -215,7 +215,7 @@ public class EnvironmentParser
             String
                 .format(
                     "Could not load model from %s. If this was working a second ago, check out %s.",
-                    location, "http://jactr.org/node/148"));
+                    location, "http://jact-r.org/node/148"));
     }
 
     return models;

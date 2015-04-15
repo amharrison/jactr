@@ -13,14 +13,17 @@
  */
 package org.jactr.core.runtime;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import junit.framework.TestCase;
 
 import org.antlr.runtime.tree.CommonTree;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.model.IModel;
-import org.jactr.core.runtime.controller.IController;
 import org.jactr.core.runtime.controller.DefaultController;
+import org.jactr.core.runtime.controller.IController;
 import org.jactr.io.CommonIO;
 import org.jactr.io.generator.CodeGeneratorFactory;
 import org.jactr.io.resolver.ASTResolver;
@@ -81,9 +84,10 @@ public class GeneralExecutionTest extends TestCase
   protected IModel configureModel(IModel model)
   {
     if (LOGGER.isDebugEnabled()) LOGGER.debug("Attaching logger");
-//    org.jactr.core.logging.impl.DefaultModelLogger dml = new DefaultModelLogger();
-//    dml.setParameter("all", "err");
-//    model.install(dml);
+    // org.jactr.core.logging.impl.DefaultModelLogger dml = new
+    // DefaultModelLogger();
+    // dml.setParameter("all", "err");
+    // model.install(dml);
     return model;
   }
 
@@ -95,15 +99,16 @@ public class GeneralExecutionTest extends TestCase
       LOGGER.debug(line.toString());
   }
 
-  protected void execute(IModel model) throws Exception
+  protected void execute(IModel... models) throws Exception
   {
     if (_dumpOnStart)
     {
       if (LOGGER.isDebugEnabled()) LOGGER.debug("Initial model state");
-      dump(model);
+      for (IModel model : models)
+        dump(model);
     }
-
-    ACTRRuntime.getRuntime().addModel(model);
+    for (IModel model : models)
+      ACTRRuntime.getRuntime().addModel(model);
 
     IController controller = ACTRRuntime.getRuntime().getController();
 
@@ -114,25 +119,34 @@ public class GeneralExecutionTest extends TestCase
     assertFalse(controller.isRunning());
 
     if (LOGGER.isDebugEnabled()) LOGGER.debug("Terminated");
-    assertTrue(controller.getTerminatedModels().contains(model));
+    for (IModel model : models)
+      assertTrue(controller.getTerminatedModels().contains(model));
 
-    ACTRRuntime.getRuntime().removeModel(model);
-    if (_dumpOnStop) dump(model);
+    for (IModel model : models)
+    {
+      ACTRRuntime.getRuntime().removeModel(model);
+      if (_dumpOnStop) dump(model);
+      model.dispose();
+    }
 
-    model.dispose();
   }
 
-  protected void test(String modelLocation) throws Exception
+  protected void test(String... modelLocations) throws Exception
   {
-    IModel model = load(modelLocation);
-    configureModel(model);
-    execute(model);
+    List<IModel> models = new ArrayList<IModel>();
+    for (String modelLocation : modelLocations)
+    {
+      IModel model = load(modelLocation);
+      configureModel(model);
+      models.add(model);
+    }
+    execute(models.toArray(new IModel[models.size()]));
   }
 
-//  public void testLispSemantic() throws Exception
-//  {
-//    test("org/jactr/core/runtime/semantic-lisp.lisp");
-//  }
+  // public void testLispSemantic() throws Exception
+  // {
+  // test("org/jactr/core/runtime/semantic-lisp.lisp");
+  // }
 
   public void testBasicSemantic() throws Exception
   {
@@ -152,6 +166,12 @@ public class GeneralExecutionTest extends TestCase
   public void testCount() throws Exception
   {
     test("org/jactr/core/models/count.jactr");
+  }
+
+  public void testMultiple() throws Exception
+  {
+    test("org/jactr/core/models/count.jactr",
+        "org/jactr/core/models/addition.jactr");
   }
 
 }

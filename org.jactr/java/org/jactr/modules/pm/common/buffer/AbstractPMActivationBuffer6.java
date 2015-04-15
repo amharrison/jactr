@@ -15,7 +15,8 @@ package org.jactr.modules.pm.common.buffer;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+
+import javolution.util.FastCollection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,6 +34,7 @@ import org.jactr.core.queue.ITimedEvent;
 import org.jactr.core.queue.event.TimedEventEvent;
 import org.jactr.core.queue.event.TimedEventListenerAdaptor;
 import org.jactr.core.slot.BasicSlot;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 import org.jactr.modules.pm.buffer.IEventTrackingActivationBuffer;
 import org.jactr.modules.pm.buffer.IPerceptualBuffer;
 
@@ -141,12 +143,12 @@ public abstract class AbstractPMActivationBuffer6 extends
      * write lock which could result in deadlock since the events might have
      * locks of their own
      */
-    Collection<ITimedEvent> events = Collections.emptyList();
+    FastCollection<ITimedEvent> events = FastCollectionFactory.newInstance();
     try
     {
       getLock().readLock().lock();
       if (_pendingTimedEvents.size() != 0)
-        events = new ArrayList<ITimedEvent>(_pendingTimedEvents);
+ events.addAll(_pendingTimedEvents);
     }
     finally
     {
@@ -156,6 +158,7 @@ public abstract class AbstractPMActivationBuffer6 extends
     for (ITimedEvent element : events)
       element.abort();
 
+    FastCollectionFactory.recycle(events);
   }
 
   /**

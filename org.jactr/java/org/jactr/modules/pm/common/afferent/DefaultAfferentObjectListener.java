@@ -242,6 +242,9 @@ public class DefaultAfferentObjectListener implements IAfferentListener,
     boolean shouldQueue = false;
     synchronized (_removedObjects)
     {
+      // we only queue if there are still pending removes. the next cycle will
+      // catch
+      // the new removals
       shouldQueue = _removedObjects.size() == 0;
       Collection<IAfferentObject> removed = removeEvent.getObjects();
       _removedObjects.addAll(removed);

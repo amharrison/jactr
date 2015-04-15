@@ -60,7 +60,6 @@ public class CommonRealityConnector implements IConnector
   public CommonRealityConnector()
   {
     _defaultClock = new BasicClock();
-    _defaultClock.setTime(-1);
     _agentInterfaces = new ConcurrentHashMap<IModel, ACTRAgent>();
     // _disconnectedModels = new ConcurrentHashMap<IModel, IClock>();
     _allClocks = new ConcurrentHashMap<IModel, IClock>();

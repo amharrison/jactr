@@ -172,7 +172,7 @@ public class OutputAction extends DefaultAction
    */
   static public String replaceVariables(String template, VariableBindings variableBindings)
   {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
     int start = 0;
     int end = 0;
 

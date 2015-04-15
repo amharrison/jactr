@@ -23,8 +23,8 @@ import org.antlr.runtime.tree.CommonTree;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.io.IOUtilities;
-import org.jactr.io.generator.ICodeGenerator;
 import org.jactr.io.generator.CodeGeneratorFactory;
+import org.jactr.io.generator.ICodeGenerator;
 
 public class XMLGeneratorTest extends TestCase
 {
@@ -42,6 +42,6 @@ public class XMLGeneratorTest extends TestCase
     ICodeGenerator gen = CodeGeneratorFactory.getCodeGenerator("jactr");
     Collection<StringBuilder> code = gen.generate(md, true);
     for (StringBuilder line : code)
-      LOGGER.debug(line);
+      System.out.println(line);
   }
 }

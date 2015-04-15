@@ -21,6 +21,7 @@ SaveAsExtension : extension of the code generator to use. (default: jactr)
 StartDirectory : local working directory path to save the start state models to. Will be created if missing. (default: start/)
 StopDirectory : local working directory path to save the stop models to. Will be created if missing. (default: stop/)
 TrimModuleContributions : Don&apos;t include the injected content from modules and extensions in the generated code. (default: true).
+ASTGenerator: default or class name of Function&lt;IModel, CommonTree&gt; to generate a filtered ast for writing to file.
 
 http://jactr.org/node/144</description>
          <parameter
@@ -34,7 +35,11 @@ http://jactr.org/node/144</description>
                value="stop"/>
           <parameter
                name="TrimModuleContributions"
-               value="true"/>     
+               value="true"/>
+          <parameter
+                name="ASTGenerator"
+                value="default">
+          </parameter>     
       </instrument>
       <instrument
             class="org.jactr.tools.tracer.RuntimeTracer"
@@ -386,6 +391,14 @@ http://jactr.org/node/144</description>
             name="Cached Procedural System">
          <description>
             Provides a drop-in replacement of the production instantiator that can cache failed instantiations until the production can possibly be instantiated. This can cut conflict resolution processing time by an order of magnitude (depending on the production patterns used). EnableCaching=true turns it on. ValidateInstantiations=true will verify the correctness of the cache (negating any performance improvements, but a useful test to ensure it's correctness).
+         </description>
+      </model-extension>
+      <model-extension
+            class="org.jactr.extensions.search.performance.DefaultSearchSystemOptimizer"
+            name="LocalSearchProfiler"
+            requiresClasspath="false">
+         <description>
+            description body text
          </description>
       </model-extension>
    </extension>

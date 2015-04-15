@@ -37,11 +37,10 @@ public class DefaultAssociativeLinkageSystem implements
   /**
    * Logger definition
    */
-  static private final transient Log LOGGER                  = LogFactory
-                                                                 .getLog(DefaultAssociativeLinkageSystem.class);
+  static private final transient Log LOGGER = LogFactory
+                                                .getLog(DefaultAssociativeLinkageSystem.class);
 
   private IAssociativeLinkEquation   _equation;
-
 
   public DefaultAssociativeLinkageSystem()
   {
@@ -68,8 +67,6 @@ public class DefaultAssociativeLinkageSystem implements
   {
     _equation = equation;
   }
-
-
 
   public void install(IModel model)
   {
@@ -101,11 +98,9 @@ public class DefaultAssociativeLinkageSystem implements
 
   public LinkParameterProcessor getParameterProcessor(final IChunk sourceChunk)
   {
-    return new LinkParameterProcessor(
-        ISubsymbolicChunk4.LINKS,
-        l -> {
+    return new LinkParameterProcessor(ISubsymbolicChunk4.LINKS, l -> {
       addLink(l);
-        },
+    },
         () -> {
           IAssociativeLinkContainer container = sourceChunk
               .getAdapter(IAssociativeLinkContainer.class);
@@ -115,9 +110,8 @@ public class DefaultAssociativeLinkageSystem implements
             return lC.iterator().next();
           else
             return null;
-        },
-      new ACTRParameterProcessor("bsName",
-        null, null, sourceChunk.getModel()), sourceChunk);
+        }, new ACTRParameterProcessor("bsName", null, null,
+            sourceChunk.getModel()), sourceChunk);
   }
 
   /**
@@ -127,27 +121,25 @@ public class DefaultAssociativeLinkageSystem implements
    */
   public void chunkWillBeDisposed(IChunk chunk)
   {
-    ISubsymbolicChunk4 ssc4 = chunk
-        .getAdapter(ISubsymbolicChunk4.class);
-    if (ssc4 != null)
-    {
-      // remove the associative links.
-      FastList<IAssociativeLink> links = FastList.newInstance();
-      // where chunk is J
-      ssc4.getIAssociations(links);
+    IAssociativeLinkContainer container = chunk
+        .getAdapter(IAssociativeLinkContainer.class);
 
-      for (IAssociativeLink link : links)
-        detachLink(link);
+    // remove the associative links.
+    FastList<IAssociativeLink> links = FastList.newInstance();
+    // where chunk is J
+    container.getOutboundLinks(links);
 
-      // where chunk is I
-      links.clear();
-      ssc4.getJAssociations(links);
+    for (IAssociativeLink link : links)
+      detachLink(link);
 
-      for (IAssociativeLink link : links)
-        detachLink(link);
+    // where chunk is I
+    links.clear();
+    container.getInboundLinks(links);
 
-      FastList.recycle(links);
-    }
+    for (IAssociativeLink link : links)
+      detachLink(link);
+
+    FastList.recycle(links);
 
   }
 
@@ -159,18 +151,15 @@ public class DefaultAssociativeLinkageSystem implements
     if (LOGGER.isDebugEnabled())
       LOGGER.debug(String.format("Detaching link %s", link));
 
-    // remove link from i and j chunks.
-    ISubsymbolicChunk4 ssc4 = null;
 
     if (!iChunk.hasBeenDisposed())
-      ssc4 = iChunk.getAdapter(ISubsymbolicChunk4.class);
+      iChunk.getAdapter(IAssociativeLinkContainer.class).removeLink(link);
+    ;
 
-    if (ssc4 != null) ssc4.removeLink(link);
 
     if (!jChunk.hasBeenDisposed())
-      ssc4 = jChunk.getAdapter(ISubsymbolicChunk4.class);
-
-    if (ssc4 != null) ssc4.removeLink(link);
+      jChunk.getAdapter(IAssociativeLinkContainer.class).removeLink(link);
+    ;
   }
 
   /*
@@ -190,19 +179,17 @@ public class DefaultAssociativeLinkageSystem implements
 
     // zip through all of sources links
 
-    ISubsymbolicChunk4 sourceSSC = source
-        .getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 destSSC = destination
-        .getAdapter(ISubsymbolicChunk4.class);
+    IAssociativeLinkContainer srcCont = source.getAdapter(IAssociativeLinkContainer.class);
+    IAssociativeLinkContainer destCont = destination.getAdapter(IAssociativeLinkContainer.class);
 
-    if (sourceSSC != null && destSSC != null)
+    if (srcCont != null && destCont != null)
     {
       // remove the associative links.
       FastList<IAssociativeLink> links = FastList.newInstance();
       // j links, that is these links spread activation from source
       if (copySourceJs)
       {
-        sourceSSC.getJAssociations(links);
+        srcCont.getOutboundLinks(links);
 
         if (LOGGER.isDebugEnabled())
           LOGGER
@@ -220,7 +207,7 @@ public class DefaultAssociativeLinkageSystem implements
         links.clear();
 
         // i links, that is, these links spread activation to source
-        sourceSSC.getIAssociations(links);
+        srcCont.getInboundLinks(links);
 
         if (LOGGER.isDebugEnabled())
           LOGGER
@@ -261,17 +248,16 @@ public class DefaultAssociativeLinkageSystem implements
           oldLink, newLink));
 
     // now add to both dest and the other side of the link
-    dest.getAdapter(ISubsymbolicChunk4.class)
-        .addLink(newLink);
+    dest.getAdapter(IAssociativeLinkContainer.class).addLink(newLink);
 
     if (sourceIsI && sourceIsJ)
       return;
     else if (sourceIsI)
-      oldLink.getJChunk().getAdapter(
-          ISubsymbolicChunk4.class).addLink(newLink);
+      oldLink.getJChunk().getAdapter(IAssociativeLinkContainer.class)
+          .addLink(newLink);
     else if (sourceIsJ)
-      oldLink.getIChunk().getAdapter(
-          ISubsymbolicChunk4.class).addLink(newLink);
+      oldLink.getIChunk().getAdapter(IAssociativeLinkContainer.class)
+          .addLink(newLink);
 
   }
 
@@ -280,11 +266,8 @@ public class DefaultAssociativeLinkageSystem implements
     IChunk sourceJ = link.getJChunk();
     IChunk targetI = link.getIChunk();
 
-    ISubsymbolicChunk4 j4 = sourceJ.getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 i4 = targetI.getAdapter(ISubsymbolicChunk4.class);
-
-    j4.addLink(link);
-    i4.addLink(link);
+    sourceJ.getAdapter(IAssociativeLinkContainer.class).addLink(link);
+    targetI.getAdapter(IAssociativeLinkContainer.class).addLink(link);
   }
 
   public void removeLink(IAssociativeLink link)
@@ -292,11 +275,8 @@ public class DefaultAssociativeLinkageSystem implements
     IChunk sourceJ = link.getJChunk();
     IChunk targetI = link.getIChunk();
 
-    ISubsymbolicChunk4 j4 = sourceJ.getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 i4 = targetI.getAdapter(ISubsymbolicChunk4.class);
-
-    j4.removeLink(link);
-    i4.removeLink(link);
+    sourceJ.getAdapter(IAssociativeLinkContainer.class).removeLink(link);
+    targetI.getAdapter(IAssociativeLinkContainer.class).removeLink(link);
   }
 
 }

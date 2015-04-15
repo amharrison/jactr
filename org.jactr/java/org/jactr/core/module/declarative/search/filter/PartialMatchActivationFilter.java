@@ -43,8 +43,7 @@ public class PartialMatchActivationFilter implements ILoggedChunkFilter
   private ActivationPolicy           _activationPolicy;
 
   public PartialMatchActivationFilter(ActivationPolicy policy,
-      ChunkTypeRequest request,
-      double threshold, boolean logEvaluations)
+      ChunkTypeRequest request, double threshold, boolean logEvaluations)
   {
     _activationPolicy = policy;
     _request = request;
@@ -80,8 +79,7 @@ public class PartialMatchActivationFilter implements ILoggedChunkFilter
     double base = ssc.getBaseLevelActivation();
     double spread = ssc.getSpreadingActivation();
 
-    ISubsymbolicChunk5 ssc5 = (ISubsymbolicChunk5) ssc
-        .getAdapter(ISubsymbolicChunk5.class);
+    ISubsymbolicChunk5 ssc5 = ssc.getAdapter(ISubsymbolicChunk5.class);
 
     if (ssc5 != null) discountedActivation = ssc5.getActivation(_request);
 
@@ -91,23 +89,34 @@ public class PartialMatchActivationFilter implements ILoggedChunkFilter
     referenceActivation -= discount;
 
     boolean acceptChunk = referenceActivation >= _activationThreshold;
+    boolean newBest = false;
 
     if (referenceActivation > _highestActivationYet)
     {
       _bestChunkYet = chunk;
       _highestActivationYet = referenceActivation;
+      newBest = true;
 
-      if (_message != null)
-        _message.append(String.format(
-            "%s is best candidate yet (%.2f=%.2f+%.2f [%.2f discount])\n",
-            _bestChunkYet, discountedActivation, base, spread, discount));
     }
-    else if (_message != null)
-      _message
-          .append(String
-              .format(
-                  "%s doesn't have the highest activation (%.2f=%.2f+%.2f [%.2f discount])\n",
-                  chunk, discountedActivation, base, spread, discount));
+
+    if (_message != null)
+    {
+      String msg = null;
+      if (newBest)
+        msg = String.format(
+            "%s is best candidate yet (%.2f=%.2f+%.2f [%.2f discount])\n",
+            _bestChunkYet, discountedActivation, base, spread, discount);
+      else
+        msg = String
+            .format(
+                "%s doesn't have the highest activation (%.2f=%.2f+%.2f [%.2f discount])\n",
+                chunk, discountedActivation, base, spread, discount);
+
+      synchronized (_message)
+      {
+        _message.append(msg);
+      }
+    }
 
     return acceptChunk;
   }

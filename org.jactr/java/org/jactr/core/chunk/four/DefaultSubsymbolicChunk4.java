@@ -365,23 +365,31 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
        * this adaptable, but the chunk's. Should probably remove adaptable from
        * content classes.
        */
-      IAssociativeLinkContainer aslc = getParentChunk().getAdapter(
-          IAssociativeLinkContainer.class);
+      FastList<IAssociativeLink> associations = FastList.newInstance();
+      try
+      {
+        IAssociativeLinkContainer aslc = getParentChunk().getAdapter(
+            IAssociativeLinkContainer.class);
 
-      Collection<IAssociativeLink> associations = FastList.newInstance();
-      aslc.getOutboundLinks(associations); // everyone we spread to
+        aslc.getOutboundLinks(associations); // everyone we spread to
 
-      ACTRParameterHandler actrph = new ACTRParameterHandler(getParentChunk()
-          .getModel());
+        ACTRParameterHandler actrph = new ACTRParameterHandler(getParentChunk()
+            .getModel());
 
-      LinkParameterHandler lph = getParentChunk().getModel()
-          .getDeclarativeModule().getAssociativeLinkageSystem()
-          .getParameterHandler();
-      lph.setDependents(getParentChunk(), actrph);
+        LinkParameterHandler lph = getParentChunk().getModel()
+            .getDeclarativeModule().getAssociativeLinkageSystem()
+            .getParameterHandler();
+        lph.setDependents(getParentChunk(), actrph);
 
-      CollectionParameterHandler<IAssociativeLink> aph = new CollectionParameterHandler<IAssociativeLink>(
-          lph);
-      rtn = aph.toString(associations);
+        CollectionParameterHandler<IAssociativeLink> aph = new CollectionParameterHandler<IAssociativeLink>(
+            lph);
+        rtn = aph.toString(associations);
+      }
+      finally
+      {
+        FastList.recycle(associations);
+      }
+
     }
     else if (CREATION_CYCLE.equalsIgnoreCase(key))
       rtn = ParameterHandler.numberInstance().toString(getCreationCycle());

@@ -23,6 +23,7 @@ import org.jactr.core.chunk.event.ChunkListenerAdaptor;
 import org.jactr.core.chunk.four.ISubsymbolicChunk4;
 import org.jactr.core.chunk.four.Link4;
 import org.jactr.core.chunk.link.IAssociativeLink;
+import org.jactr.core.module.declarative.associative.IAssociativeLinkContainer;
 import org.jactr.core.module.declarative.basic.chunk.IChunkFactory;
 import org.jactr.core.module.declarative.basic.chunk.ISubsymbolicChunkFactory;
 
@@ -91,16 +92,16 @@ public class ChunkListener extends ChunkListenerAdaptor
 
     boolean subsymbolicsCopied = sscCopied != null ? (Boolean) sscCopied
         : false;
-    
+
     if (LOGGER.isDebugEnabled())
-      {
+    {
       LOGGER.debug(String.format("Master %s(N:%.2f, C:%.2f)", master, master
           .getSubsymbolicChunk().getTimesNeeded(), master.getSubsymbolicChunk()
           .getTimesInContext()));
       LOGGER.debug(String.format("Mergee %s(N:%.2f, C:%.2f)", self, self
           .getSubsymbolicChunk().getTimesNeeded(), self.getSubsymbolicChunk()
           .getTimesInContext()));
-      }
+    }
 
     if (selfCopiedFrom != null && selfCopiedFrom.equals(master)
         && subsymbolicsCopied)
@@ -139,38 +140,39 @@ public class ChunkListener extends ChunkListenerAdaptor
   {
     double[] correction = new double[2];
 
-    ISubsymbolicChunk4 copySSC = copy
-        .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 masterSSC = master
-        .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
-    
+    master.getAdapter(IAssociativeLinkContainer.class);
+    copy.getAdapter(IAssociativeLinkContainer.class);
 
-    Link4 link = (Link4) copySSC.getJAssociation(master);
+    FastList.newInstance();
+
+    // link between copy-master
+    Link4 link = (Link4) getAssociativeLink(copy, master, false);
     if (link != null)
     {
       correction[0] = link.getFNICJ();
       // remove so that they don't become redundant self-links
-      copySSC.removeLink(link);
-      masterSSC.removeLink(link);
+      _linkageSystem.removeLink(link);
     }
 
-    link = (Link4) copySSC.getIAssociation(master);
+    // link between master-copy
+    link = (Link4) getAssociativeLink(copy, master, true);
     if (link != null)
     {
       correction[1] = link.getFNICJ();
       // remove so that they don't become redundant self-links
-      copySSC.removeLink(link);
-      masterSSC.removeLink(link);
+      _linkageSystem.removeLink(link);
     }
 
     /*
      * self won't actually have a self link since it isn't created until
      * encoding. but lets just make sure
      */
-    link = (Link4) copySSC.getIAssociation(copy);
+    link = (Link4) getAssociativeLink(copy, copy, true);
+
     if (link != null)
     {
-      Link4 mLink = (Link4) masterSSC.getIAssociation(master);
+      // master selflink
+      Link4 mLink = (Link4) getAssociativeLink(master, master, false);
 
       if (LOGGER.isDebugEnabled())
         LOGGER.debug(String.format(
@@ -178,16 +180,16 @@ public class ChunkListener extends ChunkListenerAdaptor
             absorb ? "Absorbing" : "Merging", mLink));
 
       if (absorb) // if copy was a literally subsymbolic copy, it will
-      // have the original values of mLink, so we just swap them entirely
-      mLink.setFNICJ(link.getFNICJ());
+        // have the original values of mLink, so we just swap them entirely
+        mLink.setFNICJ(link.getFNICJ());
       else
         mLink.setFNICJ(mLink.getFNICJ() + link.getFNICJ());
-      
+
       if (LOGGER.isDebugEnabled())
         LOGGER.debug(String.format("Master self link now : %s", mLink));
 
       // and remove so we don't double process
-      copySSC.removeLink(link);
+      _linkageSystem.removeLink(link);
     }
 
     if (LOGGER.isDebugEnabled())
@@ -215,16 +217,18 @@ public class ChunkListener extends ChunkListenerAdaptor
       LOGGER.debug(String.format("%s merging into %s, processing %sLinks",
           copy, master, processJLinks ? "j" : "i"));
 
-    ISubsymbolicChunk4 copySSC = copy
-        .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 masterSSC = master
-        .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
+    ISubsymbolicChunk4 masterSSC = master.getSubsymbolicChunk().getAdapter(
+        ISubsymbolicChunk4.class);
+
+    IAssociativeLinkContainer cCont = copy
+        .getAdapter(IAssociativeLinkContainer.class);
+    master.getAdapter(IAssociativeLinkContainer.class);
 
     FastList<IAssociativeLink> links = FastList.newInstance();
     if (processJLinks)
-      copySSC.getJAssociations(links);
+      cCont.getInboundLinks(links);
     else
-      copySSC.getIAssociations(links);
+      cCont.getOutboundLinks(links);
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug(String.format("Testing %d links", links.size()));
@@ -254,7 +258,7 @@ public class ChunkListener extends ChunkListenerAdaptor
        * otherChunk so that otherChunk doesn't link back to the merged chunk.
        */
       ISubsymbolicChunk4 otherSSC = otherChunk
-          .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
+          .getAdapter(ISubsymbolicChunk4.class);
 
       double fNiCj = oldLink.getFNICJ();
       int count = oldLink.getCount();
@@ -264,7 +268,7 @@ public class ChunkListener extends ChunkListenerAdaptor
         /**
          * 
          */
-        fNiCj = Math.max(0, fNiCj-fnicjCorrection);
+        fNiCj = Math.max(0, fNiCj - fnicjCorrection);
         if (LOGGER.isDebugEnabled())
           LOGGER.debug(String.format("Original FNiCj(%.2f) corrected (%.2f)",
               oldLink.getFNICJ(), fNiCj));
@@ -273,8 +277,8 @@ public class ChunkListener extends ChunkListenerAdaptor
       /*
        * now we process the link, either merging it or absorbing its values
        */
-      Link4 masterLink = (Link4) (processJLinks ? masterSSC
-          .getJAssociation(otherChunk) : masterSSC.getIAssociation(otherChunk));
+      Link4 masterLink = (Link4) getAssociativeLink(master, otherChunk,
+          processJLinks);
       if (masterLink != null)
       {
         if (LOGGER.isDebugEnabled())
@@ -282,7 +286,10 @@ public class ChunkListener extends ChunkListenerAdaptor
               .debug(String
                   .format(
                       "Master(N:%.2f, C:%.2f) is already linked to %s(N:%.2f, C:%.2f) via %s",
-              masterSSC.getTimesNeeded(), masterSSC.getTimesInContext(), otherChunk, otherSSC.getTimesNeeded(), otherSSC.getTimesInContext(), masterLink));
+                      masterSSC.getTimesNeeded(),
+                      masterSSC.getTimesInContext(), otherChunk,
+                      otherSSC.getTimesNeeded(), otherSSC.getTimesInContext(),
+                      masterLink));
 
         if (absorbLinks)
         {
@@ -351,6 +358,38 @@ public class ChunkListener extends ChunkListenerAdaptor
   }
 
   /**
+   * Return a single associative link that existing between containingChunk and
+   * referenceChunk. If getOutbound is true, containingChunk is j &
+   * referenceChunk is I. If false, containingChunk is i & reference chunk is j
+   * 
+   * @param containingChunk
+   * @param referenceChunk
+   * @param getOutbound
+   * @return
+   */
+  static public IAssociativeLink getAssociativeLink(IChunk containingChunk,
+      IChunk referenceChunk, boolean getOutbound)
+  {
+    FastList<IAssociativeLink> links = FastList.newInstance();
+    try
+    {
+      IAssociativeLinkContainer alc = containingChunk
+          .getAdapter(IAssociativeLinkContainer.class);
+      if (getOutbound)
+        alc.getOutboundLinks(referenceChunk, links);
+      else
+        alc.getInboundLinks(referenceChunk, links);
+
+      if (links.size() == 0) return null;
+      return links.iterator().next();
+    }
+    finally
+    {
+      FastList.recycle(links);
+    }
+  }
+
+  /**
    * if a copy of master and master are to be merged, and copy has master's
    * subsymbolics, then master can simply assume the same values and links.
    * 
@@ -363,18 +402,15 @@ public class ChunkListener extends ChunkListenerAdaptor
       LOGGER.debug(String.format("%s, a copy of %s is being merged back in.",
           copy, master));
 
-    ISubsymbolicChunk4 selfSSC = copy
-        .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 masterSSC = master
-        .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
+    ISubsymbolicChunk4 selfSSC = copy.getAdapter(ISubsymbolicChunk4.class);
+    ISubsymbolicChunk4 masterSSC = master.getAdapter(ISubsymbolicChunk4.class);
 
     /**
      * Sji stats
      */
     masterSSC.setTimesInContext(selfSSC.getTimesInContext());
     masterSSC.setTimesNeeded(selfSSC.getTimesNeeded());
-    
-    
+
     if (LOGGER.isDebugEnabled())
       LOGGER.debug(String.format("Master %s(N:%.2f, C:%.2f)", master, master
           .getSubsymbolicChunk().getTimesNeeded(), master.getSubsymbolicChunk()
@@ -403,10 +439,8 @@ public class ChunkListener extends ChunkListenerAdaptor
       LOGGER.debug(String.format("%s is now identical to %s. Merging.",
           identical, master));
 
-    ISubsymbolicChunk4 selfSSC = identical
-        .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
-    ISubsymbolicChunk4 masterSSC = master
-        .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk4.class);
+    ISubsymbolicChunk4 selfSSC = identical.getAdapter(ISubsymbolicChunk4.class);
+    ISubsymbolicChunk4 masterSSC = master.getAdapter(ISubsymbolicChunk4.class);
 
     /**
      * Sji stats
@@ -416,8 +450,7 @@ public class ChunkListener extends ChunkListenerAdaptor
         + selfSSC.getTimesInContext());
     masterSSC.setTimesNeeded(masterSSC.getTimesNeeded()
         + selfSSC.getTimesNeeded());
-    
-    
+
     if (LOGGER.isDebugEnabled())
       LOGGER.debug(String.format("Master %s(N:%.2f, C:%.2f)", master, master
           .getSubsymbolicChunk().getTimesNeeded(), master.getSubsymbolicChunk()

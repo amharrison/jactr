@@ -33,6 +33,7 @@ import org.jactr.core.production.ISubsymbolicProduction;
 import org.jactr.core.production.ISymbolicProduction;
 import org.jactr.core.production.IllegalProductionStateException;
 import org.jactr.core.production.VariableBindings;
+import org.jactr.core.production.bindings.VariableBindingsFactory;
 import org.jactr.core.production.condition.CannotMatchException;
 import org.jactr.core.production.condition.IBufferCondition;
 import org.jactr.core.production.condition.ICondition;
@@ -160,162 +161,155 @@ public abstract class AbstractProduction extends DefaultAdaptable implements
       throw new CannotInstantiateException(this,
           "Cannot instantiate an unencoded production");
 
+    // we call this enough in loop to warrant this
+    boolean debugEnabled = LOGGER.isDebugEnabled();
+
     ISymbolicProduction sp = getSymbolicProduction();
     IModel m = getModel();
 
     Collection<IInstantiation> instantiations = Collections.EMPTY_LIST;
-    Collection<CannotMatchException> exceptions = null;
+    FastList<CannotMatchException> exceptions = FastList.newInstance();
+    FastSet<String> missingBuffers = FastSet.newInstance();
+    FastList<ICondition> cloned = FastList.newInstance();
+
     int totalIterations = 0;
 
-    FastSet<String> missingBuffers = FastSet.newInstance();
-
-    for (IActivationBuffer buffer : m.getActivationBuffers())
-      missingBuffers.add("=" + buffer.getName());
-
-    Collection<ICondition> originals = sp.getConditions();
-
-    for (ICondition condition : originals)
-      if (condition instanceof IBufferCondition)
-        missingBuffers.remove("="
-            + ((IBufferCondition) condition).getBufferName());
-
-    /*
-     * missingBuffers now contains the variable names bound to buffers that this
-     * production should not be able to see so we will remove them from the
-     * copied bindings
-     */
-
-    // Collection<Map<String, Object>> attemptedMappings = new
-    // ArrayList<Map<String, Object>>(
-    // provisionalBindings.size());
-    FastList<ICondition> cloned = FastList.newInstance();
-    // Collection<ICondition> cloned = new
-    // ArrayList<ICondition>(originals.size());
-    for (VariableBindings variableBindings : provisionalBindings)
+    try
     {
-      VariableBindings tmpBindings = variableBindings.clone();
-      try
-      {
-        tmpBindings.bind("=production", this);
 
-        for (String missing : missingBuffers)
-          tmpBindings.unbind(missing);
+      for (IActivationBuffer buffer : m.getActivationBuffers())
+        missingBuffers.add("=" + buffer.getName());
 
-        /*
-         * now we check to see if this particular mapping has already been
-         * attempted, if so, skip.
-         */
-        // boolean alreadyAttempted = false;
-        // for (Map<String, Object> attempted : attemptedMappings)
-        // if (attempted.equals(variableBindings))
-        // {
-        // alreadyAttempted = true;
-        // break;
-        // }
-        //
-        // if (alreadyAttempted) continue;
-        //
-        // attemptedMappings.add(new TreeMap<String, Object>(variableBindings));
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug("Attempting resolution of " + sp.getName()
-              + " with provisional binding: " + tmpBindings);
-        /*
-         * first we need to duplicate the conditions
-         */
-        cloned.clear();
+      Collection<ICondition> originals = sp.getConditions();
 
-        /*
-         * clone them, they may throw CMEs if they can determine that binding is
-         * impossible.
-         */
-        for (ICondition original : originals)
-          cloned.add(original.clone(m, tmpBindings));
+      for (ICondition condition : originals)
+        if (condition instanceof IBufferCondition)
+          missingBuffers.remove("="
+              + ((IBufferCondition) condition).getBufferName());
 
-        /*
-         * Now we iteratively zip through the conditions, keeping track of the
-         * number of unresolved bindings, if the total reaches 0, we are golden
-         * and can fully instantiate. If the total fails to decrease after any
-         * iteration, it is stuck, and will fail. OR a CME can be thrown.
-         */
-        int lastTotalUnresolved = Integer.MAX_VALUE;
-        int iterations = 0;
-        while (lastTotalUnresolved > 0)
+      /*
+       * missingBuffers now contains the variable names bound to buffers that
+       * this production should not be able to see so we will remove them from
+       * the copied bindings
+       */
+      // we will recycle this binding
+      VariableBindings tmpBindings = VariableBindingsFactory.newInstance();
+
+      for (VariableBindings variableBindings : provisionalBindings)
+       try
         {
-          totalIterations++;
-          iterations++;
-          int totalUnresolved = 0;
-          for (ICondition condition : cloned) {
-        	  LOGGER.debug("binding condition " + condition.getClass());
-        	  totalUnresolved += condition.bind(m, tmpBindings, true);
-          }
           /*
-           * no change.. we turn off iterative and attempt to resolve again. we
-           * know it will fail, but we're doing this to get the CME
+           * we recycle the tmpBindings for efficiency purposes
            */
-          if (totalUnresolved == lastTotalUnresolved)
-            for (ICondition condition : cloned)
-              condition.bind(m, tmpBindings, false);
+          tmpBindings.clear();
+          tmpBindings.copy(variableBindings);
+          
+          tmpBindings.bind("=production", this);
 
-          lastTotalUnresolved = totalUnresolved;
+          for (String missing : missingBuffers)
+            tmpBindings.unbind(missing);
+
+
+          if (debugEnabled)
+            LOGGER.debug("Attempting resolution of " + sp.getName()
+                + " with provisional binding: " + tmpBindings);
+          /*
+           * first we need to duplicate the conditions
+           */
+          cloned.clear();
+
+          /*
+           * clone them, they may throw CMEs if they can determine that binding
+           * is impossible.
+           */
+          for (ICondition original : originals)
+            cloned.add(original.clone(m, tmpBindings));
+
+          /*
+           * Now we iteratively zip through the conditions, keeping track of the
+           * number of unresolved bindings, if the total reaches 0, we are
+           * golden and can fully instantiate. If the total fails to decrease
+           * after any iteration, it is stuck, and will fail. OR a CME can be
+           * thrown.
+           */
+          int lastTotalUnresolved = Integer.MAX_VALUE;
+          int iterations = 0;
+          while (lastTotalUnresolved > 0)
+          {
+            totalIterations++;
+            iterations++;
+            int totalUnresolved = 0;
+            for (ICondition condition : cloned)
+            {
+              if (debugEnabled)
+                LOGGER.debug("binding condition " + condition.getClass());
+              totalUnresolved += condition.bind(m, tmpBindings, true);
+            }
+            /*
+             * no change.. we turn off iterative and attempt to resolve again.
+             * we know it will fail, but we're doing this to get the CME
+             */
+            if (totalUnresolved == lastTotalUnresolved)
+              for (ICondition condition : cloned)
+                condition.bind(m, tmpBindings, false);
+
+            lastTotalUnresolved = totalUnresolved;
+          }
+
+          if (debugEnabled)
+            LOGGER.debug("Instantiated " + sp.getName() + " after "
+                + iterations + " iterations, bindings : " + tmpBindings);
+
+          /*
+           * we can instantiate
+           */
+          if (instantiations.size() == 0)
+            instantiations = new ArrayList<IInstantiation>(
+                provisionalBindings.size());
+
+          // an actual copy of the bindings, outside of recycling
+          // since we can't trace where these will go.
+          IInstantiation instance = createInstantiation(this, cloned,
+              tmpBindings);
+
+          instantiations.add(instance);
+        }
+        catch (CannotMatchException cme)
+        {
+          if (debugEnabled)
+            LOGGER.debug("Could not instantiate " + sp.getName() + " after "
+                + totalIterations + " iterations with binding: " + tmpBindings
+                + " ", cme);
+
+          /*
+           * hold onto the CME for passing to CNI
+           */
+          exceptions.add(cme);
+        }
+        catch (CannotInstantiateException cie)
+        {
+          cie.setProduction(this);
+          throw cie;
         }
 
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug("Instantiated " + sp.getName() + " after " + iterations
-              + " iterations, bindings : " + tmpBindings);
+      VariableBindingsFactory.recycle(tmpBindings);
 
-        /*
-         * we can instantiate
-         */
-        if (instantiations.size() == 0)
-          instantiations = new ArrayList<IInstantiation>(
-              provisionalBindings.size());
+      if (instantiations.size() == 0) throw new CannotInstantiateException(this, exceptions);
 
-        IInstantiation instance = createInstantiation(this, cloned,
-            tmpBindings.clone());
+      // event
+      if (hasListeners())
+        for (IInstantiation instance : instantiations)
+          dispatch(new ProductionEvent(this, ProductionEvent.Type.INSTANTIATED,
+              instance));
 
-        instantiations.add(instance);
-      }
-      catch (CannotMatchException cme)
-      {
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug("Could not instantiate " + sp.getName() + " after "
-              + totalIterations + " iterations with binding: " + tmpBindings
-              + " ", cme);
-
-        /*
-         * hold onto the CME for passing to CNI
-         */
-        if (exceptions == null)
-          exceptions = new ArrayList<CannotMatchException>(
-              provisionalBindings.size());
-
-        exceptions.add(cme);
-      }
-      catch (CannotInstantiateException cie)
-      {
-        cie.setProduction(this);
-        throw cie;
-      }
-
-
-    }// provisional bindings
-
-    /*
-     * clean up before exit..
-     */
-    FastList.recycle(cloned);
-    FastSet.recycle(missingBuffers);
-
-    if (instantiations.size() == 0)
-      throw new CannotInstantiateException(this, exceptions);
-
-    // event
-    if (hasListeners())
-      for (IInstantiation instance : instantiations)
-        dispatch(new ProductionEvent(this, ProductionEvent.Type.INSTANTIATED,
-            instance));
-
-    return instantiations;
+      return instantiations;
+    }
+    finally
+    {
+      FastList.recycle(cloned);
+      FastSet.recycle(missingBuffers);
+      FastList.recycle(exceptions);
+    }
   }
 
   /**
@@ -324,6 +318,7 @@ public abstract class AbstractProduction extends DefaultAdaptable implements
    * @param parent
    * @param boundConditions
    * @param bindings
+   *          will be copied.
    * @return
    */
   abstract protected IInstantiation createInstantiation(

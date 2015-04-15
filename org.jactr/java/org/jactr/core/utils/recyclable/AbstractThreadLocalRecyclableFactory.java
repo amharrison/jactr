@@ -3,7 +3,7 @@ package org.jactr.core.utils.recyclable;
 /*
  * default logging
  */
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -22,6 +22,16 @@ public abstract class AbstractThreadLocalRecyclableFactory<T> implements
 
   private ThreadLocal<List<T>>       _local = new ThreadLocal<List<T>>();
 
+  public AbstractThreadLocalRecyclableFactory()
+  {
+    this(10);
+  }
+
+  public AbstractThreadLocalRecyclableFactory(int maxCapacity)
+  {
+    setRecycleBinSize(maxCapacity);
+  }
+
   public T newInstance(Object... params)
   {
     List<T> bin = getRecycleBin();
@@ -36,11 +46,13 @@ public abstract class AbstractThreadLocalRecyclableFactory<T> implements
     cleanUp(obj);
 
     List<T> bin = getRecycleBin();
-    bin.add(obj);
 
-    while (bin.size() > _size)
-      release(bin.remove(0));
+    if (bin.size() < _size)
+      bin.add(obj);
+    else
+      release(obj);
   }
+
 
   public int getRecycleBinSize()
   {
@@ -66,10 +78,7 @@ public abstract class AbstractThreadLocalRecyclableFactory<T> implements
    * 
    * @param obj
    */
-  protected void release(T obj)
-  {
-    // noop
-  }
+  abstract protected void release(T obj);
 
   /**
    * instantiate a new T
@@ -83,7 +92,7 @@ public abstract class AbstractThreadLocalRecyclableFactory<T> implements
     List<T> rtn = _local.get();
     if (rtn == null)
     {
-      rtn = new LinkedList<T>();
+      rtn = new ArrayList<T>(_size);
       _local.set(rtn);
     }
     return rtn;

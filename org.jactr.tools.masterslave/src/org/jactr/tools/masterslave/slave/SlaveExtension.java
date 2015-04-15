@@ -10,6 +10,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.extensions.IExtension;
 import org.jactr.core.model.IModel;
+import org.jactr.core.model.IllegalModelStateException;
 import org.jactr.core.slot.IUniqueSlotContainer;
 import org.jactr.tools.masterslave.master.MasterExtension;
 
@@ -61,6 +62,14 @@ public class SlaveExtension implements IExtension
   public void install(IModel model)
   {
     _model = model;
+
+    if (true)
+      throw new IllegalModelStateException(
+          String
+              .format(
+                  "%s is currently nonfunctional until the underlying clock wrapper can be updated.",
+                  getClass().getSimpleName()));
+
     // _model.addListener(_modelListener, ExecutorServices.INLINE_EXECUTOR);
   }
 
