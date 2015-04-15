@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="lib/jmock/jmock-2.6.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jmock/jmock-junit4-2.6.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jmock/jmock-legacy-2.6.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jmock/jmock-script-2.6.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/org/jactr/commons-cli-1.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/org/jactr/commons-collections-3.2.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/org/jactr/commons-lang-2.5.jar"/>
