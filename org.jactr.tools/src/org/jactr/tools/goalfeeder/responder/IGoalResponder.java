@@ -8,6 +8,7 @@ import org.jactr.core.production.IInstantiation;
  * 
  * @author harrison
  */
+@Deprecated
 public interface IGoalResponder
 {
 

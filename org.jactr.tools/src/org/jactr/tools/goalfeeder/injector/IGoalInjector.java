@@ -24,6 +24,7 @@ import org.jactr.tools.goalfeeder.timedevents.GatingTimedEvent;
  *
  * @param <T>
  */
+@Deprecated
 public interface IGoalInjector<T>
 {
 
@@ -48,8 +49,8 @@ public interface IGoalInjector<T>
   
   
   /**
-   * GatingTimedEvents are necessary to control the flow of the model - i.e. 
-   * prevent it from running ahead of the goal feeder and vice/versa. If the 
+   * GatingTimedEvents are necessary to control the flow of the model - i.e.
+   * prevent it from running ahead of the goal feeder and vice/versa. If the
    * experiment task runs for a fixed amount of time, you will want to return
    * a gate that lasts that long.
    * @param currentTime

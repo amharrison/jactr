@@ -17,6 +17,7 @@ import org.jactr.tools.goalfeeder.GoalFeeder;
  * 
  * @author harrison
  */
+@Deprecated
 public class RespondAction implements IAction
 {
 

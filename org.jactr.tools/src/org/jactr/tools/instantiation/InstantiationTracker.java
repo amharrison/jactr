@@ -8,6 +8,7 @@ import org.apache.commons.logging.LogFactory;
 import org.jactr.core.model.IModel;
 import org.jactr.instrument.IInstrument;
 
+@Deprecated
 public class InstantiationTracker implements IInstrument
 {
   /**

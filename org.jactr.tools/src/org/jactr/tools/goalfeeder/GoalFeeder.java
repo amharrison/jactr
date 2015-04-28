@@ -9,8 +9,6 @@ import org.jactr.core.chunk.IChunk;
 import org.jactr.core.logging.Logger;
 import org.jactr.core.model.IModel;
 import org.jactr.core.production.IInstantiation;
-import org.jactr.core.queue.ITimedEvent;
-import org.jactr.core.queue.timedevents.AbstractTimedEvent;
 import org.jactr.core.queue.timedevents.TerminationTimedEvent;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.tools.goalfeeder.injector.IGoalInjector;
@@ -18,6 +16,8 @@ import org.jactr.tools.goalfeeder.responder.IGoalResponder;
 import org.jactr.tools.goalfeeder.timedevents.GatingTimedEvent;
 
 /**
+ * Deprecated. This class (and package) was never able to function as intended. <br/>
+ * <br/>
  * The goal feeder is a support class to facilitate bridging experiments and
  * models. This is to be used when your experiment cannot directly control the
  * clock, or does not use common reality (which, if it did, it would have
@@ -55,6 +55,7 @@ import org.jactr.tools.goalfeeder.timedevents.GatingTimedEvent;
  * 
  * @author harrison
  */
+@Deprecated
 public abstract class GoalFeeder<T>
 {
   /**
@@ -140,7 +141,7 @@ public abstract class GoalFeeder<T>
   }
 
   /**
-   * Bug: currently will always return null until some more 
+   * Bug: currently will always return null until some more
    * refactoring is done
    * @param experimentTask
    * @return the goal chunk created and set or null

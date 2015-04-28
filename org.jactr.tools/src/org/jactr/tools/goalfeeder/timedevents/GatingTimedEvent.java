@@ -11,6 +11,7 @@ import org.jactr.core.queue.timedevents.AbstractTimedEvent;
 /**
  * @author harrison
  */
+@Deprecated
 public class GatingTimedEvent extends AbstractTimedEvent
 {
   /**
@@ -73,6 +74,7 @@ public class GatingTimedEvent extends AbstractTimedEvent
     super.abort();
   }
 
+  @Override
   public void fire(double now)
   {
     if (hasAborted())
@@ -210,6 +212,7 @@ public class GatingTimedEvent extends AbstractTimedEvent
     }
   }
 
+  @Override
   public String toString()
   {
     return super.toString() + " creator:" + _creator;
