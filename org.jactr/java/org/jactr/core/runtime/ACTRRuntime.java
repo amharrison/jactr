@@ -78,6 +78,14 @@ public class ACTRRuntime
     setWorkingDirectory(new File(System.getProperty("user.dir")));
   }
 
+  /**
+   * Get the working directory for this instance of the runtime. By default this
+   * is user.dir, however, the iterative entry point will override this to a
+   * subdirectory per iteration to ensure no overwrites. Instruments can always
+   * write to working directory without worry.
+   * 
+   * @return
+   */
   public File getWorkingDirectory()
   {
     return _workingDirectory;
