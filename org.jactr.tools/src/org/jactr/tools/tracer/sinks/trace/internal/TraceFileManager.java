@@ -248,7 +248,7 @@ public class TraceFileManager
 
       return true;
     }
-    catch (Exception e)
+    catch (IOException e)
     {
       LOGGER.error("failed to flush ", e);
       cleanup();
@@ -284,7 +284,8 @@ public class TraceFileManager
               _recordWindow[1], _currentFile.getCanonicalPath()));
       }
 
-      output.flush();
+      if(output != null)
+    	  output.flush();
 
       // _gzipOutputStream.finish();
     }
