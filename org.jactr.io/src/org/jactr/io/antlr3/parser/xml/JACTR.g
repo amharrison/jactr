@@ -301,9 +301,9 @@ module
 @init{
 CommonTree moduleNode = null;
 CommonTree params = (CommonTree) adaptor.create(PARAMETERS,"parameters");
-}:	OPEN_MODULE_TOKEN c=classSpec (IMPORT_ATTR_TOKEN '=' i=string)?
-                ((SHORT_CLOSE_TOKEN) |
-                 (LONG_CLOSE_TOKEN p=parameters CLOSE_MODULE_TOKEN))
+}:	start=OPEN_MODULE_TOKEN c=classSpec (IMPORT_ATTR_TOKEN '=' i=string)?
+                ((end1=SHORT_CLOSE_TOKEN) |
+                 (LONG_CLOSE_TOKEN p=parameters end2=CLOSE_MODULE_TOKEN))
                  {
                   //handle the import
                   String className = "";

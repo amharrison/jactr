@@ -125,6 +125,9 @@ public class LispCodeGenerator implements ICodeGenerator
       case JACTRBuilder.MODEL:
         methodName = "model";
         break;
+      case JACTRBuilder.MODULE:
+        methodName = "module";
+        break;
       default:
         throw new IllegalArgumentException(root.getType()
             + " is not a valid type for code generation");

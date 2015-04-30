@@ -28,10 +28,12 @@ import org.antlr.runtime.tree.CommonTree;
 public interface ICodeGenerator
 {
   /**
-   * generate code for the following types: MODEL, BUFFER, EXTENSION,
+   * generate code for the following types: MODEL, BUFFER, EXTENSION, MODULE
    * PRODUCTION, CHUNK_TYPE, CHUNK, SLOTS, PARAMETER, CHECK_CONDITION
    * 
    * @param root
+   * @param shouldTrim
+   *          assumes model
    * @return
    */
   public Collection<StringBuilder> generate(CommonTree root, boolean shouldTrim);
