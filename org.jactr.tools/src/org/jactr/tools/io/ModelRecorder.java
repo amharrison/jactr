@@ -125,7 +125,9 @@ public class ModelRecorder implements IInstrument, IParameterized
 
   protected CommonTree generateAST(IModel model)
   {
-    return _astGenerator.apply(model);
+    CommonTree modelDescriptor = _astGenerator.apply(model);
+
+    return modelDescriptor;
   }
 
   protected void save(IModel model, String directory)
@@ -245,6 +247,11 @@ public class ModelRecorder implements IInstrument, IParameterized
 
       PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(
           toBeWritten)));
+
+      /*
+       * now before we dump we should make sure that the buffer contents are
+       * written
+       */
 
       /*
        * we dump the full model

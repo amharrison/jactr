@@ -421,7 +421,7 @@ public class IterativeMain
       else
         id = "-" + id;
 
-      File rootDir = new File(System.getProperty("user.dir"));
+      File rootDir = ACTRRuntime.getRuntime().getWorkingDirectory();
       PrintWriter log = new PrintWriter(new FileWriter("iterative-log" + id
           + ".xml"));
       log.println("<iterative-run total=\"" + iterations + "\">");
