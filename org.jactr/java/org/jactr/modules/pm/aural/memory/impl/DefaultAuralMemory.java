@@ -5,6 +5,7 @@ package org.jactr.modules.pm.aural.memory.impl;
  */
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jactr.core.buffer.six.IStatusBuffer;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISymbolicChunk;
 import org.jactr.core.chunk.IllegalChunkStateException;
@@ -42,6 +43,8 @@ public class DefaultAuralMemory extends AbstractPerceptualMemory implements
    */
   static private final transient Log LOGGER = LogFactory
                                                 .getLog(DefaultAuralMemory.class);
+
+  private IChunk                     _notAvailableChunk;
 
 
   public DefaultAuralMemory(IAuralModule module,
@@ -86,6 +89,18 @@ public class DefaultAuralMemory extends AbstractPerceptualMemory implements
 
     ((AuralEventIndexManager) getIndexManager())
         .attach(getAfferentObjectListener());
+
+    try
+    {
+      _notAvailableChunk = getModule().getModel().getDeclarativeModule()
+          .getChunk(IStatusBuffer.ERROR_NO_LONGER_AVAILABLE_CHUNK).get();
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Could not get no-longer available chunk ", e);
+      _notAvailableChunk = getModule().getModel().getDeclarativeModule()
+          .getErrorChunk();
+    }
   }
 
   @Override
@@ -137,6 +152,7 @@ public class DefaultAuralMemory extends AbstractPerceptualMemory implements
 
   }
   
+  @Override
   public void setParameter(String key, String value) {
 	   if (key.indexOf('.') > 0)
 	    {
@@ -184,5 +200,11 @@ public class DefaultAuralMemory extends AbstractPerceptualMemory implements
 	    }
 	    else
 	      super.setParameter(key, value);
+  }
+
+  @Override
+  protected IChunk getRemovedErrorCodeChunk()
+  {
+    return _notAvailableChunk;
   }
 }

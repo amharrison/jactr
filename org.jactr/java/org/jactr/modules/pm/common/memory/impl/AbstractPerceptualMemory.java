@@ -241,13 +241,22 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
     return _module;
   }
 
+  /**
+   * this is the chunk that is used as an error code to invalidate
+   * PerceptualSearchResults.
+   * 
+   * @return
+   */
+  abstract protected IChunk getRemovedErrorCodeChunk();
+
   public void addEncoder(IPerceptualEncoder encoder)
   {
     if (_agent != null)
       throw new IllegalStateException("Cannot add encoders to a running model");
 
     _encoders.add(encoder);
-    PerceptualEncoderBridge bridge = new PerceptualEncoderBridge(encoder, this);
+    PerceptualEncoderBridge bridge = new PerceptualEncoderBridge(encoder, this,
+        getRemovedErrorCodeChunk());
     _bridges.add(bridge);
   }
 

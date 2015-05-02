@@ -22,6 +22,7 @@ import org.jactr.core.chunk.event.ChunkEvent;
 import org.jactr.core.chunk.event.IChunkListener;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.module.declarative.IDeclarativeModule;
+import org.jactr.core.queue.timedevents.RunnableTimedEvent;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.modules.pm.common.afferent.DefaultAfferentObjectListener;
 import org.jactr.modules.pm.common.afferent.IAfferentObjectListener;
@@ -52,6 +53,8 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
 
   private final IDeclarativeModule       _declarativeModule;
 
+  private IChunk                         _removedErrorChunk;
+
   /**
    * to track add/remove of cached chunks
    */
@@ -60,12 +63,13 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
   private final AbstractPerceptualMemory _memory;
 
   public PerceptualEncoderBridge(IPerceptualEncoder encoder,
-      AbstractPerceptualMemory memory)
+      AbstractPerceptualMemory memory, IChunk removeErrorChunk)
   {
     _memory = memory;
     _encoder = encoder;
     _declarativeModule = _memory.getModule().getModel().getDeclarativeModule();
     _cache = new HashMap<IIdentifier, IChunk>();
+    _removedErrorChunk = removeErrorChunk;
     // _activeChunks = new ConcurrentHashMap<IChunk, AtomicInteger>();
 
     /**
@@ -246,7 +250,7 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
         for (PerceptualSearchResult result : results)
           if (result.getPerceptIdentifier().equals(identifier))
           {
-            result.invalidate();
+            result.setErrorCode(_removedErrorChunk);
             if (!removedFired && _memory.hasListeners())
               _memory.dispatch(new ActivePerceptEvent(_memory,
                   ActivePerceptEvent.Type.REMOVED, identifier, oldChunk));
@@ -376,7 +380,34 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
 
         if (!chunk.isEncoded()
             && BufferUtilities.getContainingBuffers(chunk, true).size() == 0)
-          _memory.getModule().getModel().getDeclarativeModule().dispose(chunk);
+        {
+          /*
+           * so there is a gap here. A model finds the chunk to
+           * 'encode'(preencoded, actually), and then adds it to its buffer for
+           * some theoretical amount time has passed. If it was removed in this
+           * gap, we could dispose it just before adding to the buffer. The
+           * buffer will catch this, but wouldn't it just be better to defer the
+           * disposal? the declarative module does this already, but only
+           * delaying up until the end of the cycle.
+           */
+
+          // instead of doing this, we will delay it with a timed event..
+          // _memory.getModule().getModel().getDeclarativeModule().dispose(chunk);
+
+          double oneSecond = _memory.getModule().getModel().getAge() + 1;
+
+          RunnableTimedEvent rte = new RunnableTimedEvent(
+              oneSecond,
+              () -> {
+                // double check.
+                if (!chunk.isEncoded()
+                    && BufferUtilities.getContainingBuffers(chunk, true).size() == 0)
+                  _memory.getModule().getModel().getDeclarativeModule()
+                      .dispose(chunk);
+              });
+
+          _memory.getModule().getModel().getTimedEventQueue().enqueue(rte);
+        }
       }
       finally
       {

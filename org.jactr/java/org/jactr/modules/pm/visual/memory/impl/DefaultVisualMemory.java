@@ -9,6 +9,7 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jactr.core.buffer.six.IStatusBuffer;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISymbolicChunk;
 import org.jactr.core.chunk.IllegalChunkStateException;
@@ -75,6 +76,8 @@ public class DefaultVisualMemory extends AbstractPerceptualMemory implements
 
   private double                     _visualPersistence            = 0;
 
+  private IChunk                     _notAvailableChunk;
+
   public DefaultVisualMemory(IVisualModule module)
   {
     super(module, new VisualLocationManager(module));
@@ -105,6 +108,12 @@ public class DefaultVisualMemory extends AbstractPerceptualMemory implements
     addFeatureMap(new VisibilityFeatureMap());
     addFeatureMap(new FINSTVisualFeatureMap(module.getModel()));
     addFeatureMap(new ValueFeatureMap());
+  }
+
+  @Override
+  protected IChunk getRemovedErrorCodeChunk()
+  {
+    return _notAvailableChunk;
   }
 
   public int getHorizontalResolution()
@@ -186,6 +195,18 @@ public class DefaultVisualMemory extends AbstractPerceptualMemory implements
      * and we apply the visual persistence delay
      */
     getObjectListener().setPerceptualDelay(getVisualPersistenceDelay());
+
+    try
+    {
+      _notAvailableChunk = getModule().getModel().getDeclarativeModule()
+          .getChunk(IStatusBuffer.ERROR_NO_LONGER_AVAILABLE_CHUNK).get();
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Could not get no-longer available chunk ", e);
+      _notAvailableChunk = getModule().getModel().getDeclarativeModule()
+          .getErrorChunk();
+    }
   }
 
   public IChunk getVisualLocationChunkAt(double x, double y)
@@ -242,8 +263,8 @@ public class DefaultVisualMemory extends AbstractPerceptualMemory implements
   protected void fillIndexChunk(IChunk indexChunk, IChunk encodedChunk,
       ChunkTypeRequest originalRequest, ChunkTypeRequest expandedRequest)
   {
-    Object value = encodedChunk.getSymbolicChunk().getSlot(
-        IVisualModule.VALUE_SLOT).getValue();
+    Object value = encodedChunk.getSymbolicChunk()
+        .getSlot(IVisualModule.VALUE_SLOT).getValue();
     expandedRequest.addSlot(new BasicSlot(IVisualModule.VALUE_SLOT, value));
 
     try

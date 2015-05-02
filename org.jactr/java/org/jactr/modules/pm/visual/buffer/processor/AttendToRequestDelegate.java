@@ -168,6 +168,8 @@ public class AttendToRequestDelegate extends AbstractRequestDelegate
   final protected boolean isValid(IRequest request, IActivationBuffer buffer)
       throws IllegalArgumentException
   {
+    boolean rtn = true;
+    boolean setError = false;
     /*
      * check to see if we are busy or not..
      */
@@ -178,7 +180,7 @@ public class AttendToRequestDelegate extends AbstractRequestDelegate
       if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
       if (Logger.hasLoggers(model))
         Logger.log(model, Logger.Stream.VISUAL, msg);
-      return false;
+      rtn = false;
     }
 
     IChunk location = getVisualLocation(request);
@@ -190,7 +192,8 @@ public class AttendToRequestDelegate extends AbstractRequestDelegate
       if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
       if (Logger.hasLoggers(model))
         Logger.log(model, Logger.Stream.VISUAL, msg);
-      return false;
+      rtn = false;
+      setError = true;
     }
 
     if (!location.isA(_module.getVisualLocationChunkType()))
@@ -200,30 +203,55 @@ public class AttendToRequestDelegate extends AbstractRequestDelegate
       if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
       if (Logger.hasLoggers(model))
         Logger.log(model, Logger.Stream.VISUAL, msg);
-      return false;
+      rtn = false;
+      setError = true;
     }
 
-    return getMatchingResult(location) != null;
-  }
-
-  protected PerceptualSearchResult getMatchingResult(IChunk visualLocation)
-  {
-    PerceptualSearchResult searchResult = VisualUtilities.getSearchResult(
-        visualLocation, _module.getVisualMemory());
-
-    IModel model = visualLocation.getModel();
-    if (searchResult == null)
+    PerceptualSearchResult psr = VisualUtilities.getSearchResult(location,
+        _module.getVisualMemory());
+    if (psr == null)
     {
-      String msg = String.format("Cannot match location(%s) to visual search.",
-          visualLocation);
+      String msg = String
+          .format("No recent visual search associated with location %s",
+          location);
       if (LOGGER.isDebugEnabled()) LOGGER.warn(msg);
       if (Logger.hasLoggers(model))
         Logger.log(model, Logger.Stream.VISUAL, msg);
+      rtn=false;
+      setError=true;
     }
 
-    return searchResult;
+    if (setError)
+    {
+      IChunk errorChunk = _module.getModel().getDeclarativeModule()
+          .getErrorChunk();
+      ((IVisualActivationBuffer) buffer).setStateChunk(errorChunk);
+      ((IVisualActivationBuffer) buffer).setExecutionChunk(errorChunk);
+    }
+
+    return rtn;
   }
 
+  // protected PerceptualSearchResult getMatchingResult(IChunk visualLocation)
+  // {
+  // PerceptualSearchResult searchResult = VisualUtilities.getSearchResult(
+  // visualLocation, _module.getVisualMemory());
+  //
+  // IModel model = visualLocation.getModel();
+  // if (searchResult == null)
+  // {
+  // String msg = String
+  // .format("No recent visual search associated with location %s",
+  // visualLocation);
+  // if (LOGGER.isDebugEnabled()) LOGGER.warn(msg);
+  // if (Logger.hasLoggers(model))
+  // Logger.log(model, Logger.Stream.VISUAL, msg);
+  // }
+  //
+  //
+  // return searchResult;
+  // }
+  //
   /**
    * start the encoding request. first we remove the current contents, then
    * request the encoding. we return a Future<IChunk> for the finishRequest
@@ -240,7 +268,8 @@ public class AttendToRequestDelegate extends AbstractRequestDelegate
       IActivationBuffer buffer, double requestTime)
   {
     IChunk location = getVisualLocation(request);
-    _searchResult = getMatchingResult(location);
+    _searchResult = VisualUtilities.getSearchResult(location,
+        _module.getVisualMemory());
 
     /*
      * clear
@@ -413,6 +442,8 @@ public class AttendToRequestDelegate extends AbstractRequestDelegate
         buffer.setExecutionChunk(errorChunk);
         if (_searchResult != null)
           buffer.setErrorChunk(_searchResult.getErrorCode());
+        // but the difference is we add it anyway.
+        buffer.addSourceChunk(visualChunk);
       }
       else
       {

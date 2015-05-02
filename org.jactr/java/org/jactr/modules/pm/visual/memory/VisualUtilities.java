@@ -23,13 +23,20 @@ public class VisualUtilities
                                                 .getLog(VisualUtilities.class);
 
   
+  /**
+   * return the search result, invalid or not
+   * 
+   * @param locationChunk
+   * @param visualMemory
+   * @return
+   */
   static public PerceptualSearchResult getSearchResult(IChunk locationChunk, IVisualMemory visualMemory)
   {
     FastList<PerceptualSearchResult> results = FastList.newInstance();
     visualMemory.getRecentSearchResults(results);
 
     for (PerceptualSearchResult result : results)
-      if (locationChunk == result.getLocation() && result.isValid())
+      if (locationChunk == result.getLocation())
         return result;
 
     FastList.recycle(results);
@@ -49,8 +56,7 @@ public class VisualUtilities
     visualMemory.getRecentSearchResults(results);
 
     for (PerceptualSearchResult result : results)
-      if (result.getPerceptIdentifier().equals(perceptualIdentifier)
-          && result.isValid())
+      if (result.getPerceptIdentifier().equals(perceptualIdentifier))
         return result;
 
     FastList.recycle(results);
