@@ -184,7 +184,6 @@ public class ModelExecutionTest extends TestCase
 
     configureModel(model);
 
-    runtime.addModel(model);
 
     IChunk yes = model.getDeclarativeModule().getChunk("yes").get();
     IChunk no = model.getDeclarativeModule().getChunk("no").get();
@@ -196,11 +195,14 @@ public class ModelExecutionTest extends TestCase
 
     for (int i = 0; i < goalNames.length; i++)
     {
-//      controller.reset();
+      runtime.addModel(model);
       assertTrue(runtime.getModels().size() == 1);
+
       testModel(model, goalNames[i], slotToCheck, slotValues[i]);
+
+      runtime.removeModel(model);
     }
-    runtime.removeModel(model);
+
     model.dispose();
     runtime.setController(null);
   }

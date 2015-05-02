@@ -235,9 +235,9 @@
       </match>
     </condition>
     <action>
-     <modify buffer="goal">
+     <remove buffer="goal">
       <slot name="judgement" equals="yes"/>
-     </modify>
+     </remove>
      <output>"Yes, a =obj is a =cat"</output>
      <remove buffer="retrieval"/>
     </action>
@@ -292,9 +292,9 @@
       
     </condition>
     <action>
-     <modify buffer="goal">
+     <remove buffer="goal">
       <slot name="judgement" equals="no"/>
-     </modify>
+     </remove>
      <output>"No, a =obj is not a =cat"</output>
      <remove buffer="retrieval"/>
     </action>
@@ -303,5 +303,6 @@
 
   </procedural-memory>
  <buffer name="goal" chunk="g3"/>
+
  </model>
 </actr>
