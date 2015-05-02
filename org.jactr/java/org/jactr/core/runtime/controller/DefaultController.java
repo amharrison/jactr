@@ -210,6 +210,7 @@ public class DefaultController implements IController
 
           destroyModelRunnable(model, runner);
           destroyExecutorService(model, service);
+          model.removeListener(_modelListener);
         }
       }
     };
