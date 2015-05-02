@@ -72,6 +72,7 @@ public class MarkerIndex
     if (_writtenTypes.add(type) && _typeStream != null) try
     {
       _typeStream.writeUTF(type);
+      _typeStream.flush();
     }
     catch (Exception e)
     {
@@ -94,6 +95,8 @@ public class MarkerIndex
         _indexStream.writeDouble(marker.getEndTime());
       else
         _indexStream.writeDouble(marker.getStartTime());
+
+      if (isClose) _indexStream.flush();
     }
     catch (Exception e)
     {
