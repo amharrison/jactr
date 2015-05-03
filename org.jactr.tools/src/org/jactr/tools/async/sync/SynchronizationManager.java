@@ -19,6 +19,7 @@ import org.apache.mina.handler.demux.MessageHandler;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.model.IModel;
 import org.jactr.core.runtime.ACTRRuntime;
+import org.jactr.core.runtime.event.ACTRRuntimeAdapter;
 import org.jactr.core.runtime.event.ACTRRuntimeEvent;
 import org.jactr.core.runtime.event.IACTRRuntimeListener;
 import org.jactr.core.utils.parameter.IParameterized;
@@ -71,19 +72,7 @@ public class SynchronizationManager implements IInstrument, IParameterized
   {
     if (_runtimeListener == null)
     {
-      _runtimeListener = new IACTRRuntimeListener() {
-
-        public void runtimeSuspended(ACTRRuntimeEvent event)
-        {
-          // TODO Auto-generated method stub
-
-        }
-
-        public void runtimeStopped(ACTRRuntimeEvent event)
-        {
-          // TODO Auto-generated method stub
-
-        }
+      _runtimeListener = new ACTRRuntimeAdapter() {
 
         public void runtimeStarted(ACTRRuntimeEvent event)
         {
@@ -158,35 +147,6 @@ public class SynchronizationManager implements IInstrument, IParameterized
           }
         }
 
-        public void runtimeResumed(ACTRRuntimeEvent event)
-        {
-          // TODO Auto-generated method stub
-
-        }
-
-        public void modelRemoved(ACTRRuntimeEvent event)
-        {
-          // TODO Auto-generated method stub
-
-        }
-
-        public void modelAdded(ACTRRuntimeEvent event)
-        {
-          // TODO Auto-generated method stub
-
-        }
-
-        public void modelStarted(ACTRRuntimeEvent event)
-        {
-          // TODO Auto-generated method stub
-
-        }
-
-        public void modelStopped(ACTRRuntimeEvent event)
-        {
-          // TODO Auto-generated method stub
-
-        }
       };
       ACTRRuntime.getRuntime().addListener(_runtimeListener, null);
     }

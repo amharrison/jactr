@@ -21,6 +21,7 @@ import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.runtime.ACTRRuntime;
+import org.jactr.core.runtime.event.ACTRRuntimeAdapter;
 import org.jactr.core.runtime.event.ACTRRuntimeEvent;
 import org.jactr.core.runtime.event.IACTRRuntimeListener;
 import org.jactr.entry.Main;
@@ -179,25 +180,7 @@ public class Application implements IApplication
   {
     final Lock lock = new ReentrantLock();
     final Condition condition = lock.newCondition();
-    IACTRRuntimeListener listener = new IACTRRuntimeListener(){
-
-      public void modelAdded(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public void modelRemoved(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public void runtimeResumed(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-        
-      }
+    IACTRRuntimeListener listener = new ACTRRuntimeAdapter(){
 
       public void runtimeStarted(ACTRRuntimeEvent event)
       {
@@ -211,30 +194,6 @@ public class Application implements IApplication
           lock.unlock();
         }
         
-      }
-
-      public void runtimeStopped(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public void runtimeSuspended(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public void modelStarted(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
-      }
-
-      public void modelStopped(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
       }
       
     };

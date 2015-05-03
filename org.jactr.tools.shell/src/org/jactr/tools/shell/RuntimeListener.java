@@ -7,10 +7,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.runtime.ACTRRuntime;
+import org.jactr.core.runtime.event.ACTRRuntimeAdapter;
 import org.jactr.core.runtime.event.ACTRRuntimeEvent;
 import org.jactr.core.runtime.event.IACTRRuntimeListener;
 
-public class RuntimeListener implements IACTRRuntimeListener
+public class RuntimeListener extends ACTRRuntimeAdapter
 {
   /**
    * Logger definition
@@ -50,16 +51,6 @@ public class RuntimeListener implements IACTRRuntimeListener
     {
       return _default != null;
     }
-  }
-
-  public void modelAdded(ACTRRuntimeEvent event)
-  {
-
-  }
-
-  public void modelRemoved(ACTRRuntimeEvent event)
-  {
-
   }
 
   public void runtimeResumed(ACTRRuntimeEvent event)
@@ -134,18 +125,6 @@ public class RuntimeListener implements IACTRRuntimeListener
     {
 
     }
-  }
-
-  public void modelStarted(ACTRRuntimeEvent event)
-  {
-    // TODO Auto-generated method stub
-
-  }
-
-  public void modelStopped(ACTRRuntimeEvent event)
-  {
-    // TODO Auto-generated method stub
-
   }
 
 }

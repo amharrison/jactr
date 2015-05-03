@@ -41,6 +41,7 @@ import org.jactr.core.model.event.ModelListenerAdaptor;
 import org.jactr.core.model.six.DefaultCycleProcessor6;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.DefaultModelRunner;
+import org.jactr.core.runtime.event.ACTRRuntimeAdapter;
 import org.jactr.core.runtime.event.ACTRRuntimeEvent;
 import org.jactr.core.runtime.event.IACTRRuntimeListener;
 import org.jactr.core.runtime.profile.ProfilingModelRunner;
@@ -348,14 +349,7 @@ public class OldController //implements IController
    */
   protected IACTRRuntimeListener createRuntimeListener()
   {
-    return new IACTRRuntimeListener() {
-
-      /**
-       * @see org.jactr.core.runtime.event.IACTRRuntimeListener#modelAdded(org.jactr.core.runtime.event.ACTRRuntimeEvent)
-       */
-      public void modelAdded(ACTRRuntimeEvent event)
-      {
-      }
+    return new ACTRRuntimeAdapter() {
 
       /**
        * @see org.jactr.core.runtime.event.IACTRRuntimeListener#modelRemoved(org.jactr.core.runtime.event.ACTRRuntimeEvent)
@@ -434,18 +428,6 @@ public class OldController //implements IController
       public void runtimeSuspended(ACTRRuntimeEvent event)
       {
         if (LOGGER.isDebugEnabled()) LOGGER.debug("runtime suspended");
-      }
-
-      public void modelStarted(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
-      }
-
-      public void modelStopped(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
       }
     };
   }
