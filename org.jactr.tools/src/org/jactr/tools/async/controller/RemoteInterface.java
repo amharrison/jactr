@@ -34,6 +34,7 @@ import org.jactr.core.runtime.controller.IController;
 import org.jactr.core.runtime.controller.debug.IDebugController;
 import org.jactr.core.runtime.controller.debug.event.BreakpointEvent;
 import org.jactr.core.runtime.controller.debug.event.IBreakpointListener;
+import org.jactr.core.runtime.event.ACTRRuntimeAdapter;
 import org.jactr.core.runtime.event.ACTRRuntimeEvent;
 import org.jactr.core.runtime.event.IACTRRuntimeListener;
 import org.jactr.core.utils.parameter.IParameterized;
@@ -170,16 +171,7 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
       }
     };
 
-    _runtimeListener = new IACTRRuntimeListener() {
-
-      public void modelAdded(ACTRRuntimeEvent event)
-      {
-        // noop
-      }
-
-      public void modelRemoved(ACTRRuntimeEvent event)
-      {
-      }
+    _runtimeListener = new ACTRRuntimeAdapter() {
 
       public void runtimeResumed(ACTRRuntimeEvent event)
       {
@@ -247,18 +239,6 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
         if (LOGGER.isDebugEnabled()) LOGGER.debug("runtime suspended");
         _handler.write(new RuntimeStateEvent(IStateEvent.State.SUSPENDED, event
             .getSimulationTime()));
-      }
-
-      public void modelStarted(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
-      }
-
-      public void modelStopped(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
       }
 
     };

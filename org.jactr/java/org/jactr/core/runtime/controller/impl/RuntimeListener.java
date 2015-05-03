@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jactr.core.runtime.event.ACTRRuntimeAdapter;
 import org.jactr.core.runtime.event.ACTRRuntimeEvent;
 import org.jactr.core.runtime.event.IACTRRuntimeListener;
 
@@ -23,7 +24,7 @@ import org.jactr.core.runtime.event.IACTRRuntimeListener;
  * 
  * @author harrison
  */
-public class RuntimeListener implements IACTRRuntimeListener
+public class RuntimeListener extends ACTRRuntimeAdapter
 {
   /**
    * Logger definition
@@ -153,16 +154,6 @@ public class RuntimeListener implements IACTRRuntimeListener
     }
   }
 
-  public void modelAdded(ACTRRuntimeEvent event)
-  {
-
-  }
-
-  public void modelRemoved(ACTRRuntimeEvent event)
-  {
-
-  }
-
   public void runtimeResumed(ACTRRuntimeEvent event)
   {
     triggerFutures(_resumeFutures, true, null);
@@ -210,17 +201,5 @@ public class RuntimeListener implements IACTRRuntimeListener
       else
         set(succeeded);
     }
-  }
-
-  public void modelStarted(ACTRRuntimeEvent event)
-  {
-    // TODO Auto-generated method stub
-
-  }
-
-  public void modelStopped(ACTRRuntimeEvent event)
-  {
-    // TODO Auto-generated method stub
-
   }
 }

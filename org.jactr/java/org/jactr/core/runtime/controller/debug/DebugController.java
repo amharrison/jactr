@@ -45,6 +45,7 @@ import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.controller.DefaultController;
 import org.jactr.core.runtime.controller.debug.event.BreakpointEvent;
 import org.jactr.core.runtime.controller.debug.event.IBreakpointListener;
+import org.jactr.core.runtime.event.ACTRRuntimeAdapter;
 import org.jactr.core.runtime.event.ACTRRuntimeEvent;
 import org.jactr.core.runtime.event.IACTRRuntimeListener;
 
@@ -86,7 +87,7 @@ public class DebugController extends DefaultController implements
 
     _proceduralListener = createProceduralListener();
     _breakpointListeners = new ACTREventDispatcher<IModel, IBreakpointListener>();
-    _runtimeListener = new IACTRRuntimeListener() {
+    _runtimeListener = new ACTRRuntimeAdapter() {
 
       /**
        * normally we would attach at start, but since break points can be added
@@ -169,38 +170,6 @@ public class DebugController extends DefaultController implements
         {
           _lock.unlock();
         }
-      }
-
-      public void runtimeResumed(ACTRRuntimeEvent event)
-      {
-
-      }
-
-      public void runtimeStarted(ACTRRuntimeEvent event)
-      {
-
-      }
-
-      public void runtimeStopped(ACTRRuntimeEvent event)
-      {
-
-      }
-
-      public void runtimeSuspended(ACTRRuntimeEvent event)
-      {
-
-      }
-
-      public void modelStarted(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
-      }
-
-      public void modelStopped(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
       }
 
     };

@@ -35,6 +35,7 @@ import org.jactr.core.runtime.controller.IController;
 import org.jactr.core.runtime.controller.debug.IDebugController;
 import org.jactr.core.runtime.controller.debug.event.BreakpointEvent;
 import org.jactr.core.runtime.controller.debug.event.IBreakpointListener;
+import org.jactr.core.runtime.event.ACTRRuntimeAdapter;
 import org.jactr.core.runtime.event.ACTRRuntimeEvent;
 import org.jactr.core.runtime.event.IACTRRuntimeListener;
 import org.jactr.core.utils.parameter.IParameterized;
@@ -179,7 +180,7 @@ public class RuntimeTracer implements IInstrument, IParameterized
   public void initialize()
   {
     ACTRRuntime runtime = ACTRRuntime.getRuntime();
-    runtime.addListener(new IACTRRuntimeListener() {
+    runtime.addListener(new ACTRRuntimeAdapter() {
 
       public void modelAdded(ACTRRuntimeEvent event)
       {
@@ -189,21 +190,6 @@ public class RuntimeTracer implements IInstrument, IParameterized
          * well
          */
         // install(event.getModel());
-      }
-
-      public void modelRemoved(ACTRRuntimeEvent event)
-      {
-
-      }
-
-      public void runtimeResumed(ACTRRuntimeEvent event)
-      {
-
-      }
-
-      public void runtimeStarted(ACTRRuntimeEvent event)
-      {
-
       }
 
       public void runtimeStopped(ACTRRuntimeEvent event)
@@ -218,23 +204,6 @@ public class RuntimeTracer implements IInstrument, IParameterized
         {
           LOGGER.error("Could not flush ", e);
         }
-      }
-
-      public void runtimeSuspended(ACTRRuntimeEvent event)
-      {
-
-      }
-
-      public void modelStarted(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
-      }
-
-      public void modelStopped(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
       }
 
     }, getExecutor());
