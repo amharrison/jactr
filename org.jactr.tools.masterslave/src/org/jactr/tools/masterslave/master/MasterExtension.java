@@ -27,6 +27,7 @@ import org.jactr.core.reality.connector.IClockConfigurator;
 import org.jactr.core.reality.connector.IConnector;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.controller.IController;
+import org.jactr.core.runtime.event.ACTRRuntimeAdapter;
 import org.jactr.core.runtime.event.ACTRRuntimeEvent;
 import org.jactr.core.runtime.event.IACTRRuntimeListener;
 import org.jactr.core.slot.BasicSlot;
@@ -103,31 +104,7 @@ public class MasterExtension implements IExtension
         LOGGER.debug(String.format("Installed custom clock configurator"));
     }
 
-    _runtimeListener = new IACTRRuntimeListener() {
-
-      public void runtimeSuspended(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
-      }
-
-      public void runtimeStopped(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
-      }
-
-      public void runtimeStarted(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
-      }
-
-      public void runtimeResumed(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
-      }
+    _runtimeListener = new ACTRRuntimeAdapter() {
 
       public void modelStopped(ACTRRuntimeEvent event)
       {
@@ -160,18 +137,6 @@ public class MasterExtension implements IExtension
               .getSlot(SlaveStateCondition.HAS_COMPLETED_SLOT))
               .setValue(Boolean.FALSE);
         }
-      }
-
-      public void modelRemoved(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
-      }
-
-      public void modelAdded(ACTRRuntimeEvent event)
-      {
-        // TODO Auto-generated method stub
-
       }
     };
 
