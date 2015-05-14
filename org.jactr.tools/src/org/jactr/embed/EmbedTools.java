@@ -83,10 +83,18 @@ public class EmbedTools
     return future;
   }
 
-
-  
-  
-
+  /**
+   * @param controller
+   * @param hasReached
+   *          uses breakpoint and triggerEvent value to determine if breakpoint
+   *          was reached
+   * @param completionValue
+   *          this is the value that is sent on completion of the future
+   * @param triggerEvent
+   *          the value that is used in breakpoint tests
+   * @param type
+   * @return
+   */
   static protected <T> CompletableFuture<T> runUntil(
       DebugController controller, BiPredicate<BreakpointEvent, T> hasReached,
       Function<BreakpointEvent, T> completionValue,
@@ -104,6 +112,7 @@ public class EmbedTools
 
     for (IModel model : ACTRRuntime.getRuntime().getModels())
     {
+      // the test could be model specific
       T triggerValue = triggerEvent.apply(model);
       triggerValues.add(triggerValue);
 
@@ -136,14 +145,20 @@ public class EmbedTools
      */
     future.thenRun(() -> {
 
+      /*
+       * make sure we remove all the breakpoints after firing
+       */
       // inefficient, but this shouldn't be run a bunch, at least not quickly
-      for (IModel model : ACTRRuntime.getRuntime().getModels())
+        for (IModel model : ACTRRuntime.getRuntime().getModels())
           for (Object triggerValue : triggerValues)
             controller.removeBreakpoint(model, type, triggerValue);
 
+        /*
+         * and the listeners too
+         */
         for (IBreakpointListener listener : bpls)
           controller.removeListener(listener);
-    });
+      });
 
     /**
      * make sure that we are running

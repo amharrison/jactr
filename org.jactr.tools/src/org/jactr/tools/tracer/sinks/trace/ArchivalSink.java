@@ -111,14 +111,15 @@ public class ArchivalSink implements ITraceSink
     }
 
     double simTime = event.getSimulationTime();
-    if (Double.isNaN(_lastSimulationTime)) _lastSimulationTime = simTime;
 
-    if (simTime - _lastSimulationTime < -0.000001)
-      LOGGER.warn(String.format(
-          "Time regression detected in event delivery!! (%.6f < %.6f)",
-          simTime, _lastSimulationTime), new RuntimeException());
-    else
-      _lastSimulationTime = simTime;
+    // if (Double.isNaN(_lastSimulationTime)) _lastSimulationTime = simTime;
+    //
+    // if (simTime - _lastSimulationTime < -0.000001)
+    // LOGGER.warn(String.format(
+    // "Time regression detected in event delivery!! (%.6f < %.6f)",
+    // simTime, _lastSimulationTime), new RuntimeException());
+    // else
+    _lastSimulationTime = simTime;
 
     _executor.execute(new Runnable() {
 

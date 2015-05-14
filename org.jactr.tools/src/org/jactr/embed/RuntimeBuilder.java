@@ -21,7 +21,8 @@ import org.jactr.scripting.ScriptingManager;
 /**
  * The start of a runtime builder to better support embedding. If running
  * outside of the Eclipse environment and are using externally contributed
- * modules, you must ensure that classpaths are accessible.
+ * modules, you must ensure that classpaths are accessible. This is not
+ * reusable, and assumes no one else is attempting to conifugre the runtime
  * 
  * @author harrison
  */

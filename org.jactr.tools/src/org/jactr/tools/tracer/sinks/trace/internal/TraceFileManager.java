@@ -199,8 +199,6 @@ public class TraceFileManager
       LOGGER.error("Failed to create new record ", e);
 
       closeRecord();
-      _recordWindow[0] = Double.NaN;
-      _recordWindow[1] = Double.MAX_VALUE;
     }
   }
 
@@ -232,6 +230,8 @@ public class TraceFileManager
     {
       _currentObjectOutputStream = null;
       _gzipOutputStream = null;
+      _recordWindow[0] = Double.NaN;
+      _recordWindow[1] = Double.MAX_VALUE;
     }
   }
 
