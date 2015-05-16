@@ -41,8 +41,23 @@ public abstract class AbstractIndexFilter<T> implements IIndexFilter
     _cache.clear();
   }
 
+  /**
+   * Allows you to extract the relevant comparison data from the chunkType
+   * request and cache it for use during accepting or comparing. If you do not
+   * need reference data for filtering or sorting, this can return null
+   * 
+   * @param request
+   * @return
+   */
   abstract protected T compute(ChunkTypeRequest request);
 
+  /**
+   * fetch the previously {@link #compute(ChunkTypeRequest)}d value for the
+   * request from the cache.
+   * 
+   * @param request
+   * @return
+   */
   protected T get(ChunkTypeRequest request)
   {
     T rtn = null;
@@ -69,6 +84,6 @@ public abstract class AbstractIndexFilter<T> implements IIndexFilter
 
   public void normalizeRequest(ChunkTypeRequest request)
   {
-    
+
   }
 }
