@@ -928,11 +928,16 @@ public class DefaultSearchSystem implements ISearchSystem
 
     rtn.addComposited(container);
 
+    // now let's snag all the rest. This could actually be null.
+    Collection<ITypeValueMap<?, IChunk>> maps = _slotMap.get(key);
+    // might actually be nothing else..
+    if (maps == null) return rtn;
+
     // now let's snag all the rest
     try
     {
       getLock().readLock().lock();
-      for (ITypeValueMap<?, IChunk> tvm : _slotMap.get(key))
+      for (ITypeValueMap<?, IChunk> tvm : maps)
         if (tvm != typeValueMap && tvm != null)
         {
           container = tvm.all();
@@ -962,11 +967,15 @@ public class DefaultSearchSystem implements ISearchSystem
 
     if (typeValueMap != null) rtn += typeValueMap.notSize(slot.getValue());
 
-    // now let's snag all the rest
+    // now let's snag all the rest. This could actually be null.
+    Collection<ITypeValueMap<?, IChunk>> maps = _slotMap.get(key);
+    // might actually be nothing else..
+    if (maps == null) return rtn;
+
     try
     {
       getLock().readLock().lock();
-      for (ITypeValueMap<?, IChunk> tvm : _slotMap.get(key))
+      for (ITypeValueMap<?, IChunk> tvm : maps)
         if (tvm != typeValueMap && tvm != null) rtn += tvm.allSize();
       return rtn;
     }
