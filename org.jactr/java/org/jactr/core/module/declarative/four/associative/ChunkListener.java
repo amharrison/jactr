@@ -278,7 +278,7 @@ public class ChunkListener extends ChunkListenerAdaptor
        * now we process the link, either merging it or absorbing its values
        */
       Link4 masterLink = (Link4) getAssociativeLink(master, otherChunk,
-          processJLinks);
+          !processJLinks); // we need to flip this so that I/Js match
       if (masterLink != null)
       {
         if (LOGGER.isDebugEnabled())
