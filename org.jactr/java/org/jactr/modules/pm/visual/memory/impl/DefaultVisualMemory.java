@@ -39,6 +39,7 @@ import org.jactr.modules.pm.visual.memory.impl.filter.AttendedVisualLocationFilt
 import org.jactr.modules.pm.visual.memory.impl.filter.NearestVisualLocationFilter;
 import org.jactr.modules.pm.visual.memory.impl.filter.ValueVisualLocationFilter;
 import org.jactr.modules.pm.visual.memory.impl.filter.VectorVisualLocationFilter;
+import org.jactr.modules.pm.visual.memory.impl.map.ColorChunkCache;
 import org.jactr.modules.pm.visual.memory.impl.map.ColorFeatureMap;
 import org.jactr.modules.pm.visual.memory.impl.map.DimensionFeatureMap;
 import org.jactr.modules.pm.visual.memory.impl.map.DistanceFeatureMap;
@@ -78,6 +79,8 @@ public class DefaultVisualMemory extends AbstractPerceptualMemory implements
 
   private IChunk                     _notAvailableChunk;
 
+  private ColorChunkCache            _colorChunkCache;
+
   public DefaultVisualMemory(IVisualModule module)
   {
     super(module, new VisualLocationManager(module));
@@ -104,10 +107,17 @@ public class DefaultVisualMemory extends AbstractPerceptualMemory implements
     addFeatureMap(new KindFeatureMap());
     addFeatureMap(new SizeFeatureMap());
     addFeatureMap(new DimensionFeatureMap());
-    addFeatureMap(new ColorFeatureMap(module.getModel()));
+    ColorFeatureMap cfm = new ColorFeatureMap(module.getModel());
+    _colorChunkCache = cfm.getColorChunkCache();
+    addFeatureMap(cfm);
     addFeatureMap(new VisibilityFeatureMap());
     addFeatureMap(new FINSTVisualFeatureMap(module.getModel()));
     addFeatureMap(new ValueFeatureMap());
+  }
+
+  public ColorChunkCache getColorChunkCache()
+  {
+    return _colorChunkCache;
   }
 
   @Override
