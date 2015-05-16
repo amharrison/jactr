@@ -38,6 +38,7 @@
 				<slot name="token" equals="null"/>
 				<slot name="type" equals="null"/>
 				<slot name="status" equals="null"/>
+				<slot name="color" equals="null"/>
 			</chunk-type>
   
 			<chunk-type name="gui" parent="visual-object">
