@@ -266,8 +266,13 @@ public class DefaultAssociativeLinkageSystem implements
     IChunk sourceJ = link.getJChunk();
     IChunk targetI = link.getIChunk();
 
+    /**
+     * add the link to both, unless they are the same
+     */
     sourceJ.getAdapter(IAssociativeLinkContainer.class).addLink(link);
-    targetI.getAdapter(IAssociativeLinkContainer.class).addLink(link);
+
+    if (sourceJ != targetI)
+      targetI.getAdapter(IAssociativeLinkContainer.class).addLink(link);
   }
 
   public void removeLink(IAssociativeLink link)
