@@ -49,6 +49,20 @@ public class AbstractTimedEvent implements ITimedEvent
   static private boolean             _shouldWarnOnSlippage = !Boolean
                                                                .getBoolean("jactr.ignoreTimeSlips");
 
+  static private double              _timeSlipThreshold    = 0.05;
+  static
+  {
+    try
+    {
+      _timeSlipThreshold = Double.parseDouble(System
+          .getProperty("jactr.timeSlipThreshold"));
+    }
+    catch (Exception e)
+    {
+      _timeSlipThreshold = 0.05;
+    }
+  }
+
 
   public AbstractTimedEvent()
   {
@@ -119,7 +133,8 @@ public class AbstractTimedEvent implements ITimedEvent
     if (hasFired())
       throw new IllegalStateException("timed event has already been fired");
 
-    if (Math.abs(getEndTime() - currentTime) > 0.01 && shouldWarnOnTimeSlips())
+    if (Math.abs(getEndTime() - currentTime) > _timeSlipThreshold
+        && shouldWarnOnTimeSlips())
       if (LOGGER.isWarnEnabled())
         LOGGER.warn(getClass().getName() + ":" + (currentTime - getEndTime())
             + " time slippage detected. Event should have fired at "
