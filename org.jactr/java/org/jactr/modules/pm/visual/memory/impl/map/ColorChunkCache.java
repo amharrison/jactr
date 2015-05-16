@@ -104,8 +104,9 @@ public class ColorChunkCache implements IChunkTypeListener
     int red = ((Number) sc.getSlot("red").getValue()).intValue();
     int green = ((Number) sc.getSlot("green").getValue()).intValue();
     int blue = ((Number) sc.getSlot("blue").getValue()).intValue();
+    int alpha = ((Number) sc.getSlot("alpha").getValue()).intValue();
 
-    Color awtColor = new Color(red, green, blue);
+    Color awtColor = new Color(red, green, blue, alpha);
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("Creating new color " + colorChunk + " " + awtColor);
@@ -139,6 +140,7 @@ public class ColorChunkCache implements IChunkTypeListener
         sc.addSlot(new BasicSlot("red", awtColor.getRed()));
         sc.addSlot(new BasicSlot("green", awtColor.getGreen()));
         sc.addSlot(new BasicSlot("blue", awtColor.getBlue()));
+        sc.addSlot(new BasicSlot("alpha", awtColor.getAlpha()));
         chunk = _model.getDeclarativeModule().addChunk(chunk).get();
         _colorToChunk.put(awtColor, chunk);
         _chunkToColor.put(chunk, awtColor);

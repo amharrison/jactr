@@ -45,6 +45,11 @@ public class ColorFeatureMap extends AbstractVisualFeatureMap<Color[]>
     _cache = new ColorChunkCache(model);
   }
 
+  public ColorChunkCache getColorChunkCache()
+  {
+    return _cache;
+  }
+
   @Override
   protected void addInformation(IIdentifier identifier, Color[] data)
   {
