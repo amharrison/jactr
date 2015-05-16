@@ -18,6 +18,7 @@ import java.util.EventListener;
  * @author developer
  *
  */
+@FunctionalInterface
 public interface IBreakpointListener extends EventListener
 {
 
