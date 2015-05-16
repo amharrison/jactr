@@ -6,6 +6,7 @@ package org.jactr.modules.pm.visual.memory.impl.encoder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.identifier.IIdentifier;
+import org.commonreality.modalities.visual.Color;
 import org.commonreality.modalities.visual.DefaultVisualPropertyHandler;
 import org.commonreality.modalities.visual.IVisualPropertyHandler;
 import org.commonreality.modalities.visual.geom.Dimension2D;
@@ -24,6 +25,7 @@ import org.jactr.modules.pm.common.memory.IPerceptualMemory;
 import org.jactr.modules.pm.visual.IVisualModule;
 import org.jactr.modules.pm.visual.memory.IVisualMemory;
 import org.jactr.modules.pm.visual.memory.VisualUtilities;
+import org.jactr.modules.pm.visual.memory.impl.DefaultVisualMemory;
 
 /**
  * abstract base implementation of a visual chunk encoder. Extenders must
@@ -80,8 +82,8 @@ public abstract class AbstractVisualEncoder implements IPerceptualEncoder
       if (!isVisible) return null;
 
       Point2D location = getHandler().getRetinalLocation(afferentObject);
-      IChunk visualLocation = visualMemory.getVisualLocationChunkAt(location
-          .getX(), location.getY());
+      IChunk visualLocation = visualMemory.getVisualLocationChunkAt(
+          location.getX(), location.getY());
       return visualLocation;
     }
     catch (UnknownPropertyNameException e)
@@ -103,12 +105,31 @@ public abstract class AbstractVisualEncoder implements IPerceptualEncoder
   static public IChunk getVisualLocation(IChunk visualChunk,
       IVisualMemory visualMemory)
   {
-    Object loc = visualChunk.getSymbolicChunk().getSlot(
-        IVisualModule.SCREEN_POSITION_SLOT).getValue();
+    Object loc = visualChunk.getSymbolicChunk()
+        .getSlot(IVisualModule.SCREEN_POSITION_SLOT).getValue();
 
     if (loc != null && loc instanceof IChunk)
       if (((IChunk) loc).isA(visualMemory.getVisualModule()
           .getVisualLocationChunkType())) return (IChunk) loc;
+
+    return null;
+  }
+
+  /**
+   * only works if visualMemory is DefaultVisualMemory. Will return the existing
+   * color chunk for this color, or create it. null if no default visual
+   * 
+   * @param color
+   * @param visualMemory
+   * @return
+   */
+  static public IChunk getColor(Color color, IVisualMemory visualMemory)
+  {
+    if (visualMemory instanceof DefaultVisualMemory)
+      return ((DefaultVisualMemory) visualMemory).getColorChunkCache()
+          .getColorChunk(color);
+
+    LOGGER.warn("getColor only properly functions with DefaultVisualMemory ");
 
     return null;
   }
@@ -216,10 +237,10 @@ public abstract class AbstractVisualEncoder implements IPerceptualEncoder
   {
     try
     {
-      double x = ((Number) visualLocation.getSymbolicChunk().getSlot(
-          IVisualModule.SCREEN_X_SLOT).getValue()).doubleValue();
-      double y = ((Number) visualLocation.getSymbolicChunk().getSlot(
-          IVisualModule.SCREEN_Y_SLOT).getValue()).doubleValue();
+      double x = ((Number) visualLocation.getSymbolicChunk()
+          .getSlot(IVisualModule.SCREEN_X_SLOT).getValue()).doubleValue();
+      double y = ((Number) visualLocation.getSymbolicChunk()
+          .getSlot(IVisualModule.SCREEN_Y_SLOT).getValue()).doubleValue();
       return new double[] { x, y };
     }
     catch (Exception e)
@@ -276,6 +297,9 @@ public abstract class AbstractVisualEncoder implements IPerceptualEncoder
           .getHeight());
       ((IMutableSlot) sc.getSlot(IVisualModule.WIDTH_SLOT)).setValue(size
           .getWidth());
+
+      IChunk color = getColor(getHandler().getColors(afferentObject)[0], memory);
+      ((IMutableSlot) sc.getSlot(IVisualModule.COLOR_SLOT)).setValue(color);
 
       IVisualModule vModule = memory.getVisualModule();
 
