@@ -50,14 +50,14 @@ public class ImmutableReferences implements IReferences
     return _references.getNumberOfReferences();
   }
 
-  public double[] getRelativeTimes(double referenceTime)
+  public double[] getRelativeTimes(double referenceTime, double[] container)
   {
-    return _references.getRelativeTimes(referenceTime);
+    return _references.getRelativeTimes(referenceTime, container);
   }
 
-  public double[] getTimes()
+  public double[] getTimes(double[] container)
   {
-    return _references.getTimes();
+    return _references.getTimes(container);
   }
 
   public void removeReferenceTime(double time)
@@ -74,6 +74,26 @@ public class ImmutableReferences implements IReferences
   public double getEarliestReferenceTime()
   {
     return _references.getEarliestReferenceTime();
+  }
+
+
+
+  @Override
+  public void setOptimizationLevel(int level)
+  {
+
+  }
+
+  @Override
+  public int getOptimizationLevel()
+  {
+    return _references.getOptimizationLevel();
+  }
+
+  @Override
+  public int getNumberOfRecentReferences()
+  {
+    return _references.getNumberOfRecentReferences();
   }
 
 }

@@ -43,6 +43,8 @@ public class DefaultReferences implements IOptimizedReferences
   public DefaultReferences(int optimization)
   {
     setOptimizationLevel(optimization);
+    // it optimizatilevel is massive, we don't actually want to create that
+    // whole mess of storage unnecssairly
     _arrayOfDoubles = new ArrayDoubleList(Math.min(getOptimizationLevel(), 10));
   }
 
@@ -123,10 +125,13 @@ public class DefaultReferences implements IOptimizedReferences
     return _referenceCount;
   }
 
-  synchronized public double[] getRelativeTimes(double referenceTime)
+  synchronized public double[] getRelativeTimes(double referenceTime,
+      double[] container)
   {
-    double[] rtn = getTimes();
-    for (int i = 0; i < rtn.length; i++)
+    int size = _arrayOfDoubles.size();
+    double[] rtn = getTimes(container);
+    // the container may be larger
+    for (int i = 0; i < size; i++)
       rtn[i] = referenceTime - rtn[i];
     return rtn;
   }
@@ -136,9 +141,10 @@ public class DefaultReferences implements IOptimizedReferences
    * 
    * @see org.jactr.core.utils.references.IReferences#getTimes()
    */
-  synchronized public double[] getTimes()
+  synchronized public double[] getTimes(double[] container)
   {
-    return _arrayOfDoubles.toArray();
+    if (container == null) container = new double[_arrayOfDoubles.size()];
+    return _arrayOfDoubles.toArray(container);
   }
 
   synchronized public void removeReferenceTime(double time)
@@ -173,7 +179,7 @@ public class DefaultReferences implements IOptimizedReferences
        * we've got some contracting to do.. snag the values and the current
        * insertion point
        */
-      double[] values = getTimes();
+      double[] values = getTimes(null);
       long currentCount = getNumberOfReferences();
       int lastPosition = _nextInsertionPoint - 1;
 
@@ -197,6 +203,12 @@ public class DefaultReferences implements IOptimizedReferences
 
       _referenceCount = currentCount;
     }
+  }
+
+  @Override
+  synchronized public int getNumberOfRecentReferences()
+  {
+    return _arrayOfDoubles.size();
   }
 
 }
