@@ -47,7 +47,7 @@ public class SynchronizationManager implements IInstrument, IParameterized
 
   private ModelsLock                 _modelsLock;
 
-  private double                     _delay   = 15;                                     // s
+  private double                     _delay   = 30;                                     // s
 
   private Runnable                   _blockProcessor;
 

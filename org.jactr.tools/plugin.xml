@@ -130,7 +130,7 @@ http://jactr.org/node/144</description>
       </instrument>
       <instrument
             class="org.jactr.tools.async.sync.SynchronizationManager"
-            hidden="false"
+            hidden="true"
             name="IDE Synchronization Manager">
          <parameter
                name="SynchronizationDelayInMS"
