@@ -53,26 +53,34 @@ public class DefaultMutableSlot extends BasicSlot implements IMutableSlot
     setValueInternal(value);
   }
 
-  /**
-   * value is intentionally excluded since we dont want the hash to change..
+  /*
+   * The below of not including the variable value in the hashcode was insane.
+   * Hopefully we won't discover any code that required this mistake and a half.
+   * Fortunately, most raw DefaultMutables are used in unique slot map
+   * containers
    */
-  @Override
-  public int hashCode()
-  {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + (getName() == null ? 0 : getName().hashCode());
-    return result;
-  }
-
-  /**
-   * however, we still want equals to include the value, so we delegate to
-   * super.
-   */
-  @Override
-  public boolean equals(Object obj)
-  {
-    return super.equals(obj);
-  }
+  // // /**
+  // // * value is intentionally excluded since we dont want the hash to
+  // change..
+  // // */
+  // // @Override
+  // // public int hashCode()
+  // // {
+  // // final int prime = 31;
+  // // int result = 1;
+  // // result = prime * result + (getName() == null ? 0 :
+  // getName().hashCode());
+  // // return result;
+  // // }
+  //
+  // /**
+  // * however, we still want equals to include the value, so we delegate to
+  // * super.
+  // */
+  // @Override
+  // public boolean equals(Object obj)
+  // {
+  // return super.equals(obj);
+  // }
 
 }
