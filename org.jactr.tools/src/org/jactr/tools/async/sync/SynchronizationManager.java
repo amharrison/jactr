@@ -1,4 +1,3 @@
-
 package org.jactr.tools.async.sync;
 
 /*
@@ -6,11 +5,7 @@ package org.jactr.tools.async.sync;
  */
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -18,6 +13,7 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.handler.demux.MessageHandler;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.model.IModel;
+import org.jactr.core.queue.timedevents.RunnableTimedEvent;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.event.ACTRRuntimeAdapter;
 import org.jactr.core.runtime.event.ACTRRuntimeEvent;
@@ -51,9 +47,8 @@ public class SynchronizationManager implements IInstrument, IParameterized
 
   private ModelsLock                 _modelsLock;
 
-  private long                       _delay   = 180000;                                 // 3
+  private double                     _delay   = 15;                                     // s
 
-  // minutes
   private Runnable                   _blockProcessor;
 
   private Runnable                   _messageProcessor;
@@ -74,6 +69,7 @@ public class SynchronizationManager implements IInstrument, IParameterized
     {
       _runtimeListener = new ACTRRuntimeAdapter() {
 
+        @Override
         public void runtimeStarted(ACTRRuntimeEvent event)
         {
           // do the real work
@@ -189,26 +185,36 @@ public class SynchronizationManager implements IInstrument, IParameterized
     // .booleanValue();
     // else
     if (INTERVAL.equalsIgnoreCase(key))
-      _delay = ParameterHandler.numberInstance().coerce(value).longValue();
+      _delay = ParameterHandler.numberInstance().coerce(value).doubleValue() / 1000.0;
   }
 
   protected void scheduleProcess()
   {
     if (_blockProcessor != null
         && RemoteInterface.getActiveRemoteInterface() != null)
-    {
-      if (LOGGER.isDebugEnabled()) LOGGER.debug(String.format("scheduling"));
-      ScheduledExecutorService ses = (ScheduledExecutorService) ExecutorServices
-          .getExecutor(ExecutorServices.PERIODIC);
-      if (ses != null)
-      ses.schedule(_blockProcessor, _delay, TimeUnit.MILLISECONDS);
-    }
+      /*
+       * now we just pick a model and attach to it. If that model is removed, we
+       * reschedule
+       */
+      try
+      {
+        IModel model = ACTRRuntime.getRuntime().getController()
+            .getRunningModels().iterator().next();
+        double when = model.getAge() + _delay;
+        RunnableTimedEvent rte = new RunnableTimedEvent(when, _blockProcessor);
+        model.getTimedEventQueue().enqueue(rte);
+      }
+      catch (Exception e)
+      {
+        LOGGER.debug("No model to attach to, irrelevant ", e);
+      }
   }
 
-  protected void synchronize()
+  synchronized protected void synchronize()
   {
     if (_message != null)
     {
+      // message is nulled when we wake back up?
       // redundant, we already are
       if (LOGGER.isDebugEnabled())
         LOGGER.debug(String.format("We are already synchronizing"));
@@ -220,49 +226,52 @@ public class SynchronizationManager implements IInstrument, IParameterized
       if (LOGGER.isDebugEnabled())
         LOGGER.debug(String.format("Attempting to synchronize"));
       // signal
-      Future<Boolean> closeFuture = _modelsLock.close();
+      CompletableFuture<Boolean> closeFuture = _modelsLock.close();
 
-      // send out the message
+      // send out the message when all have reached the synch point.
       _message = new SynchronizationMessage();
 
-      try
-      {
-        /*
-         * wait until everyone has blocked and then send the message.
-         */
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format("Attempting to get result of close"));
+      closeFuture.thenRunAsync(_messageProcessor,
+          ExecutorServices.getExecutor(ExecutorServices.BACKGROUND));
 
-        closeFuture.get(1000, TimeUnit.MILLISECONDS);
-
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format("Sending message"));
-        /*
-         * we send the message on the back ground thread since it is the thread
-         * that likely has all the pending requests on it. If we sent from here,
-         * there synch message would arrive before all the pending messages on
-         * the background thread, negating the intended purpose
-         */
-        Executor executor = ExecutorServices
-            .getExecutor(ExecutorServices.BACKGROUND);
-        if (executor != null) executor.execute(_messageProcessor);
-
-      }
-      catch (TimeoutException e)
-      {
-        LOGGER
-            .error("Waiting for all models to close took too long, stumbling forward");
-        _message = null;
-      }
-      catch (Exception e)
-      {
-        LOGGER
-            .error(
-                "SynchronizationManager.synchronize threw InterruptedException. Aborting synchronization",
-                e);
-
-        _message = null;
-      }
+      // try
+      // {
+      // /*
+      // * wait until everyone has blocked and then send the message.
+      // */
+      // if (LOGGER.isDebugEnabled())
+      // LOGGER.debug(String.format("Attempting to get result of close"));
+      //
+      // closeFuture.get(1000, TimeUnit.MILLISECONDS);
+      //
+      // if (LOGGER.isDebugEnabled())
+      // LOGGER.debug(String.format("Sending message"));
+      // /*
+      // * we send the message on the back ground thread since it is the thread
+      // * that likely has all the pending requests on it. If we sent from here,
+      // * there synch message would arrive before all the pending messages on
+      // * the background thread, negating the intended purpose
+      // */
+      // Executor executor = ExecutorServices
+      // .getExecutor(ExecutorServices.BACKGROUND);
+      // if (executor != null) executor.execute(_messageProcessor);
+      //
+      // }
+      // catch (TimeoutException e)
+      // {
+      // LOGGER
+      // .error("Waiting for all models to close took too long, stumbling forward");
+      // _message = null;
+      // }
+      // catch (Exception e)
+      // {
+      // LOGGER
+      // .error(
+      // "SynchronizationManager.synchronize threw InterruptedException. Aborting synchronization",
+      // e);
+      //
+      // _message = null;
+      // }
 
     }
     else

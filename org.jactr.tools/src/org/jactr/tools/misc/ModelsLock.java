@@ -5,11 +5,9 @@ package org.jactr.tools.misc;
  */
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -29,95 +27,7 @@ import org.jactr.instrument.IInstrument;
  */
 public class ModelsLock extends ModelListenerAdaptor implements IInstrument
 {
-  /**
-   * a simple future that has a callable to determine how long the get() call
-   * should block. If the block is released (returns false), the second callable
-   * will be executed for the return value.
-   * 
-   * @author harrison
-   * @param <T>
-   */
-  private final class SimpleFuture<T> implements Future<T>
-  {
-    private boolean           _canceled = false;
 
-    private boolean           _done     = false;
-
-    private Callable<T>       _runner;
-
-    private Callable<Boolean> _blockingTest;
-
-    public SimpleFuture(Callable<Boolean> block, Callable<T> runner)
-    {
-      _runner = runner;
-      _blockingTest = block;
-    }
-
-    public boolean cancel(boolean mayInterruptIfRunning)
-    {
-      _canceled = true;
-      return _canceled;
-    }
-
-    public T get() throws InterruptedException, ExecutionException
-    {
-      try
-      {
-        return get(-1l, null);
-      }
-      catch (TimeoutException e)
-      {
-        // won't actually happen
-        throw new ExecutionException(e);
-      }
-    }
-
-    public T get(long timeout, TimeUnit unit) throws InterruptedException,
-        ExecutionException, TimeoutException
-    {
-      try
-      {
-        _lock.lock();
-        while (_blockingTest.call())
-          if (timeout == -1 && unit == null)
-            _lockCondition.await();
-          else if (!_lockCondition.await(timeout, unit))
-            throw new TimeoutException();
-
-        return _runner.call();
-      }
-      catch (TimeoutException e)
-      {
-        throw e;
-      }
-      catch (InterruptedException e)
-      {
-        throw e;
-      }
-      catch (ExecutionException e)
-      {
-        throw e;
-      }
-      catch (Exception e)
-      {
-        throw new ExecutionException("Failed to execute callable", e);
-      }
-      finally
-      {
-        _lock.unlock();
-      }
-    }
-
-    public boolean isCancelled()
-    {
-      return _canceled;
-    }
-
-    public boolean isDone()
-    {
-      return _done;
-    }
-  }
 
   /**
    * Logger definition
@@ -142,6 +52,8 @@ public class ModelsLock extends ModelListenerAdaptor implements IInstrument
    * the models that are currently blocking
    */
   private Set<IModel>                _modelsLocked  = new HashSet<IModel>();
+
+  private volatile CompletableFuture<Boolean> _currentRequest;
 
   /*
    * we actually block at the start of the next cycle. We do it at the start,
@@ -293,37 +205,20 @@ public class ModelsLock extends ModelListenerAdaptor implements IInstrument
    * 
    * @return
    */
-  public Future<Boolean> close()
+  public CompletableFuture<Boolean> close()
   {
     try
     {
       _lock.lock();
       _shouldBlock = true;
+      _currentRequest = new CompletableFuture<Boolean>();
       _lockCondition.signalAll();
     }
     finally
     {
       _lock.unlock();
     }
-
-    return new SimpleFuture<Boolean>(new Callable<Boolean>() {
-
-      public Boolean call() throws Exception
-      {
-        return _modelsToLock.size() > 0
-            && !_modelsToLock.containsAll(_modelsLocked);
-      }
-
-    }, new Callable<Boolean>() {
-
-      public Boolean call() throws Exception
-      {
-        if (_modelsToLock.size() == 0) return false;
-        return _modelsToLock.containsAll(_modelsLocked);
-      }
-
-    });
-
+    return _currentRequest;
   }
 
   /**
@@ -331,12 +226,13 @@ public class ModelsLock extends ModelListenerAdaptor implements IInstrument
    * 
    * @return
    */
-  public Future<Boolean> open()
+  public CompletableFuture<Boolean> open()
   {
     try
     {
       _lock.lock();
       _shouldBlock = false;
+      _currentRequest = new CompletableFuture<Boolean>();
       _lockCondition.signalAll();
     }
     finally
@@ -344,22 +240,21 @@ public class ModelsLock extends ModelListenerAdaptor implements IInstrument
       _lock.unlock();
     }
 
-    return new SimpleFuture<Boolean>(new Callable<Boolean>() {
+    return _currentRequest;
+  }
 
-      public Boolean call() throws Exception
-      {
-        return _modelsToLock.size() != 0 || _modelsLocked.size() > 0;
-      }
+  private void allBocked()
+  {
+    if (_currentRequest != null)
+    _currentRequest.complete(true);
+    _currentRequest = null;
+  }
 
-    }, new Callable<Boolean>() {
-
-      public Boolean call() throws Exception
-      {
-        if (_modelsToLock.size() == 0) return false;
-        return _modelsLocked.size() == 0;
-      }
-
-    });
+  private void allFreed()
+  {
+    if (_currentRequest != null)
+    _currentRequest.complete(true);
+    _currentRequest = null;
   }
 
   /**
@@ -383,6 +278,9 @@ public class ModelsLock extends ModelListenerAdaptor implements IInstrument
         if (LOGGER.isDebugEnabled())
           LOGGER.debug(String.format("Blocking %s @ %.2f", model, ACTRRuntime
               .getRuntime().getClock(model).getTime()));
+
+        if (allAreBlocked()) allBocked();
+
         _lockCondition.await(250, TimeUnit.MILLISECONDS);
       }
 
@@ -400,6 +298,8 @@ public class ModelsLock extends ModelListenerAdaptor implements IInstrument
     finally
     {
       _modelsLocked.remove(model);
+
+      if (allAreFree()) allFreed();
 
       _lock.unlock();
     }
