@@ -26,13 +26,13 @@ import org.jactr.core.queue.ITimedEvent;
  */
 public class AbstractTimedEvent implements ITimedEvent
 {
-  static private transient final Log LOGGER      = LogFactory
-                                                     .getLog(AbstractTimedEvent.class
-                                                         .getName());
+  static private transient final Log LOGGER                = LogFactory
+                                                               .getLog(AbstractTimedEvent.class
+                                                                   .getName());
 
-  protected boolean                  _hasAborted = false;
+  protected boolean                  _hasAborted           = false;
 
-  protected boolean                  _hasFired   = false;
+  protected boolean                  _hasFired             = false;
 
   /**
    * Description of the Field
@@ -62,7 +62,6 @@ public class AbstractTimedEvent implements ITimedEvent
       _timeSlipThreshold = 0.05;
     }
   }
-
 
   public AbstractTimedEvent()
   {
@@ -136,9 +135,12 @@ public class AbstractTimedEvent implements ITimedEvent
     if (Math.abs(getEndTime() - currentTime) > _timeSlipThreshold
         && shouldWarnOnTimeSlips())
       if (LOGGER.isWarnEnabled())
-        LOGGER.warn(getClass().getName() + ":" + (currentTime - getEndTime())
-            + " time slippage detected. Event should have fired at "
-            + getEndTime() + " actually firing at " + currentTime);
+        LOGGER
+            .warn(String
+                .format(
+                    "%s (%s) : Time slippage (%.4f) detected. Event should have fired at %.2f, actually fired at %.2f",
+                    this, getClass().getSimpleName(), currentTime
+                        - getEndTime(), getEndTime(), currentTime));
 
     _hasFired = true;
   }
