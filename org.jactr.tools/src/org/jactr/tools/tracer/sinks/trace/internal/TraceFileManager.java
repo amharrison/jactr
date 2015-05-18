@@ -65,7 +65,7 @@ public class TraceFileManager
     }
     catch (Exception e)
     {
-      _recordWindowSpan = 30;
+      _recordWindowSpan = 60;
     }
 
     try
@@ -163,6 +163,14 @@ public class TraceFileManager
 
     File fp = new File(path, String.format("%1d.sessionData",
         birthday.get(Calendar.SECOND)));
+
+    if (fp.exists())
+      if (LOGGER.isWarnEnabled())
+        LOGGER
+            .warn(String
+                .format(
+                    "Tracefile %s already exists. This suggests you've got a long running model. Run with -Djactr.sink.archive.longRun=true",
+                    fp.getAbsolutePath()));
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug(String.format(
@@ -284,8 +292,7 @@ public class TraceFileManager
               _recordWindow[1], _currentFile.getCanonicalPath()));
       }
 
-      if(output != null)
-    	  output.flush();
+      if (output != null) output.flush();
 
       // _gzipOutputStream.finish();
     }
