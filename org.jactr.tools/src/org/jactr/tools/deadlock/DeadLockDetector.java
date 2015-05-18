@@ -47,6 +47,13 @@ public class DeadLockDetector implements IInstrument
 
   private boolean                    _scheduled   = false;
 
+  /**
+   * zero arg for installing straight into models
+   */
+  public DeadLockDetector()
+  {
+    this(null, 100000);
+  }
 
   public DeadLockDetector(IDeadLockListener listener, long checkIntervalMS)
   {
@@ -141,7 +148,7 @@ public class DeadLockDetector implements IInstrument
       else if (LOGGER.isDebugEnabled())
         LOGGER.debug("Time has changed [" + _currentTime + "/" + _lastTime
             + "]. All is good in the universe.");
-      
+
       _lastTime = _currentTime;
     }
 
@@ -150,7 +157,7 @@ public class DeadLockDetector implements IInstrument
       DeadLockUtilities.dumpThreads("deadlock-threads.txt");
       DeadLockUtilities.dumpHeap("deadlock-heap.hprof", true);
 
-      _listener.deadlockDetected();
+      if (_listener != null) _listener.deadlockDetected();
     }
     else
       schedule();
