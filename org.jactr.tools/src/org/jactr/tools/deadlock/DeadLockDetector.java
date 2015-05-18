@@ -146,7 +146,12 @@ public class DeadLockDetector implements IInstrument
     }
 
     if (deadlocked)
+    {
+      DeadLockUtilities.dumpThreads("deadlock-threads.txt");
+      DeadLockUtilities.dumpHeap("deadlock-heap.hprof", true);
+
       _listener.deadlockDetected();
+    }
     else
       schedule();
   }
