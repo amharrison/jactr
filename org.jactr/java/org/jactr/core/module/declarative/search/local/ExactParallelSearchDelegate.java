@@ -178,6 +178,7 @@ public class ExactParallelSearchDelegate implements ISearchDelegate
     }
     catch (InterruptedException e)
     {
+      LOGGER.warn("Interrupted, expecting termination ", e);
       return new TreeSet<IChunk>();
     }
     catch (ExecutionException e)

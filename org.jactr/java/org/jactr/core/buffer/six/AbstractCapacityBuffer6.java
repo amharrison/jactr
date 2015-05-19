@@ -15,7 +15,9 @@ import org.jactr.core.buffer.ICapacityBuffer;
 import org.jactr.core.buffer.IllegalActivationBufferStateException;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunktype.IChunkType;
+import org.jactr.core.logging.IMessageBuilder;
 import org.jactr.core.logging.Logger;
+import org.jactr.core.logging.impl.MessageBuilderFactory;
 import org.jactr.core.model.IModel;
 import org.jactr.core.module.IModule;
 import org.jactr.core.runtime.ACTRRuntime;
@@ -115,13 +117,13 @@ public abstract class AbstractCapacityBuffer6 extends
   private void ensureCapacity()
   {
     IModel model = getModel();
-    StringBuilder sb = null;
+    IMessageBuilder sb = null;
     while (isCapacityReached())
     {
       if (sb == null)
-        sb = new StringBuilder();
+        sb = Logger.messageBuilder();
       else
-        sb.delete(0, sb.length());
+        sb.clear();
 
       /*
        * remove the first..
@@ -133,11 +135,14 @@ public abstract class AbstractCapacityBuffer6 extends
         sb.append(" is being removed because capacity has been reached");
         String msg = sb.toString();
 
-        LOGGER.debug(msg);
-        Logger.log(model, Logger.Stream.BUFFER, msg);
+        if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
+        if (Logger.hasLoggers(model))
+          Logger.log(model, Logger.Stream.BUFFER, msg);
       }
       removeSourceChunk(toRemove);
     }
+
+    if (sb != null) MessageBuilderFactory.recycle(sb);
   }
 
   /**
@@ -238,12 +243,13 @@ public abstract class AbstractCapacityBuffer6 extends
       IModel model = getModel();
       if (LOGGER.isDebugEnabled() || Logger.hasLoggers(model))
       {
-        StringBuilder sb = new StringBuilder("Inserted ");
-        sb.append(chunkToInsert).append(" into ").append(getName());
-        String msg = sb.toString();
+        IMessageBuilder sb = Logger.messageBuilder();
+        sb.append(getName()).append(" inserted ")
+            .append(chunkToInsert.getSymbolicChunk().getName());
 
-        LOGGER.debug(msg);
-        Logger.log(model, Logger.Stream.BUFFER, msg);
+        if (LOGGER.isDebugEnabled()) LOGGER.debug(sb.toString());
+
+        Logger.log(model, Logger.Stream.BUFFER, sb);
       }
 
       chunkInserted(chunkToInsert);
@@ -465,8 +471,8 @@ public abstract class AbstractCapacityBuffer6 extends
   @Override
   public Collection<String> getPossibleParameters()
   {
-    Collection<String> rtn = new ArrayList<String>(super
-        .getPossibleParameters());
+    Collection<String> rtn = new ArrayList<String>(
+        super.getPossibleParameters());
     rtn.add(EJECTION_POLICY_PARAM);
     return rtn;
   }

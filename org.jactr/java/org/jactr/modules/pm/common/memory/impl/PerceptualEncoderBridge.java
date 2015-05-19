@@ -49,6 +49,8 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
 
   private final Map<IIdentifier, IChunk> _cache;
 
+  private final Map<IIdentifier, Double> _onsetTime;
+
   private final IChunkListener           _chunkListener;
 
   private final IDeclarativeModule       _declarativeModule;
@@ -69,6 +71,7 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
     _encoder = encoder;
     _declarativeModule = _memory.getModule().getModel().getDeclarativeModule();
     _cache = new HashMap<IIdentifier, IChunk>();
+    _onsetTime = new HashMap<IIdentifier, Double>();
     _removedErrorChunk = removeErrorChunk;
     // _activeChunks = new ConcurrentHashMap<IChunk, AtomicInteger>();
 
@@ -113,54 +116,6 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
 
     };
 
-    /**
-     * buffer listener is used to managed the activeChunks container which
-     * allows us to keep track of which chunks of ours are in buffers which we
-     * use to signal a reencoding event
-     */
-    // _bufferListener = new IActivationBufferListener() {
-    //
-    // public void chunkMatched(ActivationBufferEvent abe)
-    // {
-    //
-    // }
-    //
-    // public void requestAccepted(ActivationBufferEvent abe)
-    // {
-    //
-    // }
-    //
-    // public void sourceChunkAdded(ActivationBufferEvent abe)
-    // {
-    // checkContents(abe.getSourceChunks(), true);
-    // }
-    //
-    // public void sourceChunkRemoved(ActivationBufferEvent abe)
-    // {
-    // checkContents(abe.getSourceChunks(), false);
-    // }
-    //
-    // public void sourceChunksCleared(ActivationBufferEvent abe)
-    // {
-    // checkContents(abe.getSourceChunks(), false);
-    // }
-    //
-    // public void statusSlotChanged(ActivationBufferEvent abe)
-    // {
-    //
-    // }
-    //
-    // @SuppressWarnings("unchecked")
-    // public void parameterChanged(IParameterEvent pe)
-    // {
-    //
-    // }
-    //
-    // };
-    //
-    // for (IActivationBuffer buffer : _memory.getModule().getModel()
-    // .getActivationBuffers())
-    // buffer.addListener(_bufferListener, ExecutorServices.INLINE_EXECUTOR);
   }
 
   final public void clear()
@@ -173,6 +128,7 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
     for (IIdentifier id : ids)
       remove(id, true);
 
+    _onsetTime.clear();
     _cache.clear();
     FastList.recycle(ids);
   }
@@ -207,6 +163,7 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
       IChunk chunk = _encoder.encode(object, _memory);
       if (chunk != null)
       {
+        _onsetTime.put(id, chunk.getModel().getAge());
         add(id, chunk);
         if (_memory.hasListeners())
           _memory.dispatch(new ActivePerceptEvent(_memory,
@@ -223,6 +180,8 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
     if (isInterestedIn(object))
     {
       IIdentifier identifier = object.getIdentifier();
+      _onsetTime.remove(identifier);
+
       IChunk oldChunk = remove(identifier, true);
 
       if (oldChunk == null || oldChunk.hasBeenDisposed()) return;
@@ -284,8 +243,11 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
           || oldChunk.hasBeenDisposed())
       {
         oldChunk = _encoder.encode(object, _memory);
-        if (oldChunk != null) add(id, oldChunk);
-        // _listener.newPercept(id, oldChunk);
+        if (oldChunk != null)
+        {
+          _onsetTime.put(id, oldChunk.getModel().getAge());
+          add(id, oldChunk);
+        }
       }
       else
       {
@@ -316,7 +278,9 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
 
           if (updated != oldChunk)
           {
-            // if (_activeChunks.containsKey(oldChunk))
+            /*
+             * the chunk has changed entirely.
+             */
             /*
              * since we are operating in a separate thread (CR), it is possible
              * that this condition will be true and then false by the time the
@@ -328,14 +292,26 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
                 _memory.dispatch(new ActivePerceptEvent(_memory, id, updated,
                     oldChunk));
 
+            _onsetTime.put(id, updated.getModel().getAge());
             // remove from cache, but keep metadata around
             remove(id, false);
             add(id, updated);
           }
-          else if (BufferUtilities.getContainingBuffers(oldChunk, true).size() != 0)
-            if (_memory.hasListeners())
-              _memory.dispatch(new ActivePerceptEvent(_memory,
-                  ActivePerceptEvent.Type.UPDATED, id, oldChunk));
+          else
+          {
+            // still record thec ahnge, but we've got to update the meta data
+            // ourselves
+            // since add isn't called
+            double age = oldChunk.getModel().getAge();
+            _onsetTime.put(id, age);
+            oldChunk.setMetaData(
+                IPerceptualEncoder.COMMONREALITY_ONSET_TIME_KEY, age);
+
+            if (BufferUtilities.getContainingBuffers(oldChunk, true).size() != 0)
+              if (_memory.hasListeners())
+                _memory.dispatch(new ActivePerceptEvent(_memory,
+                    ActivePerceptEvent.Type.UPDATED, id, oldChunk));
+          }
         }
       }
     }
@@ -350,6 +326,8 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
 
   final protected void add(IIdentifier identifier, IChunk chunk)
   {
+    chunk.setMetaData(IPerceptualEncoder.COMMONREALITY_ONSET_TIME_KEY,
+        _onsetTime.get(identifier));
     chunk.setMetaData(IPerceptualEncoder.COMMONREALITY_IDENTIFIER_META_KEY,
         identifier);
     chunk.addListener(_chunkListener, ExecutorServices.INLINE_EXECUTOR);
@@ -376,6 +354,8 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
           chunk.removeListener(_chunkListener);
           chunk.setMetaData(
               IPerceptualEncoder.COMMONREALITY_IDENTIFIER_META_KEY, null);
+          chunk.setMetaData(IPerceptualEncoder.COMMONREALITY_ONSET_TIME_KEY,
+              null);
         }
 
         if (!chunk.isEncoded()

@@ -18,6 +18,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
+import javolution.util.FastCollection;
 import javolution.util.FastList;
 import javolution.util.FastSet;
 
@@ -33,7 +34,10 @@ import org.jactr.core.event.ACTREventDispatcher;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.reality.ACTRAgent;
 import org.jactr.core.runtime.ACTRRuntime;
+import org.jactr.core.slot.BasicSlot;
+import org.jactr.core.slot.ISlot;
 import org.jactr.core.utils.ChainedComparator;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 import org.jactr.core.utils.parameter.NumericParameterHandler;
 import org.jactr.core.utils.parameter.ParameterHandler;
 import org.jactr.modules.pm.IPerceptualModule;
@@ -54,6 +58,8 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
    */
   static private final transient Log                                           LOGGER           = LogFactory
                                                                                                     .getLog(AbstractPerceptualMemory.class);
+
+  static public final String                                                   PRECODE_ONSET_TIME = ":precode-onset";
 
   private final Collection<IPerceptualEncoder>                                 _encoders;
 
@@ -301,7 +307,7 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
     return _finstFeatureMap;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "rawtypes" })
   public Collection<IFeatureMap> getFeatureMaps(
       Collection<IFeatureMap> container)
   {
@@ -463,14 +469,46 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
   }
 
   /**
-   * create a default comparator when none is specified from the search request
-   * or null.
+   * create a default comparator when none is specified from the search request.
+   * By default this prioritizes by the most recent encoding time (highest to
+   * lowest)
    * 
    * @return null
    */
   protected Comparator<ChunkTypeRequest> createDefaultComparator()
   {
-    return null;
+    return new Comparator<ChunkTypeRequest>() {
+
+      private double getPrecodeTime(ChunkTypeRequest request)
+      {
+        FastCollection<ISlot> container = FastCollectionFactory.newInstance();
+        try
+        {
+          for (ISlot slot : request.getSlots(container))
+            if (slot.getName().equals(PRECODE_ONSET_TIME))
+              return ((Number) slot.getValue()).doubleValue();
+
+          return Double.NEGATIVE_INFINITY;
+        }
+        catch (Exception e)
+        {
+          return Double.NEGATIVE_INFINITY;
+        }
+        finally
+        {
+          FastCollectionFactory.recycle(container);
+        }
+      }
+
+      @Override
+      public int compare(ChunkTypeRequest o1, ChunkTypeRequest o2)
+      {
+        double one = getPrecodeTime(o1);
+        double two = getPrecodeTime(o2);
+        return -Double.compare(one, two);
+      }
+
+    };
   }
 
   /**
@@ -613,6 +651,21 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
           LOGGER.debug(bridge.getEncoder() + " encoded " + identifier);
 
         ChunkTypeRequest template = new ChunkTypeRequest(request.getChunkType());
+
+        /*
+         * explicitly add precode onset
+         */
+        template.addSlot(new BasicSlot(PRECODE_ONSET_TIME, encodedPercept
+            .getMetaData(IPerceptualEncoder.COMMONREALITY_ONSET_TIME_KEY)));
+
+        /*
+         * we build up the templates based on the features of the object, the
+         * encoding, and even the request (should need be) - but that can still
+         * produce a stable ordering by the comparator, so we add some extra
+         * entropy here to break things up.
+         */
+        template.addSlot(new BasicSlot(":hidden-entroy", Math.random()));
+
         for (IFeatureMap featureMap : featureMaps)
           featureMap.fillSlotValues(template, identifier, encodedPercept,
               request);

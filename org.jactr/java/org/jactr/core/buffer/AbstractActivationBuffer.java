@@ -29,6 +29,7 @@ import org.jactr.core.buffer.six.DefaultSourceActivationSpreader;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.event.ACTREventDispatcher;
+import org.jactr.core.logging.IMessageBuilder;
 import org.jactr.core.logging.Logger;
 import org.jactr.core.model.IModel;
 import org.jactr.core.model.event.IModelListener;
@@ -312,7 +313,11 @@ public abstract class AbstractActivationBuffer extends DefaultAdaptable
         _eventDispatcher.fire(new ActivationBufferEvent(this, old));
 
       if (Logger.hasLoggers(getModel()))
-        Logger.log(getModel(), Logger.Stream.BUFFER, "cleared " + getName());
+      {
+        IMessageBuilder mb = Logger.messageBuilder();
+        mb.append(getName()).append(" cleared");
+        Logger.log(getModel(), Logger.Stream.BUFFER, mb);
+      }
     }
   }
 
@@ -335,7 +340,6 @@ public abstract class AbstractActivationBuffer extends DefaultAdaptable
     if (LOGGER.isDebugEnabled()) LOGGER.debug("cleared " + sources);
     return sources;
   }
-
 
   public void setActivationSpreader(ISourceActivationSpreader spreader)
   {
@@ -405,8 +409,12 @@ public abstract class AbstractActivationBuffer extends DefaultAdaptable
             ActivationBufferEvent.Type.SOURCE_ADDED, added));
 
       if (Logger.hasLoggers(getModel()))
-        Logger.log(getModel(), Logger.Stream.BUFFER, "Added " + added + " to "
-            + getName());
+      {
+        IMessageBuilder mb = Logger.messageBuilder();
+        mb.append(getName()).append(" added ")
+            .append(added.getSymbolicChunk().getName());
+        Logger.log(getModel(), Logger.Stream.BUFFER, mb);
+      }
     }
 
     return added;
@@ -469,8 +477,12 @@ public abstract class AbstractActivationBuffer extends DefaultAdaptable
             ActivationBufferEvent.Type.SOURCE_REMOVED, c));
 
       if (Logger.hasLoggers(getModel()))
-        Logger.log(getModel(), Logger.Stream.BUFFER, "Removed " + c + " from "
-            + getName());
+      {
+        IMessageBuilder mb = Logger.messageBuilder();
+        mb.append(getName()).append(" removed ")
+            .append(c.getSymbolicChunk().getName());
+        Logger.log(getModel(), Logger.Stream.BUFFER, mb);
+      }
     }
   }
 

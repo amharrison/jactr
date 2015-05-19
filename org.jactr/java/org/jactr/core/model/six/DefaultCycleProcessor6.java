@@ -123,8 +123,8 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
     }
     catch (InterruptedException ie)
     {
-      if (LOGGER.isDebugEnabled())
-        LOGGER.debug("Interrupted while executing production. Terminating ");
+      if (LOGGER.isWarnEnabled())
+        LOGGER.warn("Interrupted while executing production. Terminating ");
 
       nextWaitTime = Double.NaN;
     }

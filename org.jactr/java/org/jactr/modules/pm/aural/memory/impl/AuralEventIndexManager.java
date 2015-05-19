@@ -146,7 +146,8 @@ public class AuralEventIndexManager implements IIndexManager
     IChunk event = null;
     try
     {
-      event = decM.createChunk(audioEventType, identifier.toString()).get();
+      event = decM.createChunk(audioEventType,
+          String.format("ae-%s", identifier.getName())).get();
     }
     catch (Exception e)
     {

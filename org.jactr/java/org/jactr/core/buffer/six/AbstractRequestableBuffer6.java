@@ -17,6 +17,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.IRequestableBuffer;
 import org.jactr.core.buffer.event.ActivationBufferEvent;
+import org.jactr.core.logging.IMessageBuilder;
 import org.jactr.core.logging.Logger;
 import org.jactr.core.module.IModule;
 import org.jactr.core.production.request.IRequest;
@@ -56,8 +57,15 @@ public abstract class AbstractRequestableBuffer6 extends AbstractActivationBuffe
       if (LOGGER.isDebugEnabled()) LOGGER.debug("addChunkPatternInternal returned true, dispatching");
       if (getEventDispatcher().hasListeners())
         getEventDispatcher().fire(new ActivationBufferEvent(this, request));
+
       if(Logger.hasLoggers(getModel()))
-        Logger.log(getModel(), Logger.Stream.BUFFER, "Added pattern "+request+" to "+getName());
+      {
+        IMessageBuilder mb = Logger.messageBuilder();
+        mb.append(getName()).append(" added pattern ")
+            .append(String.format("%s", request));
+
+        Logger.log(getModel(), Logger.Stream.BUFFER, mb);
+      }
     }
     
     return processed;

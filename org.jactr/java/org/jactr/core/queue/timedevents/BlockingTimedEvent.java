@@ -79,6 +79,7 @@ public class BlockingTimedEvent extends AbstractTimedEvent
     catch (InterruptedException e)
     {
       LOGGER.debug("BlockingTimedEvent.fire ("+_owner+") interrupted", e);
+      LOGGER.warn("Interrupted, expecting termination ", e);
     }
     finally
     {

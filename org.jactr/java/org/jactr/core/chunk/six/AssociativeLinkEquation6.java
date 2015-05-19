@@ -40,31 +40,25 @@ public class AssociativeLinkEquation6 implements IAssociativeLinkEquation
     if (Double.isNaN(_declarativeLearningModule.getMaximumStrength()))
       return 0;
 
-    /*
-     * fanji is (1+slotsj) / slotsofji. where slotsj is the number of slots
-     * where j is the value across all of DM. slotsofji is the number of slots
-     * in i that have j (plus 1 if i==j). slotsofji is actually just
-     * link.getCount(). We do not need the +1 modifiers in the numerator or
-     * denominator since the self-link is explicit (count >=1, slotsj >=1)
+    double max = _declarativeLearningModule.getMaximumStrength();
+
+    /**
+     * In theory, this is Sji = Smax - ln(fanj). However, the lisp manual
+     * mentions fanj = fanj+1 / count
      */
-    // just count all the references.
-    // this may underestimate, to be completely correct, we need to iterate over
-    // all the i associations
-    // and sum their counts.
+    double fanj = link.getJChunk().getAdapter(IAssociativeLinkContainer.class)
+        .getNumberOfOutboundLinks();
 
-    double numerator = link.getJChunk()
-        .getAdapter(IAssociativeLinkContainer.class).getNumberOfOutboundLinks();
+    // fanj++;
+    fanj = fanj / ((Link4) link).getCount();
 
-    double denominator = ((Link4) link).getCount();
-
-    double strength = _declarativeLearningModule.getMaximumStrength()
-        - Math.log(numerator / denominator);
+    double ln = Math.log(fanj);
+    double strength = max - ln;
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug(String.format(
-          "Sji j:%s i:%s slotsj %.2f / slotsji %.2f = %.2f, yields Sji %.2f",
-          link.getJChunk(), link.getIChunk(), numerator, denominator,
-          numerator / denominator, strength));
+                  "Sji j:%s i:%s fanj = %.2f, ln(fanj) = %.2f, max = %.2f yields Sji %.2f",
+                  link.getJChunk(), link.getIChunk(), fanj, ln, max, strength));
 
     return strength;
   }

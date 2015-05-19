@@ -520,7 +520,7 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
           getReferences().getNumberOfReferences());
     else if (REFERENCE_TIMES.equalsIgnoreCase(key))
     {
-      double[] times = getReferences().getTimes();
+      double[] times = getReferences().getTimes(null);
       // make sure they are sorted
       Arrays.sort(times);
 
@@ -595,7 +595,7 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
           .longValue();
       IReferences references = getReferences();
 
-      double[] oldTimes = references.getTimes();
+      double[] oldTimes = references.getTimes(null);
       long oldCount = references.getNumberOfReferences();
 
       references.clear();
@@ -618,7 +618,7 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
             oldCount, referenceCount));
         _parentChunk.dispatch(new ParameterEvent(this, ACTRRuntime.getRuntime()
             .getClock(_parentChunk.getModel()).getTime(), REFERENCE_TIMES,
-            oldTimes, references.getTimes()));
+            oldTimes, references.getTimes(null)));
       }
     }
     else if (REFERENCE_TIMES.equalsIgnoreCase(key))
@@ -637,7 +637,7 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
         refTimes.add(time.doubleValue());
 
       IReferences references = getReferences();
-      double[] oldTimes = references.getTimes();
+      double[] oldTimes = references.getTimes(null);
 
       /*
        * if count was previously set, we need to maintain it..
@@ -656,7 +656,7 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
       if (_parentChunk.hasParameterListeners())
         _parentChunk.dispatch(new ParameterEvent(this, ACTRRuntime.getRuntime()
             .getClock(_parentChunk.getModel()).getTime(), REFERENCE_TIMES,
-            oldTimes, references.getTimes()));
+            oldTimes, references.getTimes(null)));
     }
     else if (BASE_LEVEL_ACTIVATION.equalsIgnoreCase(key))
       setBaseLevelActivation(ParameterHandler.numberInstance().coerce(value)

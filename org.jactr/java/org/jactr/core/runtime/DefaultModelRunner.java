@@ -299,11 +299,14 @@ public class DefaultModelRunner implements Runnable
     }
     catch (ModelTerminatedException mte)
     {
+      LOGGER.debug("Model threw termination");
       // perfectly normal
+      // thi
     }
     catch (InterruptedException ie)
     {
       // perfectly normal
+      LOGGER.warn("Interrupted, expecting termination ", ie);
     }
     catch (ExecutionException ee)
     {

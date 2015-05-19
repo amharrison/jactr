@@ -152,7 +152,7 @@ public class RetrievalRequestDelegate extends AsynchronousRequestDelegate
 
   private boolean indexedRetrievalsEnabled(IRequest request)
   {
-    DefaultRetrievalModule6 rm = (DefaultRetrievalModule6) _retrievalModule
+    DefaultRetrievalModule6 rm = _retrievalModule
         .getAdapter(DefaultRetrievalModule6.class);
     if (rm != null)
     {
@@ -300,6 +300,7 @@ public class RetrievalRequestDelegate extends AsynchronousRequestDelegate
       catch (InterruptedException ie)
       {
         // bail
+        LOGGER.warn("Interrupted, expecting termination ", ie);
         return;
       }
       catch (Exception e)

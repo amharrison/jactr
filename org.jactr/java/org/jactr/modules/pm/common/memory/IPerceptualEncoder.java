@@ -16,6 +16,7 @@ public interface IPerceptualEncoder
 {
   static public final String COMMONREALITY_IDENTIFIER_META_KEY = "org.commonreality.identifier";
 
+  static public final String COMMONREALITY_ONSET_TIME_KEY      = "org.commonreality.onsetTime";
   
   /**
    * 
@@ -42,7 +43,7 @@ public interface IPerceptualEncoder
   public boolean isDirty(IAfferentObject afferentObject, IChunk oldChunk, IPerceptualMemory memory);
   
   /**
-   * update the contents of the encoded chunk. If the percept has changed too much, a new chunk can be 
+   * update the contents of the encoded chunk. If the percept has changed too much, a new chunk can be
    * returned.
    * @param afferentObject
    * @param oldChunk

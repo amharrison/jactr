@@ -17,12 +17,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.delegate.ExpandChunkRequestDelegate;
 import org.jactr.core.chunk.IChunk;
+import org.jactr.core.chunk.ISymbolicChunk;
 import org.jactr.core.chunktype.IChunkType;
 import org.jactr.core.logging.Logger;
 import org.jactr.core.model.IModel;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.queue.ITimedEvent;
 import org.jactr.core.slot.BasicSlot;
+import org.jactr.core.slot.IMutableSlot;
 import org.jactr.modules.pm.aural.IAuralModule;
 import org.jactr.modules.pm.aural.buffer.IAuralLocationBuffer;
 import org.jactr.modules.pm.aural.buffer.processor.AuralSearchRequestDelegate;
@@ -30,6 +32,8 @@ import org.jactr.modules.pm.buffer.IPerceptualBuffer;
 import org.jactr.modules.pm.common.buffer.AbstractPMActivationBuffer6;
 
 /**
+ * Supports clearing unique fields of the audio-event permiting merging.
+ * 
  * @author developer
  */
 public class DefaultAuralLocationBuffer extends AbstractPMActivationBuffer6
@@ -38,12 +42,14 @@ public class DefaultAuralLocationBuffer extends AbstractPMActivationBuffer6
   /**
    * logger definition
    */
-  static private final Log LOGGER = LogFactory
-                                      .getLog(DefaultAuralLocationBuffer.class);
+  static private final Log LOGGER           = LogFactory
+                                                .getLog(DefaultAuralLocationBuffer.class);
 
   protected ITimedEvent    _pendingScan;
 
   protected boolean        _stuffPending;
+
+  protected boolean        _nullUniqueSlots = true;
 
   /**
    * @param name
@@ -53,6 +59,16 @@ public class DefaultAuralLocationBuffer extends AbstractPMActivationBuffer6
   public DefaultAuralLocationBuffer(IAuralModule module)
   {
     super(IAuralModule.AURAL_LOCATION_BUFFER, module);
+  }
+
+  public void setCompressAudioEventsEnabled(boolean compressAudioEvents)
+  {
+    _nullUniqueSlots = compressAudioEvents;
+  }
+
+  public boolean isCompressAudioEventsEnabled()
+  {
+    return _nullUniqueSlots;
   }
 
   @Override
@@ -138,8 +154,8 @@ public class DefaultAuralLocationBuffer extends AbstractPMActivationBuffer6
      * for the newest left most (WTF?).
      */
 
-    ChunkTypeRequest locationBufferStuffPattern = new ChunkTypeRequest(aModule
-        .getAudioEventChunkType());
+    ChunkTypeRequest locationBufferStuffPattern = new ChunkTypeRequest(
+        aModule.getAudioEventChunkType());
     locationBufferStuffPattern.addSlot(new BasicSlot(
         IAuralModule.ATTENDED_STATUS_SLOT, getModel().getDeclarativeModule()
             .getNewChunk()));
@@ -169,5 +185,31 @@ public class DefaultAuralLocationBuffer extends AbstractPMActivationBuffer6
       _pendingScan = null;
       _stuffPending = false;
     }
+  }
+
+  /**
+   * overriden so that we can null out the time values for better merge
+   * behavior.
+   */
+  @Override
+  protected boolean removeSourceChunkInternal(IChunk chunkToRemove)
+  {
+    super.removeSourceChunkInternal(chunkToRemove);
+    if (isCompressAudioEventsEnabled())
+    {
+      try
+      {
+        ISymbolicChunk sc = chunkToRemove.getSymbolicChunk();
+        ((IMutableSlot) sc.getSlot(IAuralModule.ONSET_SLOT)).setValue(null);
+        ((IMutableSlot) sc.getSlot(IAuralModule.OFFSET_SLOT)).setValue(null);
+      }
+      catch (Exception e)
+      {
+        LOGGER.debug(
+            "Failed to clear audio-event contents. Leaving untouched. ", e);
+      }
+      return true;
+    }
+    return false;
   }
 }

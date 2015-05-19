@@ -7,6 +7,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.basic.AbstractSubsymbolicChunk;
+import org.jactr.core.logging.Logger;
+import org.jactr.core.logging.Logger.Stream;
 import org.jactr.core.model.IModel;
 
 /**
@@ -36,6 +38,10 @@ public class DefaultBaseLevelActivationEquation implements
   {
     double base = c.getSubsymbolicChunk().getBaseLevelActivation();
     if (Double.isNaN(base)) base = _declarativeModule.getBaseLevelConstant();
+
+    if (Logger.hasLoggers(model))
+      Logger.log(model, Stream.ACTIVATION,
+          String.format("%s.base = %.2f", c, base));
 
     return base;
   }

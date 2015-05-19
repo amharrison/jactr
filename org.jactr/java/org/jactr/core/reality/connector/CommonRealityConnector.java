@@ -200,6 +200,7 @@ public class CommonRealityConnector implements IConnector
     if (agentInterface != null)
       try
       {
+        CommonReality.removeAgent(agentInterface);
         _agentInterfaces.remove(model);
         cleanDisconnect(agentInterface);
       }

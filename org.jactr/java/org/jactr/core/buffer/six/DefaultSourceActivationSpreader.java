@@ -19,6 +19,10 @@ import org.jactr.core.chunk.ISubsymbolicChunk;
 import org.jactr.core.chunk.four.ISubsymbolicChunk4;
 import org.jactr.core.chunk.four.Link4;
 import org.jactr.core.chunk.link.IAssociativeLink;
+import org.jactr.core.logging.IMessageBuilder;
+import org.jactr.core.logging.Logger;
+import org.jactr.core.logging.Logger.Stream;
+import org.jactr.core.model.IModel;
 
 /**
  * default activation spreader. this is not thread safe and assumes that
@@ -26,19 +30,21 @@ import org.jactr.core.chunk.link.IAssociativeLink;
  * 
  * @author harrison
  */
-public class DefaultSourceActivationSpreader implements ISourceActivationSpreader
+public class DefaultSourceActivationSpreader implements
+    ISourceActivationSpreader
 {
   /**
    * Logger definition
    */
-  static private final transient Log LOGGER = LogFactory
-                                                .getLog(DefaultSourceActivationSpreader.class);
+  static private final transient Log LOGGER         = LogFactory
+                                                        .getLog(DefaultSourceActivationSpreader.class);
 
   private final IActivationBuffer    _buffer;
 
   private final Map<IChunk, Integer> _activatedChunks;
 
   private double                     _activationPortion;
+
 
   public DefaultSourceActivationSpreader(IActivationBuffer buffer)
   {
@@ -58,15 +64,13 @@ public class DefaultSourceActivationSpreader implements ISourceActivationSpreade
     return _buffer;
   }
 
- 
 
   /**
-   * divies source activation amoung the chunks linked to the
-   * source chunks.
+   * divies source activation amoung the chunks linked to the source chunks.
    */
   public void spreadSourceActivation()
   {
-    
+
     clearSourceActivation();
     // nothing to spread
     if (_buffer.getActivation() == 0) return;
@@ -108,8 +112,7 @@ public class DefaultSourceActivationSpreader implements ISourceActivationSpreade
       int numLinks = 0;
       for (IChunk sourceChunk : sourceChunks)
       {
-        ISubsymbolicChunk sourceChunkSub = sourceChunk.getSubsymbolicChunk();
-        ISubsymbolicChunk4 ssc4 = (ISubsymbolicChunk4) sourceChunkSub
+        ISubsymbolicChunk4 ssc4 = sourceChunk
             .getAdapter(ISubsymbolicChunk4.class);
         if (ssc4 != null)
         {
@@ -122,15 +125,25 @@ public class DefaultSourceActivationSpreader implements ISourceActivationSpreade
             IChunk jChunk = link.getJChunk();
             if (jChunk.hasBeenDisposed()) continue;
 
+            /*
+             * we might be tempted to check for a self link to exclude, but no.
+             * We need to include it. While this is propogating source
+             * activation, taht is not part of the total activation equation
+             * (just spread). Only by propogating source to the self does spread
+             * reach the slot values of this chunk.
+             */
+
             int count = 1;
             if (link instanceof Link4) count = ((Link4) link).getCount();
 
+            // we need to check activated chunks because the source chunks
+            // might all point to similar chunks
             if (_activatedChunks.containsKey(jChunk))
               count += _activatedChunks.get(jChunk);
-            
+
             if (LOGGER.isDebugEnabled())
-              LOGGER.debug(String.format("%s(i) - %s(j) has %d links", sourceChunk, jChunk, count));
-            
+              LOGGER.debug(String.format("%s(i) - %s(j) has %d links",
+                  sourceChunk, jChunk, count));
 
             numLinks += count;
             _activatedChunks.put(jChunk, count);
@@ -144,22 +157,39 @@ public class DefaultSourceActivationSpreader implements ISourceActivationSpreade
       if (numLinks != 0)
       {
         _activationPortion = _buffer.getActivation() / numLinks;
-        
+        IModel model = getBuffer().getModel();
+
+        IMessageBuilder logMsg = null;
+        if (Logger.hasLoggers(model))
+        {
+          logMsg = Logger.messageBuilder();
+          logMsg.append(getBuffer().getName()).append(" spreading ")
+              .append(String.format("%.2f", _activationPortion));
+          logMsg.append(" to each ");
+        }
+
         if (LOGGER.isDebugEnabled())
           LOGGER.debug(String.format(
               "Activating associated chunks %s with %.2f", _activatedChunks,
               _activationPortion));
-        
-        for(Map.Entry<IChunk, Integer> entry : _activatedChunks.entrySet())
+
+        for (Map.Entry<IChunk, Integer> entry : _activatedChunks.entrySet())
         {
+          IChunk chunk = entry.getKey();
           double source = _activationPortion * entry.getValue();
-          ISubsymbolicChunk ssc = entry.getKey().getSubsymbolicChunk();
+          ISubsymbolicChunk ssc = chunk.getSubsymbolicChunk();
           ssc.setSourceActivation(_buffer, source);
 
           if (LOGGER.isDebugEnabled())
-            LOGGER.debug(String.format("%s has %.2f", entry.getKey(), ssc
-                .getSourceActivation()));
+            LOGGER.debug(String.format("%s has %.2f", entry.getKey(),
+                ssc.getSourceActivation()));
+
+          if (logMsg != null)
+            logMsg.append(chunk.getSymbolicChunk().getName()).append(" ");
         }
+
+        if (logMsg != null)
+ Logger.log(model, Stream.ACTIVATION, logMsg);
       }
       else if (LOGGER.isDebugEnabled())
         LOGGER.debug(String.format("No associated chunks to activate"));
@@ -185,13 +215,13 @@ public class DefaultSourceActivationSpreader implements ISourceActivationSpreade
     {
       // a chunk may have been disposed of by now...
       if (chunk.hasBeenDisposed()) continue;
-      
+
       ISubsymbolicChunk ssc = chunk.getSubsymbolicChunk();
       // double activation = ssc.getSourceActivation() - _activationPortion;
       ssc.setSourceActivation(_buffer, 0);
       if (LOGGER.isDebugEnabled())
-        LOGGER.debug(String.format("%s has %.2f", chunk, ssc
-            .getSourceActivation()));
+        LOGGER.debug(String.format("%s has %.2f", chunk,
+            ssc.getSourceActivation()));
     }
 
     _activatedChunks.clear();

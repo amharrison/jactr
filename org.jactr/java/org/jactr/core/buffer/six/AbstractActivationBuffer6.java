@@ -24,6 +24,7 @@ import org.jactr.core.buffer.IActivationBuffer;
 import org.jactr.core.buffer.IllegalActivationBufferStateException;
 import org.jactr.core.buffer.event.ActivationBufferEvent;
 import org.jactr.core.chunk.IChunk;
+import org.jactr.core.logging.IMessageBuilder;
 import org.jactr.core.logging.Logger;
 import org.jactr.core.logging.Logger.Stream;
 import org.jactr.core.model.IModel;
@@ -85,11 +86,16 @@ public abstract class AbstractActivationBuffer6 extends
         IModel model = getModel();
         if (LOGGER.isDebugEnabled() || Logger.hasLoggers(model))
         {
-          String msg = String.format("%s.%s=%s (was %s)", getName(),
-              slot.getName(), newValue, oldValue);
-          if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
+          IMessageBuilder mb = Logger.messageBuilder();
+
+          mb.append(getName()).append(".").append(slot.getName()).append("=")
+              .append(String.format("%s", newValue))
+              .append(String.format(" (was %s)", oldValue));
+
+          if (LOGGER.isDebugEnabled()) LOGGER.debug(mb.toString());
+
           if (Logger.hasLoggers(model))
-            Logger.log(model, Logger.Stream.BUFFER, msg);
+            Logger.log(model, Logger.Stream.BUFFER, mb);
         }
 
         if (getEventDispatcher().hasListeners())
@@ -459,8 +465,6 @@ public abstract class AbstractActivationBuffer6 extends
     return _unrequestedChunk;
   }
 
-
-
   @Override
   protected void grabReferences()
   {
@@ -490,7 +494,7 @@ public abstract class AbstractActivationBuffer6 extends
      * unlikely, but let's log it.
      */
     if (sourceChunk.hasBeenDisposed())
-    {
+    {// not frequently called, no need for message builder
       String message = String
           .format(
               "%s.addSourceChunk() sourceChunk %s has been disposed before inserting, setting error",

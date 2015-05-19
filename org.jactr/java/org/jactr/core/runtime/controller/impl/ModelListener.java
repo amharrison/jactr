@@ -3,8 +3,6 @@ package org.jactr.core.runtime.controller.impl;
 /*
  * default logging
  */
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -83,6 +81,7 @@ public class ModelListener extends ModelListenerAdaptor
     catch (InterruptedException e)
     {
       // ignore and return
+      LOGGER.warn("Interrupted, expecting termination ", e);
     }
     finally
     {
@@ -116,6 +115,7 @@ public class ModelListener extends ModelListenerAdaptor
     _state.suspended(me.getSource());
   }
 
+  @Override
   public void modelDisconnected(ModelEvent me)
   {
   }

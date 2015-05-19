@@ -10,6 +10,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.six.AbstractRequestableBuffer6;
 import org.jactr.core.chunk.IChunk;
+import org.jactr.core.logging.IMessageBuilder;
 import org.jactr.core.logging.Logger;
 import org.jactr.core.model.IModel;
 import org.jactr.core.module.IModule;
@@ -68,14 +69,14 @@ public abstract class DefaultDelegatedRequestableBuffer6 extends
     IModel model = getModel();
     if (LOGGER.isDebugEnabled() || Logger.hasLoggers(model))
     {
-      StringBuilder sb = new StringBuilder(getName());
-      sb.append(" could not handle this request:");
-      sb.append(request).append(
+      IMessageBuilder sb = Logger.messageBuilder();
+      sb.append(getName()).append(" could not handle this request:");
+      sb.append(request.toString()).append(
           ", ignoring. The module's log may have additional details.");
       String msg = sb.toString();
 
       LOGGER.debug(msg);
-      Logger.log(model, Logger.Stream.BUFFER, msg);
+      Logger.log(model, Logger.Stream.BUFFER, sb);
     }
 
     return false;
