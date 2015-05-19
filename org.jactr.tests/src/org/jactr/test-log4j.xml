@@ -259,11 +259,16 @@
 	<logger name="org.jactr.io.antlr3.parser">
 		<level value="debug" />
 	</logger>
-	-->
 	<logger name="org.jactr.core.module.procedural.six.DefaultConflictSetAssembler">
 		<level value="debug" />
 	</logger>
-	
+	<logger name="org.commonreality.time">
+		<level value="debug" />
+	</logger>
+	<logger name="org.jactr.core.module.declarative.four.learning.DefaultBaseLevelActivationEquation">
+		<level value="debug" />
+	</logger>
+	-->
 	<root>
 		<level value="warn" />
 		<appender-ref ref="CONSOLE" />
