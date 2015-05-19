@@ -15,6 +15,7 @@ package org.jactr.io.antlr3.misc;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -755,6 +756,7 @@ public class ASTSupport
   static public Collection<CommonTree> getAllDescendantsWithType(
       CommonTree root, int type)
   {
+    if (root == null) return Collections.EMPTY_LIST;
     Collection<CommonTree> rtn = new ArrayList<CommonTree>();
     if (root.getType() == type) rtn.add(root);
     for (int i = 0; i < root.getChildCount(); i++)
