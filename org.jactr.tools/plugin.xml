@@ -164,6 +164,16 @@ http://jactr.org/node/144</description>
             Detects simple production loops (same production, firing within defaultAction time of each other). Logs it, and can optionally terminate the model.
          </description>
       </instrument>
+      <instrument
+            class="org.jactr.tools.deadlock.DeadLockDetector"
+            hidden="false"
+            name="Deadlock Detector"
+            requiresClasspath="false">
+         <description>
+            Provides a simple mechanism for (eventually) detecting deadlock in models. This is accomplished by periodically checking the model to see if time has advanced. If it hasn&apos;t for long enough, deadlock is assumed and the system will dump heap and thread traces.
+This is provided here for diagnosing individual model runs. Iterative runs automatically install this tool.
+         </description>
+      </instrument>
    </extension>
    <extension
          point="org.jactr.tools.iterative">
