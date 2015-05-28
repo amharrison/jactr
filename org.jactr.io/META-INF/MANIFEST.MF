@@ -42,7 +42,7 @@ Eclipse-RegisterBuddy: org.jactr, org.commonreality, org.apache.log4j
 Require-Bundle: org.jactr,
  org.jactr.support,
  org.eclipse.core.runtime,
- org.commonreality
+ org.commonreality.core
 Bundle-ClassPath: .,
  lib/antlr-3.1.1.jar
 Bundle-Vendor: jactr.org

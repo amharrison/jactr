@@ -94,16 +94,16 @@ public class DefaultParserImportDelegate implements IParserImportDelegate
       else
       // throw new CompilationWarning("Could not find IASTParticipant for "
       // + className, null);
-      if (LOGGER.isWarnEnabled())
-        LOGGER.warn("Could not find IASTParticipant for " + className, null);
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug("Could not find IASTParticipant for " + className, null);
 
       if (injector != null)
         injector.inject(modelDescriptor, true);
       else
       // throw new CompilationWarning("Could not find IASTInjector for "
       // + className, null);
-      if (LOGGER.isWarnEnabled())
-        LOGGER.warn("Could not find IASTInjector for " + className, null);
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug("Could not find IASTInjector for " + className, null);
 
       if (injector instanceof BasicASTInjector)
         ((BasicASTInjector) injector).injectParameters(classBasedNode);
