@@ -134,15 +134,20 @@ public class AbstractTimedEvent implements ITimedEvent
 
     if (Math.abs(getEndTime() - currentTime) > _timeSlipThreshold
         && shouldWarnOnTimeSlips())
-      if (LOGGER.isWarnEnabled())
-        LOGGER
-            .warn(String
-                .format(
-                    "%s (%s) : Time slippage (%.4f) detected. Event should have fired at %.2f, actually fired at %.2f",
-                    this, getClass().getSimpleName(), currentTime
-                        - getEndTime(), getEndTime(), currentTime));
+ timeSlipExceedsTolerance(currentTime);
 
     _hasFired = true;
+  }
+
+  protected void timeSlipExceedsTolerance(double currentTime)
+  {
+    if (LOGGER.isWarnEnabled())
+      LOGGER
+          .warn(String
+              .format(
+                  "%s (%s) : Time slippage (%.4f) detected. Event should have fired at %.2f, actually fired at %.2f",
+                  this, getClass().getSimpleName(), currentTime - getEndTime(),
+                  getEndTime(), currentTime));
   }
 
   synchronized public boolean hasFired()

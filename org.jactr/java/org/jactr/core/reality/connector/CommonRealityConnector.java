@@ -128,8 +128,20 @@ public class CommonRealityConnector implements IConnector
 
       for (IAgent a : CommonReality.getAgents())
         if (a instanceof ACTRAgent)
-          if (modelName.equals(((ACTRAgent) a).getModelName()))
-            agentInterface = (ACTRAgent) a;
+        {
+          String idModelName = a.getIdentifier().getName();
+          String agentName = ((ACTRAgent) a).getModelName();
+
+          /*
+           * short term test as we migrate from ACTRAgent explicitly.
+           */
+          if (!idModelName.equals(agentName))
+            LOGGER.warn(String.format(
+                "Model name (%s) isn't same as agent name(%s)?", idModelName,
+                agentName));
+
+          if (modelName.equals(agentName)) agentInterface = (ACTRAgent) a;
+        }
 
       if (agentInterface != null)
       {

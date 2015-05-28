@@ -17,8 +17,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.commonreality.executor.GeneralThreadFactory;
 import org.jactr.core.concurrent.ExecutorServices;
+import org.jactr.core.concurrent.GeneralThreadFactory;
 import org.jactr.core.model.IModel;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.DefaultModelRunner;

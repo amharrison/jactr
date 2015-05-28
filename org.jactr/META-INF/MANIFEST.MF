@@ -167,7 +167,11 @@ Export-Package: org.jactr.core.buffer,
 Eclipse-BuddyPolicy: registered
 Eclipse-RegisterBuddy: org.commonreality, org.apache.log4j
 Require-Bundle: org.jactr.support;visibility:=reexport,
- org.commonreality,
- org.commonreality.mina,
- org.mozilla.javascript
+ org.commonreality.core,
+ org.mozilla.javascript,
+ org.commonreality.api;bundle-version="1.0.0",
+ org.commonreality.time;bundle-version="1.0.0",
+ org.commonreality.net;bundle-version="1.0.0",
+ org.commonreality.modalities;bundle-version="1.0.0",
+ org.commonreality.sensors
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8

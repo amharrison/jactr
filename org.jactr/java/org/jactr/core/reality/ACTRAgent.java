@@ -21,11 +21,12 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.agents.AbstractAgent;
-import org.commonreality.executor.GeneralThreadFactory;
 import org.commonreality.identifier.IIdentifier;
 import org.commonreality.object.IAgentObject;
 import org.commonreality.object.manager.impl.AgentObject;
+import org.commonreality.time.IClock;
 import org.jactr.core.concurrent.ExecutorServices;
+import org.jactr.core.concurrent.GeneralThreadFactory;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.controller.IController;
 
@@ -171,5 +172,11 @@ public class ACTRAgent extends AbstractAgent
     ExecutorServices.addExecutor(getExecutorName(), _commonRealityExecutor);
 
     super.initialize();
+  }
+
+  @Override
+  public IClock getClock()
+  {
+    return super.getClock();
   }
 }

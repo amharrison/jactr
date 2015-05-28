@@ -10,7 +10,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.agents.IAgent;
-import org.commonreality.executor.InlineExecutor;
 import org.commonreality.identifier.IIdentifier;
 import org.commonreality.modalities.motor.MotorConstants;
 import org.commonreality.modalities.motor.MotorUtilities;
@@ -19,6 +18,7 @@ import org.commonreality.object.delta.IObjectDelta;
 import org.commonreality.object.manager.IEfferentObjectManager;
 import org.commonreality.object.manager.event.IEfferentListener;
 import org.commonreality.object.manager.event.IObjectEvent;
+import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.modules.pm.motor.IMotorModule;
 import org.jactr.modules.pm.motor.event.MotorModuleEvent;
 
@@ -48,7 +48,8 @@ public class MuscleStateManager implements IEfferentListener
     /*
      * attach
      */
-    agent.getEfferentObjectManager().addListener(this, InlineExecutor.get());
+    agent.getEfferentObjectManager().addListener(this,
+        ExecutorServices.INLINE_EXECUTOR);
 
     IEfferentObjectManager eManager = agent.getEfferentObjectManager();
     for (IIdentifier id : eManager.getIdentifiers())
