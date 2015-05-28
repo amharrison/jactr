@@ -13,6 +13,7 @@
  */
 package org.jactr.tools.async.message.command.state;
 
+import java.io.Serializable;
 
 
 
@@ -20,11 +21,9 @@ package org.jactr.tools.async.message.command.state;
  * @author developer
  *
  */
-public interface IStateCommand
+public interface IStateCommand extends Serializable
 {
   static public enum State {START, STOP, SUSPEND, RESUME};
   public abstract State getState();
   
-
-
 }

@@ -15,16 +15,16 @@ package org.jactr.tools.async.shadow.handlers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.session.IoSession;
-import org.apache.mina.handler.demux.MessageHandler;
+import org.commonreality.net.handler.IMessageHandler;
+import org.commonreality.net.session.ISessionInfo;
 import org.jactr.tools.async.message.event.data.BreakpointReachedEvent;
 import org.jactr.tools.async.shadow.ShadowController;
-import org.jactr.tools.async.shadow.ShadowIOHandler;
 /**
  * @author developer
  *
  */
-public class BreakpointMessageHandler implements MessageHandler<BreakpointReachedEvent>
+public class BreakpointMessageHandler implements
+    IMessageHandler<BreakpointReachedEvent>
 {
   /**
    logger definition
@@ -32,12 +32,21 @@ public class BreakpointMessageHandler implements MessageHandler<BreakpointReache
   static private final Log LOGGER = LogFactory
                                       .getLog(BreakpointMessageHandler.class);
 
-  /**
-   * @see org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession, java.lang.Object)
-   */
-  public void handleMessage(IoSession session, BreakpointReachedEvent event) throws Exception
+  // /**
+  // * @see
+  // org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
+  // java.lang.Object)
+  // */
+  // public void handleMessage(IoSession session, BreakpointReachedEvent event)
+  // throws Exception
+  // {
+  // }
+
+  @Override
+  public void accept(ISessionInfo session, BreakpointReachedEvent event)
   {
-    ShadowController controller = (ShadowController) session.getAttribute(ShadowIOHandler.CONTROLLER_ATTR);
+    ShadowController controller = (ShadowController) session
+        .getAttribute(ShadowController.CONTROLLER_ATTR);
     
     controller.setCurrentSimulationTime(event.getSimulationTime());
     if (LOGGER.isDebugEnabled()) LOGGER.debug("Got "+event);

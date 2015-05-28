@@ -18,14 +18,14 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.session.IoSession;
-import org.apache.mina.handler.demux.MessageHandler;
+import org.commonreality.net.handler.IMessageHandler;
+import org.commonreality.net.session.ISessionInfo;
 import org.jactr.core.model.IModel;
 import org.jactr.core.production.IProduction;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.controller.debug.BreakpointType;
 import org.jactr.core.runtime.controller.debug.IDebugController;
-import org.jactr.tools.async.controller.RemoteIOHandler;
+import org.jactr.tools.async.message.command.breakpoint.BreakpointCommand;
 import org.jactr.tools.async.message.command.breakpoint.IBreakpointCommand;
 
 /**
@@ -34,34 +34,38 @@ import org.jactr.tools.async.message.command.breakpoint.IBreakpointCommand;
  * 
  * @author developer
  */
-public class BreakpointHandler implements MessageHandler<IBreakpointCommand>
+public class BreakpointHandler implements IMessageHandler<BreakpointCommand>
 {
   /**
    * logger definition
    */
-  static private final Log         LOGGER = LogFactory
+  static private final transient Log LOGGER = LogFactory
                                               .getLog(BreakpointHandler.class);
 
-  final private RemoteIOHandler _handler;
 
-  public BreakpointHandler(RemoteIOHandler handler)
+
+  public BreakpointHandler()
   {
-    _handler = handler;
   }
 
-  /**
-   * @see org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
-   *      java.lang.Object)
-   */
-  public void handleMessage(IoSession session, IBreakpointCommand command)
-      throws Exception
-  {
-    // only the owner can change break points
-    _handler.allowsCommands(session);
+  // /**
+  // * @see
+  // org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
+  // * java.lang.Object)
+  // */
+  // public void handleMessage(IoSession session, IBreakpointCommand command)
+  // throws Exception
+  // {
+  // // only the owner can change break points
+  // }
 
+  @Override
+  public void accept(ISessionInfo session, BreakpointCommand command)
+  {
     if (LOGGER.isDebugEnabled()) LOGGER.debug("Got " + command);
 
-    IDebugController controller = (IDebugController) _handler.getController(session);
+    IDebugController controller = (IDebugController) ACTRRuntime.getRuntime()
+        .getController();
     switch (command.getAction())
     {
       case CLEAR:
@@ -74,6 +78,7 @@ public class BreakpointHandler implements MessageHandler<IBreakpointCommand>
         removeBreakpoint(controller, command);
         break;
     }
+
   }
 
   protected IModel getModel(String modelName, IDebugController controller)
@@ -103,10 +108,8 @@ public class BreakpointHandler implements MessageHandler<IBreakpointCommand>
       models.add(getModel(modelName, controller));
 
     for (IModel model : models)
-    {
       controller.clearBreakpoints(getModel(command.getModelName(), controller),
           command.getType());
-    }
   }
 
   protected void addBreakpoint(IDebugController controller,
@@ -122,7 +125,6 @@ public class BreakpointHandler implements MessageHandler<IBreakpointCommand>
 
     BreakpointType type = command.getType();
     for (IModel model : models)
-    {
       if (type == BreakpointType.TIME || type == BreakpointType.CYCLE)
       {
         // resolve to a number
@@ -149,7 +151,6 @@ public class BreakpointHandler implements MessageHandler<IBreakpointCommand>
               + " for " + model + " since no production matching was found", e);
         }
       }
-    }
   }
 
   protected void removeBreakpoint(IDebugController controller,
@@ -164,7 +165,6 @@ public class BreakpointHandler implements MessageHandler<IBreakpointCommand>
       models.add(getModel(modelName, controller));
     BreakpointType type = command.getType();
     for (IModel model : models)
-    {
       if (type == BreakpointType.TIME || type == BreakpointType.CYCLE)
       {
         // resolve to a number
@@ -190,8 +190,8 @@ public class BreakpointHandler implements MessageHandler<IBreakpointCommand>
               + " for " + model + " since no production matching was found", e);
         }
       }
-    }
   }
+
 
   
 }

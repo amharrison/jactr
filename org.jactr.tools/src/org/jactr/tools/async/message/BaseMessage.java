@@ -31,9 +31,10 @@ public class BaseMessage implements IMessage, Serializable
   /**
    logger definition
    */
-  static private final Log LOGGER = LogFactory.getLog(BaseMessage.class);
+  static private final transient Log LOGGER           = LogFactory
+                                                          .getLog(BaseMessage.class);
 
-  static private long LAST_ID = 0;
+  static private transient long      LAST_ID          = 0;
   
   private long _id;
 

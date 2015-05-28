@@ -13,13 +13,13 @@
  */
 package org.jactr.tools.async.message.command.state;
 
-import org.apache.commons.logging.Log;  
-import org.apache.commons.logging.LogFactory;
+import java.io.Serializable;
+
 /**
  * @author developer
  *
  */
-public interface IModelStateCommand extends IStateCommand
+public interface IModelStateCommand extends IStateCommand, Serializable
 {
 
   public String getModelName();

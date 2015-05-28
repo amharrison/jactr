@@ -15,38 +15,34 @@ package org.jactr.tools.async.controller.handlers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.session.IoSession;
-import org.apache.mina.handler.demux.MessageHandler;
+import org.commonreality.net.handler.IMessageHandler;
+import org.commonreality.net.session.ISessionInfo;
+import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.controller.IController;
-import org.jactr.tools.async.controller.RemoteIOHandler;
-import org.jactr.tools.async.message.command.state.IRuntimeStateCommand;
+import org.jactr.tools.async.message.command.state.RuntimeStateCommand;
 
 /**
  * @author developer
  */
 public class RuntimeStateHandler implements
-    MessageHandler<IRuntimeStateCommand>
+    IMessageHandler<RuntimeStateCommand>
 {
   /**
    * logger definition
    */
-  static private final Log      LOGGER = LogFactory
-                                           .getLog(RuntimeStateHandler.class);
+  static private final transient Log LOGGER = LogFactory
+                                      .getLog(RuntimeStateHandler.class);
 
-  private final RemoteIOHandler _handler;
-
-  public RuntimeStateHandler(RemoteIOHandler handler)
+  public RuntimeStateHandler()
   {
-    _handler = handler;
   }
 
-  final public void handleMessage(IoSession session, IRuntimeStateCommand command)
-      throws Exception
+  @Override
+  public void accept(ISessionInfo session, RuntimeStateCommand command)
   {
     if (LOGGER.isDebugEnabled()) LOGGER.debug("Got " + command);
-    
-    _handler.allowsCommands(session);
-    IController controller = _handler.getController(session);
+
+    IController controller = ACTRRuntime.getRuntime().getController();
 
     switch (command.getState())
     {
@@ -94,18 +90,18 @@ public class RuntimeStateHandler implements
   {
     if (controller.isSuspended() && controller.isRunning())
       controller.resume();
-//    else if (controller instanceof IDebugController)
-//    {
-//      IDebugController debugger = (IDebugController) controller;
-//      Collection<IModel> suspended = controller.getSuspendedModels();
-//      if (suspended.size() != 0)
-//      {
-//        for (IModel model : suspended)
-//          debugger.resume(model);
-//      }
-//      else if (LOGGER.isWarnEnabled())
-//        LOGGER.warn("no models are suspended, ignoring request");
-//    }
+    // else if (controller instanceof IDebugController)
+    // {
+    // IDebugController debugger = (IDebugController) controller;
+    // Collection<IModel> suspended = controller.getSuspendedModels();
+    // if (suspended.size() != 0)
+    // {
+    // for (IModel model : suspended)
+    // debugger.resume(model);
+    // }
+    // else if (LOGGER.isWarnEnabled())
+    // LOGGER.warn("no models are suspended, ignoring request");
+    // }
     else if (LOGGER.isDebugEnabled())
       LOGGER.debug("controller is already running, ignoring request");
   }

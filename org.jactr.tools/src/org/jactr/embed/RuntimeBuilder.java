@@ -9,7 +9,12 @@ import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.commonreality.agents.IAgent;
+import org.commonreality.agents.ThinAgent;
+import org.commonreality.identifier.IIdentifier.Type;
+import org.commonreality.identifier.impl.BasicIdentifier;
 import org.jactr.core.model.IModel;
+import org.jactr.core.reality.connector.IConnector;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.controller.DefaultController;
 import org.jactr.core.runtime.controller.IController;
@@ -31,8 +36,8 @@ public class RuntimeBuilder
   /**
    * Logger definition
    */
-  static private final transient Log LOGGER = LogFactory
-                                                .getLog(RuntimeBuilder.class);
+  static private final transient Log LOGGER          = LogFactory
+                                                         .getLog(RuntimeBuilder.class);
 
   private Collection<Runnable>       _parserInitializers;
 
@@ -43,6 +48,8 @@ public class RuntimeBuilder
   private Supplier<Object>           _applicationDataSupplier;
 
   private Collection<IModel>         _models;
+
+  private IConnector                 _connector;
 
   static public RuntimeBuilder newBuilder()
   {
@@ -117,6 +124,18 @@ public class RuntimeBuilder
   }
 
   /**
+   * @param connector
+   * @return
+   */
+  public RuntimeBuilder with(IConnector connector)
+  {
+    _connector = connector;
+    return this;
+  }
+
+
+
+  /**
    * Terminal build operator that will construct and configure the runtime. It
    * returns the controller that should be used to manage the runtime.
    * 
@@ -180,6 +199,8 @@ public class RuntimeBuilder
       runtime.setController(null);
     }
 
+    runtime.setConnector(null);
+
     /*
      * zero our application data
      */
@@ -218,9 +239,42 @@ public class RuntimeBuilder
   {
     ACTRRuntime runtime = ACTRRuntime.getRuntime();
 
+
+    runtime.setConnector(_connector);
+
     for (IModel model : _models)
       runtime.addModel(model);
+  }
 
+  /**
+   * hypothetical support for embedding by using the thin agent instead of the
+   * fat ACTRAgent
+   * 
+   * @param model
+   */
+  protected void runThinClient(IModel model)
+  {
+    LOGGER.warn("THIS IS COMPLETELY UNTESTED");
+    /*
+     * CommonRealityConnector
+     */
+    IAgent thinClient = new ThinAgent(new BasicIdentifier(model.getName(),
+        Type.AGENT, null));
+
+    // we need to set the clock for this.. but to what??
+    try
+    {
+      thinClient.connect();
+    }
+    catch (Exception e)
+    {
+      // TODO Auto-generated catch block
+      LOGGER.error("RuntimeBuilder.runThinClient threw Exception : ", e);
+    }
+    /*
+     * we do not worry about cleanup as that will be handled when disconnect is
+     * called, which happens at the end of the model execution.
+     */
   }
 
 }

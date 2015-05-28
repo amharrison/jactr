@@ -16,13 +16,13 @@ package org.jactr.tools.async.controller;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 
 import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.tree.CommonTree;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.commonreality.net.session.ISessionInfo;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.model.IModel;
 import org.jactr.core.model.event.IModelListener;
@@ -41,11 +41,22 @@ import org.jactr.core.utils.parameter.IParameterized;
 import org.jactr.instrument.IInstrument;
 import org.jactr.io.antlr3.builder.JACTRBuilder;
 import org.jactr.io.resolver.ASTResolver;
-import org.jactr.tools.async.common.BaseIOHandler;
-import org.jactr.tools.async.common.MINAEndpoint;
+import org.jactr.tools.async.common.NetworkedEndpoint;
+import org.jactr.tools.async.controller.handlers.BreakpointHandler;
+import org.jactr.tools.async.controller.handlers.LoginHandler;
+import org.jactr.tools.async.controller.handlers.LogoutHandler;
+import org.jactr.tools.async.controller.handlers.ModelStateHandler;
+import org.jactr.tools.async.controller.handlers.ProductionHandler;
+import org.jactr.tools.async.controller.handlers.RuntimeStateHandler;
+import org.jactr.tools.async.message.command.breakpoint.BreakpointCommand;
+import org.jactr.tools.async.message.command.breakpoint.ProductionCommand;
+import org.jactr.tools.async.message.command.login.LoginCommand;
 import org.jactr.tools.async.message.command.login.LogoutCommand;
+import org.jactr.tools.async.message.command.state.ModelStateCommand;
+import org.jactr.tools.async.message.command.state.RuntimeStateCommand;
 import org.jactr.tools.async.message.event.data.BreakpointReachedEvent;
 import org.jactr.tools.async.message.event.data.ModelDataEvent;
+import org.jactr.tools.async.message.event.login.LoginAcknowledgedMessage;
 import org.jactr.tools.async.message.event.state.IStateEvent;
 import org.jactr.tools.async.message.event.state.ModelStateEvent;
 import org.jactr.tools.async.message.event.state.RuntimeStateEvent;
@@ -57,9 +68,12 @@ import org.jactr.tools.async.message.event.state.RuntimeStateEvent;
  * 
  * @author developer
  */
-public class RemoteInterface extends MINAEndpoint implements IInstrument,
+public class RemoteInterface extends NetworkedEndpoint implements IInstrument,
     IParameterized
 {
+
+  static public final String     CREDENTIALS_KEY             = "ri.credentials";
+
   /**
    * logger definition
    */
@@ -69,8 +83,6 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
   static public final String     EXECUTOR_PARAM              = "Executor";
 
   static public final String     SEND_MODEL_ON_SUSPEND_PARAM = "SendModelOnSuspend";
-
-  protected RemoteIOHandler      _handler;
 
   /*
    * for start, stop, etc
@@ -117,12 +129,7 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
    */
   public RemoteInterface()
   {
-    ACTRRuntime runtime = ACTRRuntime.getRuntime();
-    _handler = new RemoteIOHandler(runtime.getController());
-
-    // we can process the io with the background thread, it shouldn't add too
-    // much
-    setIOExecutorService((ExecutorService) getExecutor());
+    ACTRRuntime.getRuntime();
 
     _installedModels = new ArrayList<IModel>();
 
@@ -133,8 +140,16 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
       {
         String name = me.getSource().getName();
         if (LOGGER.isDebugEnabled()) LOGGER.debug(name + " has started");
-        _handler.write(new ModelStateEvent(name, IStateEvent.State.STARTED, me
-            .getSimulationTime()));
+        try
+        {
+          getSession().write(
+              new ModelStateEvent(name, IStateEvent.State.STARTED, me
+                  .getSimulationTime()));
+        }
+        catch (Exception e)
+        {
+          LOGGER.error("Failed to send message ", e);
+        }
       }
 
       @Override
@@ -142,13 +157,22 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
       {
         String name = me.getSource().getName();
         if (LOGGER.isDebugEnabled()) LOGGER.debug(name + " has stopped");
-        if (_sendOnSuspend) _handler.write(new ModelDataEvent(me.getSource()));
-        if (me.getException() != null)
-          _handler.write(new ModelStateEvent(name, me.getException(), me
-              .getSimulationTime()));
-        else
-          _handler.write(new ModelStateEvent(name, IStateEvent.State.STOPPED,
-              me.getSimulationTime()));
+        try
+        {
+          ISessionInfo session = getSession();
+          if (_sendOnSuspend)
+            session.write(new ModelDataEvent(me.getSource()));
+          if (me.getException() != null)
+            session.write(new ModelStateEvent(name, me.getException(), me
+                .getSimulationTime()));
+          else
+            session.write(new ModelStateEvent(name, IStateEvent.State.STOPPED,
+                me.getSimulationTime()));
+        }
+        catch (Exception e)
+        {
+          LOGGER.error("Failed to send message", e);
+        }
       }
 
       @Override
@@ -156,38 +180,75 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
       {
         String name = me.getSource().getName();
         if (LOGGER.isDebugEnabled()) LOGGER.debug(name + " has suspended");
-        if (_sendOnSuspend) _handler.write(new ModelDataEvent(me.getSource()));
-        _handler.write(new ModelStateEvent(name, IStateEvent.State.SUSPENDED,
-            me.getSimulationTime()));
+        try
+        {
+          ISessionInfo session = getSession();
+
+          if (_sendOnSuspend)
+            session.write(new ModelDataEvent(me.getSource()));
+          session.write(new ModelStateEvent(name, IStateEvent.State.SUSPENDED,
+              me.getSimulationTime()));
+        }
+        catch (Exception e)
+        {
+          LOGGER.error("Failed to send message", e);
+        }
       }
 
       @Override
       public void modelResumed(ModelEvent me)
       {
-        String name = me.getSource().getName();
-        if (LOGGER.isDebugEnabled()) LOGGER.debug(name + " has resumed");
-        _handler.write(new ModelStateEvent(name, IStateEvent.State.RESUMED, me
-            .getSimulationTime()));
+        try
+        {
+          String name = me.getSource().getName();
+          if (LOGGER.isDebugEnabled()) LOGGER.debug(name + " has resumed");
+          getSession().write(
+              new ModelStateEvent(name, IStateEvent.State.RESUMED, me
+                  .getSimulationTime()));
+        }
+        catch (Exception e)
+        {
+          LOGGER.error("Failed to send message", e);
+        }
       }
     };
 
     _runtimeListener = new ACTRRuntimeAdapter() {
 
+      @Override
       public void runtimeResumed(ACTRRuntimeEvent event)
       {
         if (LOGGER.isDebugEnabled()) LOGGER.debug("Runtime resumed");
 
-        _handler.write(new RuntimeStateEvent(IStateEvent.State.RESUMED, event
-            .getSimulationTime()));
+        try
+        {
+          getSession().writeAndWait(
+              new RuntimeStateEvent(IStateEvent.State.RESUMED, event
+                  .getSimulationTime()));
+        }
+        catch (Exception e)
+        {
+          LOGGER.error("Failed to send message", e);
+        }
       }
 
+      @Override
       public void runtimeStarted(ACTRRuntimeEvent event)
       {
         if (LOGGER.isDebugEnabled()) LOGGER.debug("Runtime started");
-        _handler.write(new RuntimeStateEvent(ACTRRuntime.getRuntime()
-            .getModels(), event.getSimulationTime()));
+        try
+        {
+          getSession().writeAndWait(
+              new RuntimeStateEvent(ACTRRuntime.getRuntime().getModels(), event
+                  .getSimulationTime()));
+        }
+        catch (Exception e)
+        {
+          LOGGER.error("Failed to send message", e);
+        }
       }
 
+      @Override
       public void runtimeStopped(final ACTRRuntimeEvent event)
       {
         if (LOGGER.isDebugEnabled()) LOGGER.debug("runtime stopped");
@@ -195,12 +256,15 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
         if (LOGGER.isDebugEnabled()) LOGGER.debug("Sending stop notice");
         try
         {
-          if (_handler.isConnected())
+          ISessionInfo<?> session = getSession();
+          if (session != null)
             if (event.getException() != null)
-              _handler.write(new RuntimeStateEvent(event.getException(), event
+              session.writeAndWait(new RuntimeStateEvent(event.getException(),
+                  event
                   .getSimulationTime()));
             else
-              _handler.write(new RuntimeStateEvent(IStateEvent.State.STOPPED,
+              session.writeAndWait(new RuntimeStateEvent(
+                  IStateEvent.State.STOPPED,
                   event.getSimulationTime()));
 
           // send the logout, shadow controller will echo it back and we'll
@@ -210,13 +274,23 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
           // else has a chance to finish up first.
           try
           {
-          ExecutorServices.getExecutor(ExecutorServices.BACKGROUND).execute(
-              new Runnable() {
-                public void run()
-                {
-                  _handler.write(new LogoutCommand());
-                }
-              });
+            ExecutorServices.getExecutor(ExecutorServices.BACKGROUND).execute(
+                new Runnable() {
+                  public void run()
+                  {
+                    try
+                    {
+                      ISessionInfo<?> session = getSession();
+                      if (session != null)
+                        session.writeAndWait(new LogoutCommand());
+                    }
+                    catch (Exception e)
+                    {
+                      // TODO Auto-generated catch block
+                      LOGGER.error(".run threw Exception : ", e);
+                    }
+                  }
+                });
           }
           catch (Exception e)
           {
@@ -232,13 +306,26 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
           if (LOGGER.isDebugEnabled())
             LOGGER.debug("Could not send stop notice, already disconnected");
         }
+        catch (Exception e)
+        {
+          LOGGER.error("Failed to send message", e);
+        }
       }
 
+      @Override
       public void runtimeSuspended(ACTRRuntimeEvent event)
       {
         if (LOGGER.isDebugEnabled()) LOGGER.debug("runtime suspended");
-        _handler.write(new RuntimeStateEvent(IStateEvent.State.SUSPENDED, event
-            .getSimulationTime()));
+        try
+        {
+          getSession().writeAndWait(
+              new RuntimeStateEvent(IStateEvent.State.SUSPENDED, event
+                  .getSimulationTime()));
+        }
+        catch (Exception e)
+        {
+          LOGGER.error("Failed to send message", e);
+        }
       }
 
     };
@@ -262,7 +349,14 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
 
         if (LOGGER.isDebugEnabled())
           LOGGER.debug("Sending breakpoint reached " + bpre);
-        _handler.write(bpre);
+        try
+        {
+          getSession().writeAndWait(bpre);
+        }
+        catch (Exception e)
+        {
+          LOGGER.error("Failed to send message", e);
+        }
       }
 
     };
@@ -272,15 +366,84 @@ public class RemoteInterface extends MINAEndpoint implements IInstrument,
      */
   }
 
-  public RemoteIOHandler getHandler()
+  @Override
+  protected void createDefaultHandlers()
   {
-    return _handler;
+    super.createDefaultHandlers();
+    /**
+     * and our default handlers..
+     */
+    _defaultHandlers.put(LoginCommand.class, new LoginHandler());
+    _defaultHandlers.put(RuntimeStateCommand.class, new RuntimeStateHandler());
+    _defaultHandlers.put(ModelStateCommand.class, new ModelStateHandler());
+    _defaultHandlers.put(LogoutCommand.class, new LogoutHandler());
+
+    IController controller = ACTRRuntime.getRuntime().getController();
+    if (controller instanceof IDebugController)
+    {
+      _defaultHandlers.put(BreakpointCommand.class, new BreakpointHandler());
+      _defaultHandlers.put(ProductionCommand.class, new ProductionHandler());
+    }
+
+    /*
+     * exception handling? set after the session is opened
+     */
+
   }
 
   @Override
-  public BaseIOHandler getIOHandler()
+  protected void sessionOpened(ISessionInfo<?> session)
   {
-    return getHandler();
+    /*
+     * make sure only one client can connect
+     */
+    if (getActiveSession() != null)
+    {
+      LOGGER.warn(String.format("Another client has attempted to connect %s",
+          session));
+      try
+      {
+        session.writeAndWait(new LoginAcknowledgedMessage(false,
+            "Another client already connected"));
+        session.close();
+      }
+      catch (Exception e)
+      {
+        // TODO Auto-generated catch block
+        LOGGER.error("RemoteInterface.sessionOpened threw Exception : ", e);
+      }
+      return;
+    }
+
+    super.sessionOpened(session);
+
+    try
+    {
+      session.writeAndWait(new LoginAcknowledgedMessage(true,
+          "You are controller"));
+    }
+    catch (Exception e)
+    {
+      // TODO Auto-generated catch block
+      LOGGER.error("RemoteInterface.sessionOpened threw Exception : ", e);
+    }
+
+    /**
+     * horrible exception handler..
+     */
+    session.addExceptionHandler((s, t) -> {
+      try
+      {
+        LOGGER.error(String.format("Exception from %s, closing. ", s), t);
+        if (s.isConnected() && !s.isClosing()) s.close();
+      }
+      catch (Exception e)
+      {
+        LOGGER.error(String.format("Exception from %s, closing. ", s), e);
+      }
+      return true;
+    });
+
   }
 
   public Executor getExecutor()

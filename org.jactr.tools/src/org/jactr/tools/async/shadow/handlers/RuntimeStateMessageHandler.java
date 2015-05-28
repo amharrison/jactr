@@ -15,16 +15,16 @@ package org.jactr.tools.async.shadow.handlers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.session.IoSession;
-import org.apache.mina.handler.demux.MessageHandler;
-import org.jactr.tools.async.message.event.state.IRuntimeStateEvent;
+import org.commonreality.net.handler.IMessageHandler;
+import org.commonreality.net.session.ISessionInfo;
+import org.jactr.tools.async.message.event.state.RuntimeStateEvent;
 import org.jactr.tools.async.shadow.ShadowController;
-import org.jactr.tools.async.shadow.ShadowIOHandler;
 /**
  * @author developer
  *
  */
-public class RuntimeStateMessageHandler implements MessageHandler<IRuntimeStateEvent>
+public class RuntimeStateMessageHandler implements
+    IMessageHandler<RuntimeStateEvent>
 {
   /**
    logger definition
@@ -32,17 +32,31 @@ public class RuntimeStateMessageHandler implements MessageHandler<IRuntimeStateE
   static private final Log LOGGER = LogFactory
                                       .getLog(RuntimeStateMessageHandler.class);
 
-  /**
-   * @see org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession, java.lang.Object)
-   */
-  public void handleMessage(IoSession session, IRuntimeStateEvent message) throws Exception
+  // /**
+  // * @see
+  // org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
+  // java.lang.Object)
+  // */
+  // public void handleMessage(IoSession session, IRuntimeStateEvent message)
+  // throws Exception
+  // {
+  // }
+
+  @Override
+  public void accept(ISessionInfo session, RuntimeStateEvent message)
   {
-    ShadowController controller = (ShadowController) session.getAttribute(ShadowIOHandler.CONTROLLER_ATTR);
+
+    ShadowController controller = (ShadowController) session
+        .getAttribute(ShadowController.CONTROLLER_ATTR);
     
     controller.setCurrentSimulationTime(message.getSimulationTime());
 
     if (LOGGER.isDebugEnabled()) LOGGER.debug("Got "+message);
-    
+
+    /**
+     * other than start, the actual state of the runtime is determined by all of
+     * the ModelState messages that we get.
+     */
     switch(message.getState())
     {
       case STARTED :
@@ -52,6 +66,7 @@ public class RuntimeStateMessageHandler implements MessageHandler<IRuntimeStateE
 //      case SUSPENDED : controller.suspended(); break;
 //      case RESUMED : controller.resumed(); break;
     }
+
   }
 
 }

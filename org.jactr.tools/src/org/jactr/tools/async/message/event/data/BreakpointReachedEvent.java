@@ -35,7 +35,7 @@ public class BreakpointReachedEvent extends BaseASTMessage implements IEvent, Se
   /**
    * logger definition
    */
-  static private final Log LOGGER = LogFactory
+  static private final transient Log LOGGER           = LogFactory
                                       .getLog(BreakpointReachedEvent.class);
 
   BreakpointType _type;

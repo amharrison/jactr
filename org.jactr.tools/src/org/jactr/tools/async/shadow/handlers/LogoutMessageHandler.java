@@ -15,9 +15,8 @@ package org.jactr.tools.async.shadow.handlers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.session.IoSession;
-import org.apache.mina.handler.demux.MessageHandler;
-import org.jactr.tools.async.common.BaseIOHandler;
+import org.commonreality.net.handler.IMessageHandler;
+import org.commonreality.net.session.ISessionInfo;
 import org.jactr.tools.async.message.command.login.LogoutCommand;
 
 /**
@@ -27,7 +26,7 @@ import org.jactr.tools.async.message.command.login.LogoutCommand;
  * 
  * @author developer
  */
-public class LogoutMessageHandler implements MessageHandler<LogoutCommand>
+public class LogoutMessageHandler implements IMessageHandler<LogoutCommand>
 {
   /**
    * logger definition
@@ -35,23 +34,38 @@ public class LogoutMessageHandler implements MessageHandler<LogoutCommand>
   static private final Log LOGGER = LogFactory
                                       .getLog(LogoutMessageHandler.class);
 
-  private BaseIOHandler    _handler;
 
-  public LogoutMessageHandler(BaseIOHandler handler)
+  public LogoutMessageHandler()
   {
-    _handler = handler;
   }
 
-  /**
-   * @see org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
-   *      java.lang.Object)
-   */
-  public void handleMessage(IoSession session, LogoutCommand arg1) throws Exception
+  //
+  // /**
+  // * @see
+  // org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
+  // * java.lang.Object)
+  // */
+  // public void handleMessage(IoSession session, LogoutCommand arg1) throws
+  // Exception
+  // {
+  // /*
+  // * we merely echo this back
+  // */
+  // }
+
+  @Override
+  public void accept(ISessionInfo session, LogoutCommand message)
   {
-    /*
-     * we merely echo this back
-     */
-    _handler.write(new LogoutCommand());
+    try
+    {
+      session.write(new LogoutCommand());
+    }
+    catch (Exception e)
+    {
+      // TODO Auto-generated catch block
+      LOGGER.error("LogoutMessageHandler.accept threw Exception : ", e);
+    }
+
   }
 
 }

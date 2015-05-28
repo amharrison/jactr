@@ -15,41 +15,38 @@ package org.jactr.tools.async.controller.handlers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.session.IoSession;
-import org.apache.mina.handler.demux.MessageHandler;
+import org.commonreality.net.handler.IMessageHandler;
+import org.commonreality.net.session.ISessionInfo;
 import org.jactr.core.model.IModel;
+import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.controller.IController;
 import org.jactr.core.runtime.controller.debug.IDebugController;
-import org.jactr.tools.async.controller.RemoteIOHandler;
-import org.jactr.tools.async.message.command.state.IModelStateCommand;
+import org.jactr.tools.async.message.command.state.ModelStateCommand;
 
 /**
+ * Largely historic, as we no longer support individual model control, but only
+ * runtime control. We continue to support it in case of older clients
+ * 
  * @author developer
  */
-public class ModelStateHandler implements MessageHandler<IModelStateCommand>
+public class ModelStateHandler implements IMessageHandler<ModelStateCommand>
 {
   /**
    * logger definition
    */
-  static private final Log LOGGER = LogFactory.getLog(ModelStateHandler.class);
+  static private final transient Log LOGGER = LogFactory
+                                                .getLog(ModelStateHandler.class);
 
-  private RemoteIOHandler  _handler;
 
-  public ModelStateHandler(RemoteIOHandler handler)
+  public ModelStateHandler()
   {
-    _handler = handler;
   }
 
-
-  /**
-   * @see org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
-   *      java.lang.Object)
-   */
-  public void handleMessage(IoSession session, IModelStateCommand command)
+  @Override
+  public void accept(ISessionInfo session, ModelStateCommand command)
   {
-    _handler.allowsCommands(session);
-    IDebugController controller = (IDebugController) _handler
-        .getController(session);
+    IDebugController controller = (IDebugController) ACTRRuntime.getRuntime()
+        .getController();
     IModel model = getModel(controller, command.getModelName());
     if (model == null)
     {
@@ -57,29 +54,28 @@ public class ModelStateHandler implements MessageHandler<IModelStateCommand>
         LOGGER.warn("Could not find model named " + command.getModelName());
       return;
     }
-    
 
     switch (command.getState())
     {
-      
-//      case RESUME:
-//        if (controller.getSuspendedModels().contains(model))
-//        {
-//          if (LOGGER.isDebugEnabled()) LOGGER.debug("Resuming " + model);
-//          controller.resume(model);
-//        }
-//        else if (LOGGER.isDebugEnabled())
-//          LOGGER.debug(" cannot resume " + model + " is is not suspended");
-//        break;
-//      case SUSPEND:
-//        if (!controller.getSuspendedModels().contains(model))
-//        {
-//          if (LOGGER.isDebugEnabled()) LOGGER.debug("Suspending " + model);
-//          controller.suspendModel(model);
-//        }
-//        else if (LOGGER.isDebugEnabled())
-//          LOGGER.debug("cannot suspend " + model + " already suspended");
-//        break;
+
+    // case RESUME:
+    // if (controller.getSuspendedModels().contains(model))
+    // {
+    // if (LOGGER.isDebugEnabled()) LOGGER.debug("Resuming " + model);
+    // controller.resume(model);
+    // }
+    // else if (LOGGER.isDebugEnabled())
+    // LOGGER.debug(" cannot resume " + model + " is is not suspended");
+    // break;
+    // case SUSPEND:
+    // if (!controller.getSuspendedModels().contains(model))
+    // {
+    // if (LOGGER.isDebugEnabled()) LOGGER.debug("Suspending " + model);
+    // controller.suspendModel(model);
+    // }
+    // else if (LOGGER.isDebugEnabled())
+    // LOGGER.debug("cannot suspend " + model + " already suspended");
+    // break;
       default:
         if (LOGGER.isWarnEnabled())
           LOGGER.warn("Requested state " + command.getState()
@@ -95,5 +91,4 @@ public class ModelStateHandler implements MessageHandler<IModelStateCommand>
     return null;
   }
 
-  
 }

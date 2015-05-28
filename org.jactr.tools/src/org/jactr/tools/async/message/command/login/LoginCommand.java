@@ -34,7 +34,8 @@ public class LoginCommand extends BaseMessage implements ICommand, Serializable
   /**
    logger definition
    */
-  static private final Log LOGGER = LogFactory.getLog(LoginCommand.class);
+  static transient private final Log LOGGER           = LogFactory
+                                                          .getLog(LoginCommand.class);
 
   ICredentials _credentials;
   

@@ -13,6 +13,7 @@
  */
 package org.jactr.tools.async.message;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,7 +24,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @author developer
  */
-public class BulkMessage extends BaseMessage
+public class BulkMessage extends BaseMessage implements Serializable
 {
   /**
    * 
@@ -33,7 +34,8 @@ public class BulkMessage extends BaseMessage
   /**
    * logger definition
    */
-  static private final Log LOGGER = LogFactory.getLog(BulkMessage.class);
+  static private final transient Log LOGGER           = LogFactory
+                                                          .getLog(BulkMessage.class);
 
   Collection<IMessage>     _messages;
 

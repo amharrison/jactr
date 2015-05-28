@@ -15,16 +15,15 @@ package org.jactr.tools.async.shadow.handlers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.session.IoSession;
-import org.apache.mina.handler.demux.MessageHandler;
-import org.jactr.tools.async.message.event.state.IModelStateEvent;
+import org.commonreality.net.handler.IMessageHandler;
+import org.commonreality.net.session.ISessionInfo;
+import org.jactr.tools.async.message.event.state.ModelStateEvent;
 import org.jactr.tools.async.shadow.ShadowController;
-import org.jactr.tools.async.shadow.ShadowIOHandler;
 /**
  * @author developer
  *
  */
-public class ModelStateHandler implements MessageHandler<IModelStateEvent>
+public class ModelStateHandler implements IMessageHandler<ModelStateEvent>
 {
   /**
    logger definition
@@ -32,12 +31,21 @@ public class ModelStateHandler implements MessageHandler<IModelStateEvent>
   static private final Log LOGGER = LogFactory.getLog(ModelStateHandler.class);
 
   
-  /**
-   * @see org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession, java.lang.Object)
-   */
-  public void handleMessage(IoSession session, IModelStateEvent mse) throws Exception
+  // /**
+  // * @see
+  // org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
+  // java.lang.Object)
+  // */
+  // public void handleMessage(IoSession session, IModelStateEvent mse) throws
+  // Exception
+  // {
+  // }
+
+  @Override
+  public void accept(ISessionInfo session, ModelStateEvent mse)
   {
-    ShadowController controller = (ShadowController) session.getAttribute(ShadowIOHandler.CONTROLLER_ATTR);
+    ShadowController controller = (ShadowController) session
+        .getAttribute(ShadowController.CONTROLLER_ATTR);
 
     controller.setCurrentSimulationTime(mse.getSimulationTime());
     String modelName = mse.getModelName();
@@ -51,6 +59,7 @@ public class ModelStateHandler implements MessageHandler<IModelStateEvent>
       case RESUMED : controller.resumed(modelName); break;
       case STOPPED : controller.stopped(modelName); break;
     }
+
   }
 
 }

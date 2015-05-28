@@ -13,13 +13,15 @@
  */
 package org.jactr.tools.async.credentials;
 
+import java.io.Serializable;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
  * @author developer
  */
-public class PlainTextCredentials implements ICredentials
+public class PlainTextCredentials implements ICredentials, Serializable
 {
   /**
    * 
@@ -57,8 +59,8 @@ public class PlainTextCredentials implements ICredentials
   {
     final int PRIME = 31;
     int result = 1;
-    result = PRIME * result + ((_password == null) ? 0 : _password.hashCode());
-    result = PRIME * result + ((_user == null) ? 0 : _user.hashCode());
+    result = PRIME * result + (_password == null ? 0 : _password.hashCode());
+    result = PRIME * result + (_user == null ? 0 : _user.hashCode());
     return result;
   }
 

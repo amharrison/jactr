@@ -9,8 +9,8 @@ import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.session.IoSession;
-import org.apache.mina.handler.demux.MessageHandler;
+import org.commonreality.net.handler.IMessageHandler;
+import org.commonreality.net.session.ISessionInfo;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.model.IModel;
 import org.jactr.core.queue.timedevents.RunnableTimedEvent;
@@ -88,34 +88,18 @@ public class SynchronizationManager implements IInstrument, IParameterized
                           getClass().getName()));
             else
             {
-
               /*
-               * install our handler
+               * install our handler into the active session (if connected) or
+               * the default handler set
                */
-              ri.getIOHandler().addSentMessageHandler(
-                  SynchronizationMessage.class,
-                  new MessageHandler<SynchronizationMessage>() {
+              IMessageHandler<SynchronizationMessage> handler = (s, m) -> synchronizationPointReached(m);
 
-                    public void handleMessage(IoSession arg0,
-                        SynchronizationMessage arg1) throws Exception
-                    {
-                      // ignore the out going
-                    }
-                  });
-
-              /*
-               * when we get a reply, check it against the one we sent out
-               */
-              ri.getIOHandler().addReceivedMessageHandler(
-                  SynchronizationMessage.class,
-                  new MessageHandler<SynchronizationMessage>() {
-
-                    public void handleMessage(IoSession arg0,
-                        SynchronizationMessage arg1) throws Exception
-                    {
-                      synchronizationPointReached(arg1);
-                    }
-                  });
+              ISessionInfo session = ri.getActiveSession();
+              if (session != null)
+                session.addHandler(SynchronizationMessage.class, handler);
+              else
+                ri.getDefaultHandlers().put(SynchronizationMessage.class,
+                    handler);
             }
 
             _blockProcessor = new Runnable() {
@@ -131,8 +115,16 @@ public class SynchronizationManager implements IInstrument, IParameterized
 
               public void run()
               {
-                RemoteInterface.getActiveRemoteInterface().getHandler()
-                    .getOwner().write(_message);
+                try
+                {
+                  RemoteInterface.getActiveRemoteInterface().getActiveSession()
+                      .write(_message);
+                }
+                catch (Exception e)
+                {
+                  // TODO Auto-generated catch block
+                  LOGGER.error(".run threw Exception : ", e);
+                }
               }
 
             };

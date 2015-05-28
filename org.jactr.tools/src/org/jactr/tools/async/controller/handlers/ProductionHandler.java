@@ -13,21 +13,16 @@
  */
 package org.jactr.tools.async.controller.handlers;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.session.IoSession;
-import org.apache.mina.handler.demux.MessageHandler;
+import org.commonreality.net.handler.IMessageHandler;
+import org.commonreality.net.session.ISessionInfo;
 import org.jactr.core.model.IModel;
 import org.jactr.core.production.IProduction;
 import org.jactr.core.runtime.ACTRRuntime;
-import org.jactr.core.runtime.controller.debug.BreakpointType;
 import org.jactr.core.runtime.controller.debug.IDebugController;
-import org.jactr.tools.async.controller.RemoteIOHandler;
-import org.jactr.tools.async.message.command.breakpoint.IBreakpointCommand;
 import org.jactr.tools.async.message.command.breakpoint.IProductionCommand;
+import org.jactr.tools.async.message.command.breakpoint.ProductionCommand;
 
 /**
  * take the requested breakpoint action and apply it. currently we only support
@@ -35,34 +30,28 @@ import org.jactr.tools.async.message.command.breakpoint.IProductionCommand;
  * 
  * @author developer
  */
-public class ProductionHandler implements MessageHandler<IProductionCommand>
+public class ProductionHandler implements IMessageHandler<ProductionCommand>
 {
   /**
    * logger definition
    */
-  static private final Log         LOGGER = LogFactory
+  static private final transient Log LOGGER = LogFactory
                                               .getLog(ProductionHandler.class);
 
-  final private RemoteIOHandler _handler;
 
-  public ProductionHandler(RemoteIOHandler handler)
+
+  public ProductionHandler()
   {
-    _handler = handler;
   }
 
-  /**
-   * @see org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
-   *      java.lang.Object)
-   */
-  public void handleMessage(IoSession session, IProductionCommand command)
-      throws Exception
+  @Override
+  public void accept(ISessionInfo session, ProductionCommand command)
   {
-    // only the owner can change break points
-    _handler.allowsCommands(session);
 
     if (LOGGER.isDebugEnabled()) LOGGER.debug("Got " + command);
 
-    IDebugController controller = (IDebugController) _handler.getController(session);
+    IDebugController controller = (IDebugController) ACTRRuntime.getRuntime()
+        .getController();
     switch (command.getAction())
     {
       case ENABLE:
@@ -119,5 +108,6 @@ public class ProductionHandler implements MessageHandler<IProductionCommand>
     if(production==null) return;
     controller.setEnabled(production, false);
   }
+
   
 }

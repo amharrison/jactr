@@ -42,7 +42,8 @@ public class BaseASTMessage extends BaseMessage implements Serializable,
   /**
    * logger definition
    */
-  static private final Log     LOGGER = LogFactory.getLog(BaseASTMessage.class);
+  static private final transient Log                          LOGGER           = LogFactory
+                                                                                   .getLog(BaseASTMessage.class);
 
   private transient CommonTree _ast;
 

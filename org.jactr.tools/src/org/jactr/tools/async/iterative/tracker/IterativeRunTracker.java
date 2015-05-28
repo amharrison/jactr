@@ -22,110 +22,70 @@ import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.session.IoSession;
-import org.apache.mina.handler.demux.MessageHandler;
-import org.jactr.tools.async.common.BaseIOHandler;
-import org.jactr.tools.async.common.MINAEndpoint;
+import org.commonreality.net.session.ISessionInfo;
+import org.jactr.tools.async.common.NetworkedEndpoint;
+import org.jactr.tools.async.iterative.listener.NetworkedIterativeRunListener;
 import org.jactr.tools.async.iterative.message.DeadLockMessage;
 import org.jactr.tools.async.iterative.message.ExceptionMessage;
 import org.jactr.tools.async.iterative.message.StatusMessage;
 import org.jactr.tools.deadlock.IDeadLockListener;
 
 /**
+ * for the receiving of updates from the {@link NetworkedIterativeRunListener}
+ * 
  * @author developer
  */
-public class IterativeRunTracker extends MINAEndpoint
+public class IterativeRunTracker extends NetworkedEndpoint
 {
   /**
    * logger definition
    */
-  static private final Log LOGGER               = LogFactory
-                                                    .getLog(IterativeRunTracker.class);
+  static private final Log  LOGGER               = LogFactory
+                                                     .getLog(IterativeRunTracker.class);
 
-  private BaseIOHandler    _ioHandler;
+  private int               _totalIterations;
 
-  private int              _totalIterations;
+  private int               _currentIteration;
 
-  private int              _currentIteration;
+  private long              _startTime           = 0;
 
-  private long             _startTime           = 0;
+  private long              _summedDurations;
 
-  private long             _summedDurations;
+  private long              _estimatedIterationDuration;
 
-  private long             _estimatedIterationDuration;
+  private long              _estimatedCompletionTime;
 
-  private long             _estimatedCompletionTime;
+  private Set<Integer>      _exceptionIterations = new TreeSet<Integer>();
 
-  private Set<Integer>     _exceptionIterations = new TreeSet<Integer>();
-  
   private IDeadLockListener _listener;
 
   public IterativeRunTracker()
   {
-    _ioHandler = new BaseIOHandler();
-    _ioHandler.addReceivedMessageHandler(StatusMessage.class, new MessageHandler<StatusMessage>() {
+  }
 
-      public void handleMessage(IoSession arg0, StatusMessage message)
-          throws Exception
-      {
-        update(message);
-        
-        if (LOGGER.isDebugEnabled())
-        {
-          StringBuilder sb = new StringBuilder();
-          sb.append(message.getIteration()).append("/").append(
-              message.getTotalIterations());
-          if (message.isStart())
-            sb.append(" started @ ");
-          else
-            sb.append(" stopped @ ");
-          
-          DateFormat format = DateFormat.getTimeInstance(DateFormat.LONG);
-          sb.append(format.format(new Date(message.getWhen())));
-          LOGGER.debug(sb.toString());
-          LOGGER.debug("Will finish @ " + format.format(new Date(getETA())) +
-              " in " + getTimeToCompletion() + "ms");
-        }
-      }
+  @Override
+  protected void createDefaultHandlers()
+  {
+    super.createDefaultHandlers();
+    _defaultHandlers.put(DeadLockMessage.class, (s, m) -> {
+      LOGGER.error("Deadlock has been detected, notifying");
+      if (_listener != null) _listener.deadlockDetected();
     });
 
-    _ioHandler.addReceivedMessageHandler(ExceptionMessage.class, new MessageHandler<ExceptionMessage>() {
+    _defaultHandlers.put(ExceptionMessage.class,
+        (s, m) -> update((ExceptionMessage) m));
 
-      public void handleMessage(IoSession arg0, ExceptionMessage message)
-          throws Exception
-      {
-        update(message);
-        if (LOGGER.isDebugEnabled())
-        {
-          StringBuilder sb = new StringBuilder(
-          "Exception thrown during iteration ");
-          sb.append(message.getIteration()).append(" by ").append(
-              message.getModelName()).append(" ");
-          LOGGER.debug(sb.toString(), message.getThrown());
-        }
-      }
-    });
-    
-    _ioHandler.addReceivedMessageHandler(DeadLockMessage.class, new MessageHandler<DeadLockMessage>(){
+    _defaultHandlers.put(StatusMessage.class,
+        (s, m) -> update((StatusMessage) m));
 
-      public void handleMessage(IoSession session, DeadLockMessage message)
-          throws Exception
-      {
-        /**
-         * Error : error
-         */
-        LOGGER.error("Deadlock has been detected, notifying");
-        if(_listener!=null)
-          _listener.deadlockDetected();
-      }
-    });
   }
 
   protected void update(StatusMessage message)
   {
     _totalIterations = message.getTotalIterations();
     _currentIteration = message.getIteration();
-    if (_startTime == 0) _startTime = message.getWhen(); // when it actually started
+    if (_startTime == 0) _startTime = message.getWhen(); // when it actually
+                                                         // started
 
     if (message.isStop())
     {
@@ -144,29 +104,58 @@ public class IterativeRunTracker extends MINAEndpoint
        */
       _estimatedIterationDuration = _summedDurations / _currentIteration;
 
-      long remainingTime = (_totalIterations - _currentIteration + 1) *
-          _estimatedIterationDuration;
+      long remainingTime = (_totalIterations - _currentIteration + 1)
+          * _estimatedIterationDuration;
 
       _estimatedCompletionTime = remainingTime + message.getWhen();
 
       if (LOGGER.isDebugEnabled())
-        LOGGER.debug("estimated duration : " +
-            _estimatedIterationDuration +
-            " r:" +
-            (_totalIterations - _currentIteration) +
-            " remainingTime : " +
-            remainingTime +
-            "ms eta " +
-            DateFormat.getTimeInstance(DateFormat.LONG).format(
+        LOGGER.debug("estimated duration : "
+            + _estimatedIterationDuration
+            + " r:"
+            + (_totalIterations - _currentIteration)
+            + " remainingTime : "
+            + remainingTime
+            + "ms eta "
+            + DateFormat.getTimeInstance(DateFormat.LONG).format(
                 _estimatedCompletionTime));
+    }
+
+    if (LOGGER.isDebugEnabled())
+    {
+      StringBuilder sb = new StringBuilder();
+      sb.append(message.getIteration()).append("/")
+          .append(message.getTotalIterations());
+      if (message.isStart())
+        sb.append(" started @ ");
+      else
+        sb.append(" stopped @ ");
+
+      DateFormat format = DateFormat.getTimeInstance(DateFormat.LONG);
+      sb.append(format.format(new Date(message.getWhen())));
+      LOGGER.debug(sb.toString());
+      LOGGER.debug("Will finish @ " + format.format(new Date(getETA()))
+          + " in " + getTimeToCompletion() + "ms");
     }
   }
 
   protected void update(ExceptionMessage message)
   {
     _exceptionIterations.add(message.getIteration());
+    if (LOGGER.isDebugEnabled())
+    {
+      StringBuilder sb = new StringBuilder("Exception thrown during iteration ");
+      sb.append(message.getIteration()).append(" by ")
+          .append(message.getModelName()).append(" ");
+      LOGGER.debug(sb.toString(), message.getThrown());
+    }
   }
-  
+
+  public ISessionInfo getActiveSession()
+  {
+    return getSession();
+  }
+
   public void setDeadLockListener(IDeadLockListener listener)
   {
     _listener = listener;
@@ -202,15 +191,6 @@ public class IterativeRunTracker extends MINAEndpoint
   public Collection<Integer> getExceptionCycles()
   {
     return new ArrayList<Integer>(_exceptionIterations);
-  }
-
-  /**
-   * @see org.jactr.tools.async.common.MINAEndpoint#getIOHandler()
-   */
-  @Override
-  public BaseIOHandler getIOHandler()
-  {
-    return _ioHandler;
   }
 
   public void start() throws Exception

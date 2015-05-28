@@ -15,8 +15,8 @@ package org.jactr.tools.async.controller.handlers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.session.IoSession;
-import org.apache.mina.handler.demux.MessageHandler;
+import org.commonreality.net.handler.IMessageHandler;
+import org.commonreality.net.session.ISessionInfo;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.controller.IController;
 import org.jactr.tools.async.controller.RemoteInterface;
@@ -25,32 +25,39 @@ import org.jactr.tools.async.message.command.login.LogoutCommand;
 /**
  * @author developer
  */
-public class LogoutHandler implements MessageHandler<LogoutCommand>
+public class LogoutHandler implements IMessageHandler<LogoutCommand>
 {
   /**
    * logger definition
    */
-  static private final Log LOGGER = LogFactory.getLog(LogoutHandler.class);
+  static private final transient Log LOGGER = LogFactory
+                                                .getLog(LogoutHandler.class);
 
-  /**
-   * @see org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
-   *      java.lang.Object)
-   */
-  public void handleMessage(IoSession session, LogoutCommand arg1) throws Exception
+  // /**
+  // * @see
+  // org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
+  // * java.lang.Object)
+  // */
+  // public void handleMessage(IoSession session, LogoutCommand arg1)
+  // throws Exception
+  // {
+  // }
+
+  @Override
+  public void accept(ISessionInfo session, LogoutCommand message)
   {
     if (LOGGER.isDebugEnabled()) LOGGER.debug("Got a disconnect command");
     RemoteInterface ri = RemoteInterface.getActiveRemoteInterface();
-    if (ri.getHandler().isOwner(session))
+
+    IController controller = ACTRRuntime.getRuntime().getController();
+    if (controller == null || !controller.isRunning())
     {
-      IController controller = ACTRRuntime.getRuntime().getController();
-      if (controller == null || !controller.isRunning())
-      {
-        if (LOGGER.isDebugEnabled()) LOGGER.debug("disconnecting");
-        ri.disconnectSafe(false);
-      }
-      else if (LOGGER.isDebugEnabled())
-        LOGGER.debug("could not disconnect - not running");
+      if (LOGGER.isDebugEnabled()) LOGGER.debug("disconnecting");
+      ri.disconnectSafe(false);
     }
+    else if (LOGGER.isDebugEnabled())
+      LOGGER.debug("could not disconnect - not running");
+
   }
 
 }

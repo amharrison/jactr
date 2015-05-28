@@ -24,7 +24,6 @@ import javolution.util.FastList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.concurrent.ExecutorServices;
-import org.jactr.tools.async.controller.RemoteIOHandler;
 import org.jactr.tools.async.controller.RemoteInterface;
 import org.jactr.tools.async.message.BulkMessage;
 import org.jactr.tools.async.message.IMessage;
@@ -46,21 +45,21 @@ public class NetworkedSink implements ITraceSink
 
   private int                  MAXIMUM_BUFFER_SIZE = 25;
 
-  private RemoteIOHandler      _handler;
 
   private Collection<IMessage> _messageBuffer;
 
   private Runnable             _autoFlush;
 
+  private RemoteInterface      _interface;
+
   private volatile boolean     _scheduled          = false;
 
   public NetworkedSink()
   {
-    RemoteInterface ri = RemoteInterface.getActiveRemoteInterface();
-    if (ri == null)
+    _interface = RemoteInterface.getActiveRemoteInterface();
+    if (_interface == null)
       throw new RuntimeException(
           "A RemoteInterface must be active before instantiating this sink");
-    _handler = ri.getHandler();
 
     try
     {
@@ -176,12 +175,12 @@ public class NetworkedSink implements ITraceSink
     {
       if (LOGGER.isDebugEnabled())
         LOGGER.debug("Sending bulk message " + message.getSize());
-      _handler.write(message);
+      _interface.getActiveSession().write(message);
     }
   }
 
   public boolean isOpen()
   {
-    return _handler.isConnected();
+    return _interface.getActiveSession() != null;
   }
 }

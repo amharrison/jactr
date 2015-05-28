@@ -15,16 +15,15 @@ package org.jactr.tools.async.shadow.handlers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.session.IoSession;
-import org.apache.mina.handler.demux.MessageHandler;
+import org.commonreality.net.handler.IMessageHandler;
+import org.commonreality.net.session.ISessionInfo;
 import org.jactr.tools.async.message.event.data.ModelDataEvent;
 import org.jactr.tools.async.shadow.ShadowController;
-import org.jactr.tools.async.shadow.ShadowIOHandler;
 /**
  * @author developer
  *
  */
-public class ModelDataMessageHandler implements MessageHandler<ModelDataEvent>
+public class ModelDataMessageHandler implements IMessageHandler<ModelDataEvent>
 {
   /**
    logger definition
@@ -32,12 +31,22 @@ public class ModelDataMessageHandler implements MessageHandler<ModelDataEvent>
   static private final Log LOGGER = LogFactory
                                       .getLog(ModelDataMessageHandler.class);
 
-  /** 
-   * @see org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession, java.lang.Object)
-   */
-  public void handleMessage(IoSession session, ModelDataEvent event) throws Exception
+  //
+  // /**
+  // * @see
+  // org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
+  // java.lang.Object)
+  // */
+  // public void handleMessage(IoSession session, ModelDataEvent event) throws
+  // Exception
+  // {
+  // }
+
+  @Override
+  public void accept(ISessionInfo session, ModelDataEvent event)
   {
-    ShadowController controller = (ShadowController) session.getAttribute(ShadowIOHandler.CONTROLLER_ATTR);
+    ShadowController controller = (ShadowController) session
+        .getAttribute(ShadowController.CONTROLLER_ATTR);
     controller.setModelDescriptor(event.getModelName(), event.getAST());
   }
 

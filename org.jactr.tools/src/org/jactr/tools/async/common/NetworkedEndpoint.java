@@ -17,22 +17,25 @@ import java.lang.reflect.Constructor;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.filter.executor.OrderedThreadPoolExecutor;
-import org.commonreality.executor.GeneralThreadFactory;
-import org.commonreality.executor.ThreadNamer;
-import org.commonreality.mina.protocol.IMINAProtocolConfiguration;
-import org.commonreality.mina.protocol.SerializingProtocol;
-import org.commonreality.mina.service.ClientService;
-import org.commonreality.mina.service.IMINAService;
-import org.commonreality.mina.transport.IMINATransportProvider;
-import org.commonreality.mina.transport.NIOTransportProvider;
-import org.jactr.core.concurrent.ExecutorServices;
+import org.commonreality.net.handler.IMessageHandler;
+import org.commonreality.net.protocol.IProtocolConfiguration;
+import org.commonreality.net.service.INetworkService;
+import org.commonreality.net.session.ISessionInfo;
+import org.commonreality.net.session.ISessionListener;
+import org.commonreality.net.transport.ITransportProvider;
+import org.commonreality.netty.protocol.SerializingProtocol;
+import org.commonreality.netty.service.ClientService;
+import org.commonreality.netty.transport.NIOTransportProvider;
+import org.jactr.core.concurrent.GeneralThreadFactory;
 import org.jactr.core.utils.parameter.IParameterized;
 import org.jactr.tools.async.credentials.ICredentials;
 import org.jactr.tools.async.credentials.PlainTextCredentials;
@@ -43,92 +46,192 @@ import org.jactr.tools.async.credentials.PlainTextCredentials;
  * 
  * @author developer
  */
-public abstract class MINAEndpoint implements IParameterized
+public abstract class NetworkedEndpoint implements IParameterized
 {
 
   /**
    * Logger definition
    */
 
-  static private final transient Log    LOGGER            = LogFactory
-                                                              .getLog(MINAEndpoint.class);
+  static private final transient Log          LOGGER            = LogFactory
+                                                                    .getLog(NetworkedEndpoint.class);
 
-  public static final String            TRANSPORT_CLASS   = "transportClass";
+  public static final String                  TRANSPORT_CLASS   = "transportClass";
 
-  public static final String            PROTOCOL_CLASS    = "protocolClass";
+  public static final String                  PROTOCOL_CLASS    = "protocolClass";
 
-  public static final String            ADDRESS           = "address";
+  public static final String                  ADDRESS           = "address";
 
-  public static final String            SERVICE_CLASS     = "serviceClass";
+  public static final String                  SERVICE_CLASS     = "serviceClass";
 
-  public static final String            CREDENTAILS       = "credentials";
+  public static final String                  CREDENTAILS       = "credentials";
 
-  public static final String            CRED_CLASS        = "credentialsClass";
+  public static final String                  CRED_CLASS        = "credentialsClass";
 
-  private IMINATransportProvider        _transport        = new NIOTransportProvider();
+  private ITransportProvider                  _transport        = new NIOTransportProvider();
 
-  private IMINAService                  _service          = new ClientService();
+  private INetworkService                     _service          = new ClientService();
 
-  private IMINAProtocolConfiguration    _protocol         = new SerializingProtocol();
+  private IProtocolConfiguration              _protocol         = new SerializingProtocol();
 
-  private Class<? extends ICredentials> _credentialsClass = PlainTextCredentials.class;
+  private Class<? extends ICredentials>       _credentialsClass = PlainTextCredentials.class;
 
-  private String                        _addressInformation;
+  private String                              _addressInformation;
 
-  private String                        _credentialInformation;
+  private String                              _credentialInformation;
 
-  private ICredentials                  _actualCredentials;
+  private ICredentials                        _actualCredentials;
 
-  private SocketAddress                 _actualAddress;
+  private SocketAddress                       _actualAddress;
 
-  private ExecutorService               _executorService;
+  private volatile ISessionInfo<?>            _sessionInfo;
 
-  private boolean                       _usedDefaultExecutorService;
+  protected Map<Class<?>, IMessageHandler<?>> _defaultHandlers  = new HashMap<Class<?>, IMessageHandler<?>>();
+
+  private ISessionListener                    _defaultListener;
+
+  private Lock                                _lock             = new ReentrantLock();
+
+  private Condition                           _connected        = _lock
+                                                                    .newCondition();
 
   /**
    * 
    */
-  public MINAEndpoint()
+  public NetworkedEndpoint()
   {
     super();
+    createDefaultHandlers();
+    _defaultListener = createSessionListener();
   }
 
   /**
-   * return the io handler that handles all the communications
+   * Override to set what message handlers are used by this endpoint.
+   */
+  protected void createDefaultHandlers()
+  {
+
+  }
+
+  /**
+   * return the actual backing map for the default handlers. Used to confiugre
+   * the handlers (again, before the first connection), by non-extenders
    * 
    * @return
    */
-  abstract public BaseIOHandler getIOHandler();
-
-  /**
-   * set the executor for use by MINA
-   * 
-   * @param service
-   */
-  synchronized public void setIOExecutorService(ExecutorService service)
+  public Map<Class<?>, IMessageHandler<?>> getDefaultHandlers()
   {
-    _executorService = service;
-    _usedDefaultExecutorService = false;
+    return _defaultHandlers;
   }
 
   /**
-   * return the executor service that mina is relying upon
+   * override to provide a session listener. defaults handles
+   * 
+   * @return
    */
-  synchronized public ExecutorService getIOExecutorService()
+  protected ISessionListener createSessionListener()
   {
-    if (_executorService == null)
-    {
-      if (LOGGER.isDebugEnabled())
-        LOGGER
-            .debug("No executor service configured, using single thread executor");
-      // _executorService = new OrderedThreadPoolExecutor(1, 1, 5000,
-      // TimeUnit.MILLISECONDS, new GeneralThreadFactory("MINAEndpoint"));
-      _executorService = Executors
-          .newSingleThreadExecutor(new GeneralThreadFactory("MINA-Endpoint"));
-      _usedDefaultExecutorService = true;
-    }
+    return new ISessionListener() {
 
-    return _executorService;
+      @Override
+      public void opened(ISessionInfo<?> session)
+      {
+        sessionOpened(session);
+      }
+
+      @Override
+      public void destroyed(ISessionInfo<?> session)
+      {
+        // TODO Auto-generated method stub
+
+      }
+
+      @Override
+      public void created(ISessionInfo<?> session)
+      {
+
+      }
+
+      @Override
+      public void closed(ISessionInfo<?> session)
+      {
+        sessionClosed(session);
+
+      }
+    };
+  }
+
+  public boolean waitForConnection(long timeOut) throws InterruptedException
+  {
+    try
+    {
+      _lock.lock();
+
+      long start = System.currentTimeMillis();
+      while (getSession() == null)
+      {
+        if (timeOut > 0 && System.currentTimeMillis() - start >= timeOut)
+          break;
+
+        if (timeOut > 0)
+          _connected.await(timeOut, TimeUnit.MILLISECONDS);
+        else
+          _connected.await();
+      }
+      return getSession() != null;
+    }
+    finally
+    {
+      _lock.unlock();
+    }
+  }
+
+  /**
+   * The active session, if connected. Exposed publicly so that other tools can
+   * hook into the existing connection
+   * 
+   * @return
+   */
+  public ISessionInfo<?> getActiveSession()
+  {
+    return getSession();
+  }
+
+  protected ISessionInfo<?> getSession()
+  {
+    try
+    {
+      _lock.lock();
+      return _sessionInfo;
+    }
+    finally
+    {
+      _lock.unlock();
+    }
+  }
+
+  protected void sessionOpened(ISessionInfo<?> session)
+  {
+    setSession(session);
+  }
+
+  protected void sessionClosed(ISessionInfo<?> session)
+  {
+    setSession(null);
+  }
+
+  protected void setSession(ISessionInfo<?> session)
+  {
+    try
+    {
+      _lock.lock();
+      _sessionInfo = session;
+      _connected.signalAll();
+    }
+    finally
+    {
+      _lock.unlock();
+    }
   }
 
   /**
@@ -136,7 +239,7 @@ public abstract class MINAEndpoint implements IParameterized
    * 
    * @param provider
    */
-  public void setTransportProvider(IMINATransportProvider provider)
+  public void setTransportProvider(ITransportProvider provider)
   {
     _transport = provider;
     if (_addressInformation != null)
@@ -155,7 +258,7 @@ public abstract class MINAEndpoint implements IParameterized
    * 
    * @param service
    */
-  public void setService(IMINAService service)
+  public void setService(INetworkService service)
   {
     _service = service;
   }
@@ -165,7 +268,7 @@ public abstract class MINAEndpoint implements IParameterized
    * 
    * @param protocol
    */
-  public void setProtocol(IMINAProtocolConfiguration protocol)
+  public void setProtocol(IProtocolConfiguration protocol)
   {
     _protocol = protocol;
   }
@@ -212,7 +315,7 @@ public abstract class MINAEndpoint implements IParameterized
         Constructor<? extends ICredentials> cons = _credentialsClass
             .getConstructor(new Class[] { obj.getClass() });
         _actualCredentials = cons.newInstance(new Object[] { creds });
-        getIOHandler().setCredentials(_actualCredentials);
+        // getIOHandler().setCredentials(_actualCredentials);
         return _actualCredentials;
       }
       catch (Exception e)
@@ -273,7 +376,7 @@ public abstract class MINAEndpoint implements IParameterized
       throw new RuntimeException("Must specify adderss information");
 
     if (_service == null)
-      throw new RuntimeException("Must specific service (IMINAService)");
+      throw new RuntimeException("Must specific service (INetworkService)");
 
     if (_credentialInformation == null)
       throw new RuntimeException("Must specify credential information");
@@ -284,11 +387,11 @@ public abstract class MINAEndpoint implements IParameterized
     if (_actualCredentials == null)
       throw new RuntimeException("Actual credentials must be set");
 
-    _service.configure(_transport, _protocol, getIOHandler(),
-        getIOExecutorService());
-
     try
     {
+      _service.configure(_transport, _protocol, _defaultHandlers,
+          _defaultListener, new GeneralThreadFactory("NetworkedEndpoint"));
+
       _actualAddress = _service.start(_actualAddress);
     }
     catch (Exception e)
@@ -311,36 +414,26 @@ public abstract class MINAEndpoint implements IParameterized
   /**
    * try to establish the connection
    */
-  synchronized protected void disconnect(boolean force)
-      throws Exception
+  synchronized protected void disconnect(boolean force) throws Exception
   {
     try
     {
       if (LOGGER.isDebugEnabled()) LOGGER.debug("Waiting for pending writes");
-      if (!force) getIOHandler().waitForPendingWrites();
+      ISessionInfo<?> session = getSession();
 
-      /*
-       * close all connections..
-       */
-      getIOHandler().disconnect(force);
+      if (session != null)
+      {
+        if (!force) session.waitForPendingWrites();
+
+        /*
+         * close all connections..
+         */
+        session.close();
+      }
 
       if (LOGGER.isDebugEnabled()) LOGGER.debug("Shutting down");
 
       _service.stop(_actualAddress);
-
-      if (_usedDefaultExecutorService && _executorService != null)
-      {
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug("Default executor service was used, shuting down");
-        
-        if(force)
-          _executorService.shutdownNow();
-        else
-          _executorService.shutdown();
-        
-        _usedDefaultExecutorService = false;
-        _executorService = null;
-      }
     }
     catch (Exception e)
     {
@@ -416,11 +509,11 @@ public abstract class MINAEndpoint implements IParameterized
     else if (CRED_CLASS.equalsIgnoreCase(key))
       setCredentialsClass(getClass(value));
     else if (PROTOCOL_CLASS.equalsIgnoreCase(key))
-      setProtocol((IMINAProtocolConfiguration) instance(value));
+      setProtocol((IProtocolConfiguration) instance(value));
     else if (TRANSPORT_CLASS.equalsIgnoreCase(key))
-      setTransportProvider((IMINATransportProvider) instance(value));
+      setTransportProvider((ITransportProvider) instance(value));
     else if (SERVICE_CLASS.equalsIgnoreCase(key))
-      setService((IMINAService) instance(value));
+      setService((INetworkService) instance(value));
   }
 
   /**

@@ -3,6 +3,8 @@ package org.jactr.tools.async.sync;
 /*
  * default logging
  */
+import java.io.Serializable;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.tools.async.controller.RemoteInterface;
@@ -21,7 +23,7 @@ import org.jactr.tools.async.shadow.ShadowController;
  * 
  * @author harrison
  */
-public class SynchronizationMessage extends BaseMessage
+public class SynchronizationMessage extends BaseMessage implements Serializable
 {
   /**
    * 

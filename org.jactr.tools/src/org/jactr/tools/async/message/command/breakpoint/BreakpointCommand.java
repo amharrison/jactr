@@ -33,7 +33,8 @@ public class BreakpointCommand extends BaseMessage implements IBreakpointCommand
   /**
    * logger definition
    */
-  static private final Log LOGGER = LogFactory.getLog(BreakpointCommand.class);
+  static private final transient Log LOGGER           = LogFactory
+                                                          .getLog(BreakpointCommand.class);
 
   Action                   _action;
 
@@ -98,20 +99,14 @@ public class BreakpointCommand extends BaseMessage implements IBreakpointCommand
         }
     }
     else if (_type == BreakpointType.EXCEPTION)
-    {
       throw new IllegalArgumentException(
           "Exception breakpoints are always enabled");
-    }
-    else if (_type == BreakpointType.PRODUCTION)
-    {
-      /*
-       * name must not be null.. uless clear
-       */
-      if (_action != Action.CLEAR && _details == null)
-        throw new IllegalArgumentException(
-            "Unless clearing, production breakpoints must have a name");
-
-    }
+    else if (_type == BreakpointType.PRODUCTION) /*
+     * name must not be null.. uless clear
+     */
+    if (_action != Action.CLEAR && _details == null)
+      throw new IllegalArgumentException(
+          "Unless clearing, production breakpoints must have a name");
   }
 
   /**

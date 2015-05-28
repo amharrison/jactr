@@ -22,8 +22,7 @@ import org.jactr.core.model.IModel;
 import org.jactr.core.utils.parameter.IParameterized;
 import org.jactr.entry.iterative.IIterativeRunListener;
 import org.jactr.entry.iterative.TerminateIterativeRunException;
-import org.jactr.tools.async.common.BaseIOHandler;
-import org.jactr.tools.async.common.MINAEndpoint;
+import org.jactr.tools.async.common.NetworkedEndpoint;
 import org.jactr.tools.async.iterative.message.DeadLockMessage;
 import org.jactr.tools.async.iterative.message.ExceptionMessage;
 import org.jactr.tools.async.iterative.message.StatusMessage;
@@ -33,7 +32,7 @@ import org.jactr.tools.deadlock.IDeadLockListener;
 /**
  * @author developer
  */
-public class NetworkedIterativeRunListener extends MINAEndpoint implements
+public class NetworkedIterativeRunListener extends NetworkedEndpoint implements
     IIterativeRunListener, IParameterized
 {
   /**
@@ -44,19 +43,12 @@ public class NetworkedIterativeRunListener extends MINAEndpoint implements
 
   static public final String DEADLOCK_TIMEOUT_PARAM = "DeadlockTimeout";
 
-  private BaseIOHandler      _ioHandler;
-
   private DeadLockDetector   _detector;
 
   private long               _timeout               = 10000;
 
   public NetworkedIterativeRunListener()
   {
-    /*
-     * we ignore credentials.. We also dont accept any incoming messages - so no
-     * bother..
-     */
-    _ioHandler = new BaseIOHandler();
   }
 
   /**
@@ -71,7 +63,18 @@ public class NetworkedIterativeRunListener extends MINAEndpoint implements
      */
     LOGGER.error("Iteration : [" + index + "](" + model + ") threw ", thrown);
 
-    getIOHandler().write(new ExceptionMessage(index, model, thrown));
+    try
+    {
+      getSession().write(new ExceptionMessage(index, model, thrown));
+    }
+    catch (Exception e)
+    {
+      // TODO Auto-generated catch block
+      LOGGER
+          .error(
+              "NetworkedIterativeRunListener.exceptionThrown threw Exception : ",
+              e);
+    }
 
   }
 
@@ -82,8 +85,18 @@ public class NetworkedIterativeRunListener extends MINAEndpoint implements
   public void postRun(int currentRunIndex, int totalRuns,
       Collection<IModel> models) throws TerminateIterativeRunException
   {
-    getIOHandler().write(new StatusMessage(false, currentRunIndex, totalRuns));
-    for(IModel model : models)
+    try
+    {
+      getSession().write(new StatusMessage(false, currentRunIndex, totalRuns));
+    }
+    catch (Exception e)
+    {
+      // TODO Auto-generated catch block
+      LOGGER.error("NetworkedIterativeRunListener.postRun threw Exception : ",
+          e);
+    }
+
+    for (IModel model : models)
       model.uninstall(_detector);
   }
 
@@ -91,9 +104,9 @@ public class NetworkedIterativeRunListener extends MINAEndpoint implements
    * @see org.jactr.entry.iterative.IIterativeRunListener#preBuild(int, int,
    *      java.util.Collection)
    */
-  public void preBuild(int currentRunIndex,
-      int totalRuns,
-      Collection<CommonTree> modelDescriptors) throws TerminateIterativeRunException
+  public void preBuild(int currentRunIndex, int totalRuns,
+      Collection<CommonTree> modelDescriptors)
+      throws TerminateIterativeRunException
   {
     // noop
   }
@@ -108,21 +121,21 @@ public class NetworkedIterativeRunListener extends MINAEndpoint implements
     /*
      * send the start
      */
-    getIOHandler().write(new StatusMessage(true, currentRunIndex, totalRuns));
+    try
+    {
+      getSession().write(new StatusMessage(true, currentRunIndex, totalRuns));
+    }
+    catch (Exception e)
+    {
+      // TODO Auto-generated catch block
+      LOGGER
+          .error("NetworkedIterativeRunListener.preRun threw Exception : ", e);
+    }
     /*
      * and attach the deadlock detector
      */
-    for(IModel model : models)
+    for (IModel model : models)
       model.install(_detector);
-  }
-
-  /**
-   * @see org.jactr.tools.async.common.MINAEndpoint#getIOHandler()
-   */
-  @Override
-  public BaseIOHandler getIOHandler()
-  {
-    return _ioHandler;
   }
 
   /**
@@ -135,7 +148,15 @@ public class NetworkedIterativeRunListener extends MINAEndpoint implements
 
       public void deadlockDetected()
       {
-        getIOHandler().write(new DeadLockMessage());
+        try
+        {
+          getSession().write(new DeadLockMessage());
+        }
+        catch (Exception e)
+        {
+          // TODO Auto-generated catch block
+          LOGGER.error(".deadlockDetected threw Exception : ", e);
+        }
       }
 
     }, _timeout);
@@ -191,7 +212,8 @@ public class NetworkedIterativeRunListener extends MINAEndpoint implements
       super.setParameter(key, value);
   }
 
-  public void preLoad(int currentRunIndex, int totalRuns) throws TerminateIterativeRunException
+  public void preLoad(int currentRunIndex, int totalRuns)
+      throws TerminateIterativeRunException
   {
     // TODO Auto-generated method stub
 

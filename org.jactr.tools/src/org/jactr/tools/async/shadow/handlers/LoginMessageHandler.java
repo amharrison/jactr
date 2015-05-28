@@ -15,15 +15,15 @@ package org.jactr.tools.async.shadow.handlers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.session.IoSession;
-import org.apache.mina.handler.demux.MessageHandler;
+import org.commonreality.net.handler.IMessageHandler;
+import org.commonreality.net.session.ISessionInfo;
 import org.jactr.tools.async.message.event.login.LoginAcknowledgedMessage;
-import org.jactr.tools.async.shadow.ShadowIOHandler;
 
 /**
  * @author developer
  */
-public class LoginMessageHandler implements MessageHandler<LoginAcknowledgedMessage>
+public class LoginMessageHandler implements
+    IMessageHandler<LoginAcknowledgedMessage>
 {
   /**
    * logger definition
@@ -31,23 +31,38 @@ public class LoginMessageHandler implements MessageHandler<LoginAcknowledgedMess
   static private final Log LOGGER = LogFactory
                                       .getLog(LoginMessageHandler.class);
 
-  private ShadowIOHandler  _handler;
 
-  public LoginMessageHandler(ShadowIOHandler handler)
+
+  public LoginMessageHandler()
   {
-    _handler = handler;
   }
 
-  /**
-   * @see org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
-   *      java.lang.Object)
-   */
-  public void handleMessage(IoSession session, LoginAcknowledgedMessage message) throws Exception
-  {
-    if (LOGGER.isDebugEnabled()) LOGGER.debug("Login was accepted "+message.wasAccepted());
+  // /**
+  // * @see
+  // org.apache.mina.handler.demux.MessageHandler#messageReceived(org.apache.mina.common.IoSession,
+  // * java.lang.Object)
+  // */
+  // public void handleMessage(IoSession session, LoginAcknowledgedMessage
+  // message)
+  // throws Exception
+  // {
+  //
+  // if (!message.wasAccepted()) session.close();
+  // }
 
-    if (!message.wasAccepted())
-     session.close();
+  @Override
+  public void accept(ISessionInfo<?> t, LoginAcknowledgedMessage message)
+  {
+    if (LOGGER.isDebugEnabled())
+      LOGGER.debug("Login was accepted " + message.wasAccepted());
+    if (!message.wasAccepted()) try
+    {
+      t.close();
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to close cleanly", e);
+    }
   }
 
 }

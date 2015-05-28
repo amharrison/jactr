@@ -26,16 +26,30 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.antlr.runtime.tree.CommonTree;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.commonreality.net.session.ISessionInfo;
 import org.jactr.core.runtime.controller.debug.BreakpointType;
-import org.jactr.tools.async.common.BaseIOHandler;
-import org.jactr.tools.async.common.MINAEndpoint;
+import org.jactr.tools.async.common.NetworkedEndpoint;
 import org.jactr.tools.async.message.command.breakpoint.BreakpointCommand;
 import org.jactr.tools.async.message.command.breakpoint.IBreakpointCommand;
 import org.jactr.tools.async.message.command.breakpoint.IProductionCommand;
 import org.jactr.tools.async.message.command.breakpoint.ProductionCommand;
+import org.jactr.tools.async.message.command.login.LoginCommand;
+import org.jactr.tools.async.message.command.login.LogoutCommand;
 import org.jactr.tools.async.message.command.state.IStateCommand;
 import org.jactr.tools.async.message.command.state.ModelStateCommand;
 import org.jactr.tools.async.message.command.state.RuntimeStateCommand;
+import org.jactr.tools.async.message.event.data.BreakpointReachedEvent;
+import org.jactr.tools.async.message.event.data.ModelDataEvent;
+import org.jactr.tools.async.message.event.login.LoginAcknowledgedMessage;
+import org.jactr.tools.async.message.event.state.ModelStateEvent;
+import org.jactr.tools.async.message.event.state.RuntimeStateEvent;
+import org.jactr.tools.async.shadow.handlers.BreakpointMessageHandler;
+import org.jactr.tools.async.shadow.handlers.BulkMessageTransformer;
+import org.jactr.tools.async.shadow.handlers.LoginMessageHandler;
+import org.jactr.tools.async.shadow.handlers.LogoutMessageHandler;
+import org.jactr.tools.async.shadow.handlers.ModelDataMessageHandler;
+import org.jactr.tools.async.shadow.handlers.ModelStateHandler;
+import org.jactr.tools.async.shadow.handlers.RuntimeStateMessageHandler;
 
 /**
  * a mock controller that is to be used to interface with the real one
@@ -43,13 +57,16 @@ import org.jactr.tools.async.message.command.state.RuntimeStateCommand;
  * 
  * @author developer
  */
-public class ShadowController extends MINAEndpoint
+public class ShadowController extends NetworkedEndpoint
 {
+
+  static public final String      CONTROLLER_ATTR = "jactr.controller";
+
   /**
    * logger definition
    */
-  static private final Log        LOGGER = LogFactory
-                                             .getLog(ShadowController.class);
+  static private final Log        LOGGER          = LogFactory
+                                                      .getLog(ShadowController.class);
 
   private Set<String>             _runningModels;
 
@@ -64,11 +81,9 @@ public class ShadowController extends MINAEndpoint
    */
   private Map<String, CommonTree> _breakpointData;
 
-  private ReentrantLock           _lock  = new ReentrantLock();
+  private ReentrantLock           _lock           = new ReentrantLock();
 
-  private Condition               _state = _lock.newCondition();
-
-  private ShadowIOHandler         _handler;
+  private Condition               _state          = _lock.newCondition();
 
   /**
    * keeps track of the number of state changes that have occured
@@ -92,7 +107,70 @@ public class ShadowController extends MINAEndpoint
     _runningModels = new TreeSet<String>();
     _terminatedModels = new TreeSet<String>();
     _suspendedModels = new TreeSet<String>();
-    _handler = new ShadowIOHandler(this);
+  }
+
+  @Override
+  protected void createDefaultHandlers()
+  {
+    super.createDefaultHandlers();
+    _defaultHandlers.put(LoginAcknowledgedMessage.class,
+        new LoginMessageHandler());
+    _defaultHandlers.put(LogoutCommand.class, new LogoutMessageHandler());
+    _defaultHandlers.put(RuntimeStateEvent.class,
+        new RuntimeStateMessageHandler());
+    _defaultHandlers.put(ModelStateEvent.class, new ModelStateHandler());
+    _defaultHandlers.put(ModelDataEvent.class, new ModelDataMessageHandler());
+    _defaultHandlers.put(BreakpointReachedEvent.class,
+        new BreakpointMessageHandler());
+  }
+
+
+
+  @SuppressWarnings("rawtypes")
+  @Override
+  protected void sessionOpened(ISessionInfo session)
+  {
+    try
+    {
+      /**
+       * horrible exception handler..
+       */
+      session.addExceptionHandler((s, t) -> {
+        try
+        {
+          LOGGER.error(String.format("Exception caught from %s, closing ", s),
+              t);
+          if (s.isConnected() && !s.isClosing()) s.close();
+        }
+        catch (Exception e)
+        {
+          LOGGER.error(String.format("Exception from %s, closing. ", s), e);
+        }
+        return true;
+      });
+
+      // add the bulk message handler.
+      session.addTransformer(new BulkMessageTransformer());
+
+      session.setAttribute(CONTROLLER_ATTR, this);
+      /*
+       * first thing's first, send out our credentials
+       */
+      session.writeAndWait(new LoginCommand(getActualCredentials()));
+
+      super.sessionOpened(session);
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to send login command ", e);
+    }
+  }
+
+  @Override
+  protected void sessionClosed(ISessionInfo session)
+  {
+    if (isRunning()) for (String modelName : getRunningModels())
+      stopped(modelName);
   }
 
   public Collection<String> getModelNames()
@@ -201,22 +279,7 @@ public class ShadowController extends MINAEndpoint
 
   public boolean isConnected()
   {
-    return _handler.isConnected();
-  }
-
-  /**
-   * after attach is called (which will start the configured service) you will
-   * often need to wait for the connection to be completed (established with the
-   * remote)
-   * 
-   * @param timeout
-   *          milliseconds to wait
-   * @return
-   * @throws InterruptedException
-   */
-  public boolean waitForConnection(long timeout) throws InterruptedException
-  {
-    return _handler.waitForConnection(timeout);
+    return getSession() != null;
   }
 
   protected void checkConnection()
@@ -244,17 +307,6 @@ public class ShadowController extends MINAEndpoint
     }
   }
 
-  public ShadowIOHandler getHandler()
-  {
-    return _handler;
-  }
-
-  @Override
-  public BaseIOHandler getIOHandler()
-  {
-    return getHandler();
-  }
-
   public void detach(boolean force)
   {
     try
@@ -263,12 +315,9 @@ public class ShadowController extends MINAEndpoint
 
       if (isRunning()) stop();
 
+      ISessionInfo<?> session = getActiveSession();
       // allow the other side to disconnect first
-      if (!force)
-      {
-        getIOHandler().waitForPendingWrites();
-        getIOHandler().waitForDisconnect();
-      }
+      if (!force && session != null) session.waitForPendingWrites();
 
       disconnect(force);
     }
@@ -350,35 +399,64 @@ public class ShadowController extends MINAEndpoint
       String details)
   {
     checkConnection();
-    _handler.write(
-        new BreakpointCommand(IBreakpointCommand.Action.ADD, type, modelName,
-            details)).awaitUninterruptibly();
+    try
+    {
+      getSession().writeAndWait(
+          new BreakpointCommand(IBreakpointCommand.Action.ADD, type, modelName,
+              details));
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to send network command ", e);
+    }
   }
 
   public void removeBreakpoint(BreakpointType type, String modelName,
       String details)
   {
     checkConnection();
-    _handler.write(
-        new BreakpointCommand(IBreakpointCommand.Action.REMOVE, type,
-            modelName, details)).awaitUninterruptibly();
+    try
+    {
+      getSession().writeAndWait(
+          new BreakpointCommand(IBreakpointCommand.Action.REMOVE, type,
+              modelName, details));
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to send network command ", e);
+    }
   }
 
   public void clearBreakpoints()
   {
     checkConnection();
-    _handler.write(
-        new BreakpointCommand(IBreakpointCommand.Action.CLEAR,
-            BreakpointType.ALL)).awaitUninterruptibly();
+    try
+    {
+      getSession().writeAndWait(
+          new BreakpointCommand(IBreakpointCommand.Action.CLEAR,
+              BreakpointType.ALL));
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to send network command ", e);
+    }
   }
 
   public void setProductionEnabled(String modelName, String productionName,
       boolean enabled)
   {
     checkConnection();
-    _handler.write(new ProductionCommand(modelName, productionName,
-        enabled ? IProductionCommand.Action.ENABLE
-            : IProductionCommand.Action.DISABLE));
+    try
+    {
+      getSession().write(
+          new ProductionCommand(modelName, productionName,
+              enabled ? IProductionCommand.Action.ENABLE
+                  : IProductionCommand.Action.DISABLE));
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to send network command ", e);
+    }
   }
 
   /**
@@ -430,8 +508,12 @@ public class ShadowController extends MINAEndpoint
       _lock.lock();
       _stateAtResume = getStateCounter();
       if (LOGGER.isDebugEnabled()) LOGGER.debug("Sending resume");
-      _handler.write(new RuntimeStateCommand(IStateCommand.State.RESUME))
-          .awaitUninterruptibly();
+      getSession().writeAndWait(
+          new RuntimeStateCommand(IStateCommand.State.RESUME));
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to send resume command ", e);
     }
     finally
     {
@@ -448,8 +530,12 @@ public class ShadowController extends MINAEndpoint
       _stateAtResume = getStateCounter();
       if (LOGGER.isDebugEnabled())
         LOGGER.debug("Sending resume to " + modelName);
-      _handler.write(new ModelStateCommand(modelName,
-          IStateCommand.State.RESUME));
+      getSession().write(
+          new ModelStateCommand(modelName, IStateCommand.State.RESUME));
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to send resume command ", e);
     }
     finally
     {
@@ -476,8 +562,11 @@ public class ShadowController extends MINAEndpoint
       _lock.lock();
       _stateAtResume = Long.MAX_VALUE;
       _stateAtSuspend = Long.MAX_VALUE;
-      _handler.write(new RuntimeStateCommand(suspendImmediately))
-          .awaitUninterruptibly();
+      getSession().writeAndWait(new RuntimeStateCommand(suspendImmediately));
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to send start command ", e);
     }
     finally
     {
@@ -495,8 +584,12 @@ public class ShadowController extends MINAEndpoint
     {
       _lock.lock();
       _stateAtResume = _stateAtSuspend = getStateCounter();
-      _handler.write(new RuntimeStateCommand(IStateCommand.State.STOP))
-          .awaitUninterruptibly();
+      getSession().writeAndWait(
+          new RuntimeStateCommand(IStateCommand.State.STOP));
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to send stop command ", e);
     }
     finally
     {
@@ -511,8 +604,12 @@ public class ShadowController extends MINAEndpoint
     {
       _lock.lock();
       _stateAtResume = _stateAtSuspend = getStateCounter();
-      _handler
-          .write(new ModelStateCommand(modelName, IStateCommand.State.STOP));
+      getSession().write(
+          new ModelStateCommand(modelName, IStateCommand.State.STOP));
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to send stop command ", e);
     }
     finally
     {
@@ -531,8 +628,12 @@ public class ShadowController extends MINAEndpoint
       _lock.lock();
       _stateAtSuspend = getStateCounter();
       if (LOGGER.isDebugEnabled()) LOGGER.debug("Sending suspend");
-      _handler.write(new RuntimeStateCommand(IStateCommand.State.SUSPEND))
-          .awaitUninterruptibly();
+      getSession().writeAndWait(
+          new RuntimeStateCommand(IStateCommand.State.SUSPEND));
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to send susension command ", e);
     }
     finally
     {
@@ -549,9 +650,12 @@ public class ShadowController extends MINAEndpoint
       _stateAtSuspend = getStateCounter();
       if (LOGGER.isDebugEnabled())
         LOGGER.debug("Sending suspend to " + modelName);
-      _handler.write(
-          new ModelStateCommand(modelName, IStateCommand.State.SUSPEND))
-          .awaitUninterruptibly();
+      getSession().writeAndWait(
+          new ModelStateCommand(modelName, IStateCommand.State.SUSPEND));
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to send susension command ", e);
     }
     finally
     {

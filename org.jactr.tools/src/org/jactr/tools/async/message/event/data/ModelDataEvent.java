@@ -13,6 +13,8 @@
  */
 package org.jactr.tools.async.message.event.data;
 
+import java.io.Serializable;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.model.IModel;
@@ -23,7 +25,8 @@ import org.jactr.tools.async.message.event.IEvent;
  * @author developer
  *
  */
-public class ModelDataEvent extends BaseASTMessage implements IEvent
+public class ModelDataEvent extends BaseASTMessage implements IEvent,
+    Serializable
 {
   /**
    * 
@@ -33,7 +36,8 @@ public class ModelDataEvent extends BaseASTMessage implements IEvent
   /**
    logger definition
    */
-  static private final Log LOGGER = LogFactory.getLog(ModelDataEvent.class);
+  static private final transient Log LOGGER           = LogFactory
+                                                          .getLog(ModelDataEvent.class);
 
   String _modelName;
   

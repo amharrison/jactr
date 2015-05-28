@@ -13,14 +13,17 @@
  */
 package org.jactr.tools.async.message.event.login;
 
-import org.apache.commons.logging.Log;  
+import java.io.Serializable;
+
+import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.tools.async.message.BaseMessage;
 /**
  * @author developer
  *
  */
-public class LoginAcknowledgedMessage extends BaseMessage
+public class LoginAcknowledgedMessage extends BaseMessage implements
+    Serializable
 {
   /**
    * 
@@ -30,7 +33,7 @@ public class LoginAcknowledgedMessage extends BaseMessage
   /**
    logger definition
    */
-  static private final Log LOGGER = LogFactory
+  static private final transient Log LOGGER           = LogFactory
                                       .getLog(LoginAcknowledgedMessage.class);
 
   private boolean _accepted;
@@ -50,6 +53,13 @@ public class LoginAcknowledgedMessage extends BaseMessage
   public String getMessage()
   {
     return _message;
+  }
+
+  @Override
+  public String toString()
+  {
+    return String.format("[%s] accepted:%s  %s ", getClass().getSimpleName(),
+        getMessage(), wasAccepted());
   }
 }
 
