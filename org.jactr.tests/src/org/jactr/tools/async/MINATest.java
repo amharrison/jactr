@@ -14,7 +14,6 @@
 package org.jactr.tools.async;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import junit.framework.TestCase;
 
@@ -22,14 +21,14 @@ import org.antlr.runtime.tree.CommonTree;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.filter.executor.OrderedThreadPoolExecutor;
-import org.commonreality.mina.protocol.IMINAProtocolConfiguration;
 import org.commonreality.mina.protocol.NOOPProtocol;
 import org.commonreality.mina.protocol.SerializingProtocol;
 import org.commonreality.mina.service.ClientService;
 import org.commonreality.mina.service.ServerService;
-import org.commonreality.mina.transport.IMINATransportProvider;
 import org.commonreality.mina.transport.LocalTransportProvider;
 import org.commonreality.mina.transport.NIOTransportProvider;
+import org.commonreality.net.protocol.IProtocolConfiguration;
+import org.commonreality.net.transport.ITransportProvider;
 import org.jactr.core.logging.Logger;
 import org.jactr.core.logging.impl.DefaultModelLogger;
 import org.jactr.core.model.IModel;
@@ -41,7 +40,6 @@ import org.jactr.io.CommonIO;
 import org.jactr.io.antlr3.misc.ASTSupport;
 import org.jactr.tools.async.controller.RemoteInterface;
 import org.jactr.tools.async.shadow.ShadowController;
-import org.jactr.tools.async.shadow.ShadowIOHandler;
 
 /**
  * general MINA remote controller test. the ShadowController is the shadow copy
@@ -120,18 +118,9 @@ public class MINATest extends TestCase
     model.install(dml);
   }
 
-  /**
-   * add any handlers to the shadow controller
-   * 
-   * @param handler
-   */
-  protected void addHandlers(ShadowIOHandler handler)
-  {
-    // noop
-  }
 
-  protected void connectAndTest(IMINATransportProvider transport,
-      IMINAProtocolConfiguration protocol, String addressInfo,
+  protected void connectAndTest(ITransportProvider transport,
+      IProtocolConfiguration protocol, String addressInfo,
       String credentials, boolean runtimeIsServer,
       ExecutorService shadowExecutor, ExecutorService runtimeExecutor)
       throws Exception
@@ -141,7 +130,7 @@ public class MINATest extends TestCase
     controller.setProtocol(protocol);
     controller.setAddressInfo(addressInfo);
     controller.setCredentialInformation(credentials);
-    controller.setIOExecutorService(runtimeExecutor);
+    // controller.setIOExecutorService(runtimeExecutor);
     controller.setSendOnSuspend(true);
 
     /*
@@ -153,9 +142,9 @@ public class MINATest extends TestCase
     remote.setProtocol(protocol);
     remote.setAddressInfo(addressInfo);
     remote.setCredentialInformation(credentials);
-    remote.setIOExecutorService(shadowExecutor);
+    // remote.setIOExecutorService(shadowExecutor);
 
-    addHandlers(remote.getHandler());
+    // addHandlers(remote.getHandler());
 
     if (runtimeIsServer)
     {

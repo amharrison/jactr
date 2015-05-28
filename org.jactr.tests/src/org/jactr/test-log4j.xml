@@ -269,6 +269,12 @@
 		<level value="debug" />
 	</logger>
 	-->
+	<logger name="org.commonreality.net">
+		<level value="debug" />
+	</logger>
+	<logger name="org.commonreality.netty">
+		<level value="debug" />
+	</logger>
 	<root>
 		<level value="warn" />
 		<appender-ref ref="CONSOLE" />

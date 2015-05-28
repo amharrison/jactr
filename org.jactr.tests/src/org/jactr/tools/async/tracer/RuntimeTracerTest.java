@@ -17,7 +17,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.model.IModel;
 import org.jactr.tools.async.MINATest;
-import org.jactr.tools.async.shadow.ShadowIOHandler;
 import org.jactr.tools.tracer.RuntimeTracer;
 
 /**
@@ -52,16 +51,5 @@ public class RuntimeTracerTest extends MINATest
     model.install(_tracer);
   }
 
-  /**
-   * use MINATest's remoteIOHandler, but add a message handler to catch
-   * the TransformedLogEvent
-   * @see org.jactr.tools.async.MINATest#createRemoteIOHandler(org.jactr.tools.async.shadow.ShadowController, org.jactr.tools.async.credentials.ICredentials)
-   */
-  @Override
-  protected void addHandlers(ShadowIOHandler handler)
-  {
-    if (LOGGER.isDebugEnabled()) LOGGER.debug("Adding logger message handler");
-    
 
-  }
 }
