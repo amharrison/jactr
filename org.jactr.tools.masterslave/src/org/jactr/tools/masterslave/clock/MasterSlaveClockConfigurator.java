@@ -37,7 +37,6 @@ public class MasterSlaveClockConfigurator implements IClockConfigurator
    */
   public IClock getClockFor(IModel model, ACTRAgent agent)
   {
-
     IClock masterClock = getClockForMaster(model, agent.getClock());
     if (masterClock != null) return masterClock;
 

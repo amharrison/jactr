@@ -7,7 +7,9 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: org.jactr;bundle-version="1.2.15",
  org.jactr.io;bundle-version="1.0.9",
  org.jactr.tools;bundle-version="1.0.6",
- org.commonreality;bundle-version="1.2.8"
+ org.commonreality.api;bundle-version="1.0.0",
+ org.commonreality.time;bundle-version="1.0.0",
+ org.commonreality.core;bundle-version="1.2.8"
 Eclipse-BuddyPolicy: registered
 Eclipse-RegisterBuddy: org.jactr, org.jactr.io, org.apache.log4j, org.apache.commons.logging
 Export-Package: org.jactr.tools.masterslave.master,
