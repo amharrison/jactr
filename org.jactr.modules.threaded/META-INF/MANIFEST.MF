@@ -6,7 +6,7 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: jactr.org
 Require-Bundle: org.jactr,
  org.jactr.io,
- org.commonreality,
+ org.commonreality.core,
  org.jactr.support
 Export-Package: org.jactr.modules.threaded.goal,
  org.jactr.modules.threaded.goal.buffer,
