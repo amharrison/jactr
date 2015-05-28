@@ -8,7 +8,7 @@ Require-Bundle: org.jactr,
  org.jactr.io,
  org.jactr.tools,
  org.jactr.support,
- org.commonreality,
+ org.commonreality.core,
  org.apache.log4j
 Eclipse-BuddyPolicy: registered
 Eclipse-RegisterBuddy: org.apache.commons.logging,

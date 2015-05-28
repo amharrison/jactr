@@ -6,8 +6,8 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: jactr.org
 Require-Bundle: org.jactr,
  org.jactr.support,
- org.commonreality,
- org.jactr.io
+ org.jactr.io,
+ org.commonreality.api;bundle-version="1.0.0"
 Export-Package: org.jactr.modules.temporal,
  org.jactr.modules.temporal.buffer,
  org.jactr.modules.temporal.buffer.processor,
