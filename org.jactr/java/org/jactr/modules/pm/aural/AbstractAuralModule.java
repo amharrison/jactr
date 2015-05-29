@@ -35,7 +35,6 @@ import org.jactr.core.model.event.ModelEvent;
 import org.jactr.core.model.event.ModelListenerAdaptor;
 import org.jactr.core.module.IllegalModuleStateException;
 import org.jactr.core.module.declarative.IDeclarativeModule;
-import org.jactr.core.reality.ACTRAgent;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.utils.parameter.IParameterized;
 import org.jactr.core.utils.parameter.ParameterHandler;
@@ -310,7 +309,7 @@ public abstract class AbstractAuralModule extends AbstractPerceptualModule
     /*
      * attach the visual memory
      */
-    _auralMemory.attach((ACTRAgent) ACTRRuntime.getRuntime().getConnector()
+    _auralMemory.attach(ACTRRuntime.getRuntime().getConnector()
         .getAgent(getModel()));
   }
 

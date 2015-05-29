@@ -136,7 +136,7 @@ public class CommonRealityConnector implements IConnector
            * short term test as we migrate from ACTRAgent explicitly.
            */
           if (!idModelName.equals(agentName))
-            LOGGER.warn(String.format(
+            LOGGER.error(String.format(
                 "Model name (%s) isn't same as agent name(%s)?", idModelName,
                 agentName));
 

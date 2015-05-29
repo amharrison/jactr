@@ -279,13 +279,17 @@ public class DefaultModelRunner implements Runnable
         nextTime = cycle(eventsHaveFired);
 
         if (nextTime <= priorTime)
+        {
+          if(LOGGER.isWarnEnabled())
           LOGGER
-              .error(String
+              .warn(String
                   .format(
-                      "WARNING: Time discrepancy detected. Cycle time error : %.10f(next) <= %.10f(prior). Should be >",
+                      "WARNING: Time discrepancy detected. Cycle time error : %.6f(next) <= %.6f(prior). Should be >. Incrementing",
                       nextTime, priorTime));
+          nextTime = priorTime + 0.001;
+        }
 
-        postCycle(nextTime);
+        postCycle(priorTime);
 
         if (!Double.isNaN(nextTime))
         {

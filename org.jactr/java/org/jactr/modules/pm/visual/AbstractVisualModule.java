@@ -33,7 +33,6 @@ import org.jactr.core.event.IParameterEvent;
 import org.jactr.core.model.event.IModelListener;
 import org.jactr.core.model.event.ModelEvent;
 import org.jactr.core.model.event.ModelListenerAdaptor;
-import org.jactr.core.reality.ACTRAgent;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.utils.parameter.IParameterized;
 import org.jactr.core.utils.parameter.ParameterHandler;
@@ -568,7 +567,7 @@ public abstract class AbstractVisualModule extends AbstractPerceptualModule
     /*
      * attach the visual memory
      */
-    _visualMemory.attach((ACTRAgent) ACTRRuntime.getRuntime().getConnector()
+    _visualMemory.attach(ACTRRuntime.getRuntime().getConnector()
         .getAgent(getModel()));
   }
 

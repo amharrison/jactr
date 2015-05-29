@@ -205,7 +205,7 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
  * we only skip cycles if no events have fired. If events have fired, then
  * productions might be able to fire..
  */
-else if (model.isCycleSkippingEnabled() /* && !eventsHaveFired */)
+else if (model.isCycleSkippingEnabled())
 {
   if (eventsHaveFired)
     nextWaitTime = Math.min(nextEventFiringTime, nextProductionFiringTime);

@@ -14,8 +14,6 @@
 package org.jactr.core.reality;
 
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
@@ -24,9 +22,6 @@ import org.commonreality.agents.AbstractAgent;
 import org.commonreality.identifier.IIdentifier;
 import org.commonreality.object.IAgentObject;
 import org.commonreality.object.manager.impl.AgentObject;
-import org.commonreality.time.IClock;
-import org.jactr.core.concurrent.ExecutorServices;
-import org.jactr.core.concurrent.GeneralThreadFactory;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.controller.IController;
 
@@ -48,9 +43,9 @@ public class ACTRAgent extends AbstractAgent
 
   protected String               _modelName;
 
-  protected ExecutorService      _commonRealityExecutor;
-
-  protected GeneralThreadFactory _commonRealityThreadFactory;
+  // protected ExecutorService _commonRealityExecutor;
+  //
+  // protected GeneralThreadFactory _commonRealityThreadFactory;
 
   public ACTRAgent()
   {
@@ -125,27 +120,27 @@ public class ACTRAgent extends AbstractAgent
       /*
        * kill the executor
        */
-      if (_commonRealityExecutor != null
-          && !_commonRealityExecutor.isShutdown())
-        _commonRealityExecutor.shutdown();
-      _commonRealityExecutor = null;
-
-      if (_commonRealityThreadFactory != null)
-        _commonRealityThreadFactory.dispose();
-      _commonRealityThreadFactory = null;
+      // if (_commonRealityExecutor != null
+      // && !_commonRealityExecutor.isShutdown())
+      // _commonRealityExecutor.shutdown();
+      // _commonRealityExecutor = null;
+      //
+      // if (_commonRealityThreadFactory != null)
+      // _commonRealityThreadFactory.dispose();
+      // _commonRealityThreadFactory = null;
 
     }
     finally
     {
-      ExecutorServices.removeExecutor(getExecutorName());
+      // ExecutorServices.removeExecutor(getExecutorName());
       super.shutdown(force);
     }
   }
 
-  public ExecutorService getExecutorService()
-  {
-    return _commonRealityExecutor;
-  }
+  // public ExecutorService getExecutorService()
+  // {
+  // return _commonRealityExecutor;
+  // }
 
   @Override
   public void configure(Map<String, String> options) throws Exception
@@ -154,29 +149,24 @@ public class ACTRAgent extends AbstractAgent
     if (options.containsKey(MODEL_NAME)) setModelName(options.get(MODEL_NAME));
   }
 
-  private String getExecutorName()
-  {
-    return getModelName() + ":CommonReality-Thread";
-  }
+  // private String getExecutorName()
+  // {
+  // return getModelName() + ":CommonReality-Thread";
+  // }
 
   @Override
   public void initialize() throws Exception
   {
     if (LOGGER.isDebugEnabled()) LOGGER.debug("Initializing " + getName());
 
-    _commonRealityThreadFactory = new GeneralThreadFactory(getName() + "-CR",
-        getCentralThreadFactory().getThreadGroup());
-    _commonRealityExecutor = Executors
-        .newSingleThreadExecutor(_commonRealityThreadFactory);
-
-    ExecutorServices.addExecutor(getExecutorName(), _commonRealityExecutor);
+    // _commonRealityThreadFactory = new GeneralThreadFactory(getName() + "-CR",
+    // getCentralThreadFactory().getThreadGroup());
+    // _commonRealityExecutor = Executors
+    // .newSingleThreadExecutor(_commonRealityThreadFactory);
+    //
+    // ExecutorServices.addExecutor(getExecutorName(), _commonRealityExecutor);
 
     super.initialize();
   }
 
-  @Override
-  public IClock getClock()
-  {
-    return super.getClock();
-  }
 }
