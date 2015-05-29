@@ -9,10 +9,6 @@ import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.commonreality.agents.IAgent;
-import org.commonreality.agents.ThinAgent;
-import org.commonreality.identifier.IIdentifier.Type;
-import org.commonreality.identifier.impl.BasicIdentifier;
 import org.jactr.core.model.IModel;
 import org.jactr.core.reality.connector.IConnector;
 import org.jactr.core.runtime.ACTRRuntime;
@@ -246,35 +242,6 @@ public class RuntimeBuilder
       runtime.addModel(model);
   }
 
-  /**
-   * hypothetical support for embedding by using the thin agent instead of the
-   * fat ACTRAgent
-   * 
-   * @param model
-   */
-  protected void runThinClient(IModel model)
-  {
-    LOGGER.warn("THIS IS COMPLETELY UNTESTED");
-    /*
-     * CommonRealityConnector
-     */
-    IAgent thinClient = new ThinAgent(new BasicIdentifier(model.getName(),
-        Type.AGENT, null));
 
-    // we need to set the clock for this.. but to what??
-    try
-    {
-      thinClient.connect();
-    }
-    catch (Exception e)
-    {
-      // TODO Auto-generated catch block
-      LOGGER.error("RuntimeBuilder.runThinClient threw Exception : ", e);
-    }
-    /*
-     * we do not worry about cleanup as that will be handled when disconnect is
-     * called, which happens at the end of the model execution.
-     */
-  }
 
 }
