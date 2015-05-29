@@ -9,12 +9,12 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.commonreality.agents.IAgent;
 import org.jactr.core.buffer.six.IStatusBuffer;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISymbolicChunk;
 import org.jactr.core.chunk.IllegalChunkStateException;
 import org.jactr.core.production.request.ChunkTypeRequest;
-import org.jactr.core.reality.ACTRAgent;
 import org.jactr.core.slot.BasicSlot;
 import org.jactr.core.slot.IMutableSlot;
 import org.jactr.core.slot.ISlot;
@@ -187,7 +187,7 @@ public class DefaultVisualMemory extends AbstractPerceptualMemory implements
   }
 
   @Override
-  public void attach(ACTRAgent agent)
+  public void attach(IAgent agent)
   {
     super.attach(agent);
 

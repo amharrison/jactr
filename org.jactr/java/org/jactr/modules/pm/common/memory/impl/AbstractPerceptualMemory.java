@@ -32,7 +32,6 @@ import org.jactr.core.chunk.IChunk;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.event.ACTREventDispatcher;
 import org.jactr.core.production.request.ChunkTypeRequest;
-import org.jactr.core.reality.ACTRAgent;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.slot.BasicSlot;
 import org.jactr.core.slot.ISlot;
@@ -84,7 +83,7 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
 
   private final ACTREventDispatcher<IPerceptualMemory, IActivePerceptListener> _dispatcher      = new ACTREventDispatcher<IPerceptualMemory, IActivePerceptListener>();
 
-  private ACTRAgent                                                            _agent;
+  private IAgent                                                               _agent;
 
   private DelayableAfferentObjectListener                                      _agentListener;
 
@@ -174,12 +173,12 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
    * @param agent
    */
   @SuppressWarnings("unchecked")
-  public void attach(ACTRAgent agent)
+  public void attach(IAgent agent)
   {
     if (_agent != null) throw new IllegalStateException("Already attached!");
     _agent = agent;
     _agentListener = new DelayableAfferentObjectListener(_module.getModel(),
-        _agent, _agent.getExecutorService());
+        _agent, getModule().getCommonRealityExecutor());
 
     for (PerceptualEncoderBridge bridge : _bridges)
     {
@@ -205,6 +204,8 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
     // handle any potentially missed
     _agentListener.processExistingObjects();
   }
+
+
 
   protected DefaultAfferentObjectListener getAfferentObjectListener()
   {

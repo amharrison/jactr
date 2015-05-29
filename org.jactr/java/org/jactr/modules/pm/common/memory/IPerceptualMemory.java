@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
+import org.commonreality.agents.IAgent;
 import org.commonreality.identifier.IIdentifier;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.production.request.ChunkTypeRequest;
-import org.jactr.core.reality.ACTRAgent;
 import org.jactr.core.utils.parameter.IParameterized;
 import org.jactr.modules.pm.IPerceptualModule;
 import org.jactr.modules.pm.common.memory.filter.IIndexFilter;
@@ -47,7 +47,7 @@ public interface IPerceptualMemory extends IParameterized
    * 
    * @param agent
    */
-  public void attach(ACTRAgent agent);
+  public void attach(IAgent agent);
 
   /**
    * detach from CR
