@@ -5,10 +5,10 @@ package org.jactr.tools.masterslave.clock;
  */
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.commonreality.agents.IAgent;
 import org.commonreality.time.IClock;
 import org.commonreality.time.impl.WrappedClock;
 import org.jactr.core.model.IModel;
-import org.jactr.core.reality.ACTRAgent;
 import org.jactr.core.reality.connector.IClockConfigurator;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.tools.masterslave.master.MasterExtension;
@@ -33,9 +33,9 @@ public class MasterSlaveClockConfigurator implements IClockConfigurator
    * if the model contains the masterExtension, we will wrap its clock
    * 
    * @see org.jactr.core.reality.connector.IClockConfigurator#getClockFor(org.jactr.core.model.IModel,
-   *      org.jactr.core.reality.ACTRAgent)
+   *      IAgent)
    */
-  public IClock getClockFor(IModel model, ACTRAgent agent)
+  public IClock getClockFor(IModel model, IAgent agent)
   {
     IClock masterClock = getClockForMaster(model, agent.getClock());
     if (masterClock != null) return masterClock;
