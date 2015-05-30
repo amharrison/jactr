@@ -3,9 +3,9 @@ package org.jactr.core.reality.connector;
 /*
  * default logging
  */
+import org.commonreality.agents.IAgent;
 import org.commonreality.time.IClock;
 import org.jactr.core.model.IModel;
-import org.jactr.core.reality.ACTRAgent;
 
 /**
  * interface accepted by IConnector to tweak how clocks are
@@ -16,7 +16,7 @@ import org.jactr.core.reality.ACTRAgent;
  */
 public interface IClockConfigurator
 {
-  public IClock getClockFor(IModel model, ACTRAgent agent);
+  public IClock getClockFor(IModel model, IAgent agent);
 
   public IClock getClockFor(IModel model, IClock defaultClock);
 

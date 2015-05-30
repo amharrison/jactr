@@ -37,7 +37,7 @@ public class DefaultReferences implements IOptimizedReferences
    */
   public DefaultReferences()
   {
-    this(0);
+    this(10);
   }
 
   public DefaultReferences(int optimization)

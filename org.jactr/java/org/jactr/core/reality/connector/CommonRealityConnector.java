@@ -65,7 +65,7 @@ public class CommonRealityConnector implements IConnector
     _allClocks = new ConcurrentHashMap<IModel, IClock>();
     setClockConfigurator(new IClockConfigurator() {
 
-      public IClock getClockFor(IModel model, ACTRAgent agent)
+      public IClock getClockFor(IModel model, IAgent agent)
       {
         return agent.getClock();
       }

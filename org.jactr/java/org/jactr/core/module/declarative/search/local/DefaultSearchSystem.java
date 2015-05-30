@@ -123,9 +123,11 @@ public class DefaultSearchSystem implements ISearchSystem
 
   protected IChunkFilter                                    _defaultFilter       = new AcceptAllFilter();
 
-
-  private boolean                                           _enableNotFilters    = Boolean
-                                                                                     .getBoolean("jactr.search.enableNotFilters");
+  /*
+   * made default AMH 5/29/15
+   */
+  private boolean                                           _enableNotFilters    = !Boolean
+                                                                                     .getBoolean("jactr.search.disableNotFilters");
 
   /**
    * will do all the filter processing, but not actually swap out the filter for

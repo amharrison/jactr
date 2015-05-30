@@ -20,11 +20,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.agents.IAgent;
 import org.commonreality.time.IClock;
+import org.commonreality.time.impl.BasicClock;
 import org.commonreality.time.impl.OwnedClock;
 import org.commonreality.time.impl.OwnedClock.OwnedAuthoritativeClock;
 import org.commonreality.time.impl.WrappedClock;
 import org.jactr.core.model.IModel;
-import org.jactr.core.reality.ACTRAgent;
 
 /**
  * @author developer
@@ -34,13 +34,19 @@ public class LocalConnector implements IConnector
   /**
    * logger definition
    */
-  static private final Log  LOGGER = LogFactory.getLog(LocalConnector.class);
+  static private final Log     LOGGER                        = LogFactory
+                                                                 .getLog(LocalConnector.class);
 
-  private final OwnedClock    _defaultClock;
+  static private final boolean _enableIndependentClocks      = Boolean
+                                                                 .getBoolean("connector.independentClocks");
 
-  private Map<IModel, IClock> _clocks;
+  static private boolean       _warnedAboutIndependentClocks = false;
 
-  private IClockConfigurator        _configurator;
+  private final OwnedClock     _defaultClock;
+
+  private Map<IModel, IClock>  _clocks;
+
+  private IClockConfigurator   _configurator;
 
   public LocalConnector()
   {
@@ -55,15 +61,33 @@ public class LocalConnector implements IConnector
 
       public IClock getClockFor(IModel model, IClock defaultClock)
       {
-        return new WrappedClock(defaultClock);
+        if (!_enableIndependentClocks)
+          return new WrappedClock(defaultClock);
+        else
+        {
+          /*
+           * we need this clock to provide an authority, otherwise the model
+           * will not run properly (i.e., it will wait for time to advance, but
+           * without an authority, it cant)
+           */
+          if (!_warnedAboutIndependentClocks)
+          {
+            LOGGER
+                .warn("Using independent clocks is an experimental option can cause strange behavior in systems that assume synchronized time.");
+
+            _warnedAboutIndependentClocks = true;
+          }
+          return new BasicClock(true, model.getProceduralModule()
+              .getDefaultProductionFiringTime());
+        }
       }
 
-      public IClock getClockFor(IModel model, ACTRAgent agent)
-      {
+      public IClock getClockFor(IModel model, IAgent agent)
+      {// this is not going to be called.
         return agent.getClock();
       }
     });
-//    _defaultClock.setTime(-1);
+    // _defaultClock.setTime(-1);
   }
 
   /**
@@ -71,10 +95,12 @@ public class LocalConnector implements IConnector
    */
   public void connect(IModel model)
   {
-    OwnedAuthoritativeClock auth = (OwnedAuthoritativeClock) _defaultClock
-        .getAuthority().get();
-    // _defaultClock.addOwner(Thread.currentThread());
-    auth.addOwner(model);
+    if (!_enableIndependentClocks)
+    {
+      OwnedAuthoritativeClock auth = (OwnedAuthoritativeClock) _defaultClock
+          .getAuthority().get();
+      auth.addOwner(model);
+    }
 
     IClock clock = getClockConfigurator().getClockFor(model, _defaultClock);
 
@@ -86,23 +112,18 @@ public class LocalConnector implements IConnector
    */
   public void disconnect(IModel model)
   {
-    OwnedAuthoritativeClock auth = (OwnedAuthoritativeClock) _defaultClock
-        .getAuthority().get();
+    if (!_enableIndependentClocks)
+    {
+      OwnedAuthoritativeClock auth = (OwnedAuthoritativeClock) _defaultClock
+          .getAuthority().get();
 
-    auth.removeOwner(model);
+      auth.removeOwner(model);
+    }
 
     // _defaultClock.removeOwner(Thread.currentThread());
     IClock defined = _clocks.remove(model);
 
     getClockConfigurator().release(model, defined);
-
-    // FastList<Object> owners = FastList.newInstance();
-    // auth.getOwners(owners);
-    //
-    // // reset time if no one is connected
-    // if (owners.size() == 0) auth.requestAndWaitForTime(0, null);
-    //
-    // FastList.recycle(owners);
   }
 
   /**
@@ -123,10 +144,10 @@ public class LocalConnector implements IConnector
 
   public IClock getClock(IModel model)
   {
-    //concurrent hash cant deal w/ null
-    if(model==null) return _defaultClock;
+    // concurrent hash cant deal w/ null
+    if (model == null) return _defaultClock;
     IClock rtn = _clocks.get(model);
-    if(rtn==null) rtn = _defaultClock;
+    if (rtn == null) rtn = _defaultClock;
     return rtn;
   }
 
