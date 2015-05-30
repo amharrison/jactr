@@ -160,11 +160,24 @@ public abstract class AbstractPerceptualModule extends
    */
   protected ExecutorService getPerceptualExecutor()
   {
-    String exName = getModel().getName() + "-CR";
+    boolean useShared = Boolean.getBoolean("jactr.pm.useSharedExecutor");
+
+    String exName = "CR-";
+    if (useShared)
+      exName += "shared";
+    else
+      exName += getModel().getName();
+
     ExecutorService es = ExecutorServices.getExecutor(exName);
     if (es == null)
     {
-      es = Executors.newSingleThreadExecutor(new GeneralThreadFactory(exName));
+      boolean usePooled = Boolean.getBoolean("jactr.pm.useThreadPool");
+      if (usePooled)
+        es = Executors.newCachedThreadPool(new GeneralThreadFactory(exName));
+      else
+        es = Executors
+            .newSingleThreadExecutor(new GeneralThreadFactory(exName));
+
       ExecutorServices.addExecutor(exName, es);
     }
     return es;
@@ -222,12 +235,12 @@ public abstract class AbstractPerceptualModule extends
   {
     return _busyChunk;
   }
-  
+
   public IChunk getRequestedChunk()
   {
     return _requestedChunk;
   }
-  
+
   public IChunk getUnrequestedChunk()
   {
     return _unrequestedChunk;
