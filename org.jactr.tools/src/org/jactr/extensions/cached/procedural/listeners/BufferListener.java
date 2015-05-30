@@ -106,8 +106,7 @@ public class BufferListener extends ActivationBufferListenerAdaptor
               "Invalidating due to content change of %s", _buffer));
 
         for (IInvalidator invalidator : invalidators)
-          if (invalidator != null) invalidator.invalidate();
-        // fastlist can return null during iteration if remove was just called
+          invalidator.invalidate();
       }
     }
     catch (Exception e)

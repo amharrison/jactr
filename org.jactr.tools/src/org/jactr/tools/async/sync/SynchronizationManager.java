@@ -213,7 +213,7 @@ public class SynchronizationManager implements IInstrument, IParameterized
       return;
     }
 
-    if (!_modelsLock.isClosed() && _modelsLock.allAreFree())
+    if (!_modelsLock.isClosed() && _modelsLock.areAllFree())
     {
       if (LOGGER.isDebugEnabled())
         LOGGER.debug(String.format("Attempting to synchronize"));

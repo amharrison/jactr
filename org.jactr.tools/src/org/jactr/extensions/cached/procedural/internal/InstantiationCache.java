@@ -63,9 +63,17 @@ public class InstantiationCache
 
   public void dispose()
   {
-    _listenerHub.dispose();
-    _invalidators.clear();
-    _failedProductions.clear();
+    try
+    {
+      _lock.writeLock().lock();
+      _listenerHub.dispose();
+      _invalidators.clear();
+      _failedProductions.clear();
+    }
+    finally
+    {
+      _lock.writeLock().unlock();
+    }
   }
 
   public Set<IProduction> getProductions(Set<IProduction> container)
@@ -74,51 +82,62 @@ public class InstantiationCache
     {
       _lock.readLock().lock();
       container.addAll(_failedProductions.keySet());
-      return container;
     }
     finally
     {
       _lock.readLock().unlock();
     }
+
+    return container;
   }
 
   public boolean contains(IProduction production)
   {
+    boolean contained = false;
     try
     {
       _lock.readLock().lock();
 
-      return _failedProductions.containsKey(production);
+      contained = _failedProductions.containsKey(production);
     }
     finally
     {
       _lock.readLock().unlock();
     }
+    return contained;
   }
 
   public void remove(IProduction production)
   {
-
+    FastList<IInvalidator> invalidators = null;
+    boolean shouldUnregister = false;
     try
     {
       _lock.writeLock().lock();
 
       /*
-       * unregister all the invalidators
+       * do we need to unregister?
        */
       if (_failedProductions.remove(production) != null)
       {
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format("Marking %s as potentially instantiable",
-              production));
-        unregisterAll(production);
+        shouldUnregister = true;
+        invalidators = _invalidators.remove(production);
       }
-
     }
     finally
     {
       _lock.writeLock().unlock();
     }
+
+    if (shouldUnregister)
+    {
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug(String.format("Marking %s as potentially instantiable",
+            production));
+      unregisterAll(production, invalidators);
+    }
+
+    if (invalidators != null) FastList.recycle(invalidators);
   }
 
   public void add(IProduction production, CannotInstantiateException cie)
@@ -163,61 +182,62 @@ public class InstantiationCache
                 .format(
                     "%s could not be associated with any invalidators, it will be available for instantiation",
                     production));
-      
+
       FastList.recycle(invalidators);
     }
   }
 
   public CannotInstantiateException get(IProduction production)
   {
+    CannotInstantiateException cie = null;
     try
     {
       _lock.readLock().lock();
 
-      return _failedProductions.get(production);
+      cie = _failedProductions.get(production);
     }
     finally
     {
       _lock.readLock().unlock();
     }
+
+    return cie;
   }
 
   public void throwIfCached(IProduction production)
       throws CannotInstantiateException
   {
+    CannotInstantiateException cie = null;
     try
     {
       _lock.readLock().lock();
-
-      CannotInstantiateException cie = _failedProductions.get(production);
-      if (cie != null)
-      {
-        if (LOGGER.isDebugEnabled())
-          LOGGER
-              .debug(String.format("%s has a cached CIE %s", production, cie));
-
-        throw cie;
-      }
+      cie = _failedProductions.get(production);
     }
     finally
     {
       _lock.readLock().unlock();
     }
+
+    if (cie != null)
+    {
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug(String.format("%s has a cached CIE %s", production, cie));
+
+      throw cie;
+    }
   }
 
   /**
-   * this is called within the write lock
-   * 
    * @param production
    */
-  protected void unregisterAll(IProduction production)
+  protected void unregisterAll(IProduction production,
+      Collection<IInvalidator> invalidators)
   {
-    FastList<IInvalidator> invalidators = _invalidators.remove(production);
+
     if (invalidators == null) return;
     for (IInvalidator invalidator : invalidators)
       if (invalidator != null) invalidator.unregister(_listenerHub);
 
-    FastList.recycle(invalidators);
   }
 
   /**

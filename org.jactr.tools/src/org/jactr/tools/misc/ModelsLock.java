@@ -28,30 +28,30 @@ import org.jactr.instrument.IInstrument;
 public class ModelsLock extends ModelListenerAdaptor implements IInstrument
 {
 
-
   /**
    * Logger definition
    */
-  static private final transient Log LOGGER         = LogFactory
-                                                        .getLog(ModelsLock.class);
+  static private final transient Log          LOGGER         = LogFactory
+                                                                 .getLog(ModelsLock.class);
 
-  private ReentrantLock              _lock          = new ReentrantLock();
+  private ReentrantLock                       _lock          = new ReentrantLock();
 
-  private Condition                  _lockCondition = _lock.newCondition();
+  private Condition                           _lockCondition = _lock
+                                                                 .newCondition();
 
-  private volatile boolean           _shouldBlock   = false;
+  private volatile boolean                    _shouldBlock   = false;
 
-  private Set<IModel>                _installed     = new HashSet<IModel>();
+  private Set<IModel>                         _installed     = new HashSet<IModel>();
 
   /**
    * who are we going to lock
    */
-  private Set<IModel>                _modelsToLock  = new HashSet<IModel>();
+  private Set<IModel>                         _modelsToLock  = new HashSet<IModel>();
 
   /**
    * the models that are currently blocking
    */
-  private Set<IModel>                _modelsLocked  = new HashSet<IModel>();
+  private Set<IModel>                         _modelsLocked  = new HashSet<IModel>();
 
   private volatile CompletableFuture<Boolean> _currentRequest;
 
@@ -171,7 +171,7 @@ public class ModelsLock extends ModelListenerAdaptor implements IInstrument
     }
   }
 
-  public boolean allAreFree()
+  public boolean areAllFree()
   {
     try
     {
@@ -184,7 +184,7 @@ public class ModelsLock extends ModelListenerAdaptor implements IInstrument
     }
   }
 
-  public boolean allAreBlocked()
+  public boolean areAllBlocked()
   {
     try
     {
@@ -245,16 +245,19 @@ public class ModelsLock extends ModelListenerAdaptor implements IInstrument
 
   private void allBocked()
   {
-    if (_currentRequest != null)
-    _currentRequest.complete(true);
+    if (_currentRequest != null) _currentRequest.complete(true);
     _currentRequest = null;
   }
 
   private void allFreed()
   {
-    if (_currentRequest != null)
-    _currentRequest.complete(true);
+    if (_currentRequest != null) _currentRequest.complete(true);
     _currentRequest = null;
+  }
+
+  private boolean shouldBlock()
+  {
+    return _shouldBlock;
   }
 
   /**
@@ -264,45 +267,99 @@ public class ModelsLock extends ModelListenerAdaptor implements IInstrument
    */
   protected void checkAndBlock(IModel model)
   {
+    long start = System.currentTimeMillis();
+    boolean blocked = false;
+    boolean allAreBlocked = false;
     try
     {
       _lock.lock();
 
-      long start = System.currentTimeMillis();
-      boolean blocked = false;
-
-      while (_shouldBlock && _modelsToLock.contains(model))
+      if (shouldBlock() && _modelsToLock.contains(model))
       {
-        blocked = true;
         _modelsLocked.add(model);
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format("Blocking %s @ %.2f", model, ACTRRuntime
-              .getRuntime().getClock(model).getTime()));
+        blocked = true;
 
-        if (allAreBlocked()) allBocked();
-
-        _lockCondition.await(250, TimeUnit.MILLISECONDS);
+        allAreBlocked = areAllBlocked();
       }
-
-      if (LOGGER.isDebugEnabled() && blocked)
-      {
-        long total = System.currentTimeMillis() - start;
-        LOGGER.debug(String.format("blocked %s for %dms", model, total));
-      }
-
-    }
-    catch (InterruptedException ie)
-    {
-      return;
     }
     finally
     {
-      _modelsLocked.remove(model);
-
-      if (allAreFree()) allFreed();
-
       _lock.unlock();
     }
+
+    if (allAreBlocked) allBocked();
+
+    if (blocked)
+      try
+      {
+        _lock.lock();
+        while (shouldBlock() && _modelsToLock.contains(model))
+        {
+          if (LOGGER.isDebugEnabled())
+            LOGGER.debug(String.format("Blocking %s @ %.2f", model, ACTRRuntime
+                .getRuntime().getClock(model).getTime()));
+          _lockCondition.await(250, TimeUnit.MILLISECONDS);
+        }
+
+        if (LOGGER.isDebugEnabled())
+        {
+          long total = System.currentTimeMillis() - start;
+          LOGGER.debug(String.format("blocked %s for %dms", model, total));
+        }
+      }
+      catch (InterruptedException ie)
+      {
+        return;
+      }
+      finally
+      {
+        _modelsLocked.remove(model);
+        boolean allFree = areAllFree();
+
+        _lock.unlock();
+
+        if (allFree) allFreed();
+      }
+
+    // try
+    // {
+    // _lock.lock();
+    //
+    // long start = System.currentTimeMillis();
+    // boolean blocked = false;
+    //
+    // while (shouldBlock() && _modelsToLock.contains(model))
+    // {
+    // blocked = true;
+    // _modelsLocked.add(model);
+    // if (LOGGER.isDebugEnabled())
+    // LOGGER.debug(String.format("Blocking %s @ %.2f", model, ACTRRuntime
+    // .getRuntime().getClock(model).getTime()));
+    //
+    // if (areAllBlocked()) allBocked();
+    //
+    // _lockCondition.await();
+    // }
+    //
+    // if (LOGGER.isDebugEnabled() && blocked)
+    // {
+    // long total = System.currentTimeMillis() - start;
+    // LOGGER.debug(String.format("blocked %s for %dms", model, total));
+    // }
+    //
+    // }
+    // catch (InterruptedException ie)
+    // {
+    // return;
+    // }
+    // finally
+    // {
+    // _modelsLocked.remove(model);
+    //
+    // if (areAllFree()) allFreed();
+    //
+    // _lock.unlock();
+    // }
   }
 
 }
