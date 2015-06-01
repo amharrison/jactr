@@ -13,6 +13,7 @@
  */
 package org.jactr.tools.async.controller;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Executor;
@@ -434,7 +435,13 @@ public class RemoteInterface extends NetworkedEndpoint implements IInstrument,
     session.addExceptionHandler((s, t) -> {
       try
       {
-        LOGGER.error(String.format("Exception from %s, closing. ", s), t);
+        if (!(t instanceof IOException)
+            && t.getMessage().indexOf("Connection reset") == -1)
+          LOGGER.error(String.format("Exception caught from %s, closing ", s),
+              t);
+        else
+          LOGGER.debug("Closing after connection reset");
+
         if (s.isConnected() && !s.isClosing()) s.close();
       }
       catch (Exception e)
