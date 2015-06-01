@@ -247,15 +247,17 @@ else if (model.isCycleSkippingEnabled())
 
     if (nextWaitTime <= now)
     {
-      double newWaitTime = Math.nextAfter(nextWaitTime + 0.001,
+      double newWaitTime = Math
+          .nextAfter(now + 0.001,
           Double.POSITIVE_INFINITY);
 
       if (LOGGER.isWarnEnabled())
         LOGGER
             .warn(String
                 .format(
-                    "nextWaitTime (%.5f) is less than or equal to the time (%.5f), incrementing to (%.5f). Please report to amharrison@gmail.com",
-                    nextWaitTime, now, newWaitTime));
+                    "nextWaitTime (%.5f) is less than or equal to the time (%.5f), incrementing to (%.5f). eventsFired=%s nextEvent=%.2f productionFiringTime=%.2f",
+                    nextWaitTime, now, newWaitTime, eventsHaveFired,
+                    queue.getNextEndTime(), productionFiringTime));
 
       nextWaitTime = newWaitTime;
     }

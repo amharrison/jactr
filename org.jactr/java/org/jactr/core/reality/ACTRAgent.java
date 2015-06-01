@@ -14,7 +14,6 @@
 package org.jactr.core.reality;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,8 +21,6 @@ import org.commonreality.agents.AbstractAgent;
 import org.commonreality.identifier.IIdentifier;
 import org.commonreality.object.IAgentObject;
 import org.commonreality.object.manager.impl.AgentObject;
-import org.jactr.core.runtime.ACTRRuntime;
-import org.jactr.core.runtime.controller.IController;
 
 public class ACTRAgent extends AbstractAgent
 {
@@ -83,27 +80,32 @@ public class ACTRAgent extends AbstractAgent
     try
     {
       /*
-       * if we are still running, we need to force the controller to shutdown
+       * WRONG. In a multi model environment, this will cause abnormal
+       * termination
        */
-      IController controller = ACTRRuntime.getRuntime().getController();
-      if (controller != null && controller.isRunning())
-      {
-        if (LOGGER.isDebugEnabled()) LOGGER.debug("Stopping controller");
-        try
-        {
-          controller.stop().get(500, TimeUnit.MILLISECONDS);
-        }
-        catch (Exception e)
-        {
-
-        }
-        
-        /*
-         * there should be a wait here.. to give it a chance to cleanly quit
-         */
-        if(controller.isRunning())
-          controller.terminate().get();
-      }
+      /*
+       * if we are still running, we need to force the controller to shutdown.
+       */
+      // IController controller = ACTRRuntime.getRuntime().getController();
+      // if (controller != null && controller.isRunning())
+      // {
+      // if (LOGGER.isDebugEnabled()) LOGGER.debug("Stopping controller");
+      // try
+      // {
+      // controller.stop().get(500, TimeUnit.MILLISECONDS);
+      // }
+      // catch (Exception e)
+      // {
+      //
+      // }
+      //
+      // /*
+      // * there should be a wait here.. to give it a chance to cleanly quit
+      // */
+      // if(controller.isRunning())
+      // controller.terminate(); // cannot block
+      // // this.
+      // }
     }
     finally
     {

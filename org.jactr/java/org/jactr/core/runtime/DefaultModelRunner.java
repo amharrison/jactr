@@ -34,6 +34,7 @@ import org.jactr.core.model.basic.BasicModel;
 import org.jactr.core.model.event.ModelEvent;
 import org.jactr.core.queue.TimedEventQueue;
 import org.jactr.core.runtime.event.ACTRRuntimeEvent;
+import org.jactr.core.utils.Diagnostics;
 
 /**
  * basic model runner, handles all events except disconnected which will be
@@ -48,6 +49,9 @@ public class DefaultModelRunner implements Runnable
    */
   static private final Log  LOGGER = LogFactory
                                        .getLog(DefaultModelRunner.class);
+
+  static boolean            _enableTimeDiagnostics = Boolean
+                                                       .getBoolean("jactr.enableTimeDiagnostics");
 
   protected ExecutorService _service;
 
@@ -94,9 +98,8 @@ public class DefaultModelRunner implements Runnable
       if (LOGGER.isDebugEnabled())
         LOGGER.debug("Shifted clock to " + timeShift);
     }
-    else if (LOGGER.isWarnEnabled()) LOGGER.warn(String.format("Cannot set time shift"));
-
-
+    else if (LOGGER.isWarnEnabled())
+      LOGGER.warn(String.format("Cannot set time shift"));
 
     /**
      * let anyone who depends on commonreality know that we have connected
@@ -164,8 +167,7 @@ public class DefaultModelRunner implements Runnable
   protected double cycle(boolean eventsHaveFired)
   {
     // make sure we're within the precision bounds bounds.
-    return BasicClock.constrainPrecision(_cycleRunner.cycle(_model,
-        eventsHaveFired));
+    return _cycleRunner.cycle(_model, eventsHaveFired);
   }
 
   /**
@@ -177,8 +179,14 @@ public class DefaultModelRunner implements Runnable
   protected double waitForClock(double waitForTime)
       throws InterruptedException, ExecutionException
   {
-    if (Double.isNaN(waitForTime)) return 0;
+    if (Double.isNaN(waitForTime))
+    {
+      LOGGER
+          .error("Requested NaN? This should not happen unless we have no time control.");
+      return 0;
+    }
 
+    waitForTime = BasicClock.constrainPrecision(waitForTime);
     IClock clock = ACTRRuntime.getRuntime().getClock(_model);
     Optional<IAuthoritativeClock> auth = clock.getAuthority();
 
@@ -190,6 +198,8 @@ public class DefaultModelRunner implements Runnable
       LOGGER.warn("Cannot fully participant in time control ");
       rtn = clock.waitForTime(waitForTime).get();
     }
+
+    if (_enableTimeDiagnostics) Diagnostics.timeSanityCheck(rtn);
 
     // double rtn = ACTRRuntime.getRuntime().getClock(_model)
     // .waitForTime(waitForTime).get();
@@ -280,12 +290,15 @@ public class DefaultModelRunner implements Runnable
 
         if (nextTime <= priorTime)
         {
-          if(LOGGER.isWarnEnabled())
-          LOGGER
-              .warn(String
-                  .format(
-                      "WARNING: Time discrepancy detected. Cycle time error : %.6f(next) <= %.6f(prior). Should be >. Incrementing",
-                      nextTime, priorTime));
+          if (LOGGER.isWarnEnabled())
+            LOGGER
+                .warn(String
+                    .format(
+                        "WARNING: Time discrepancy detected. Cycle time error : %.6f(next) <= %.6f(prior). Should be >. Incrementing",
+                        nextTime, priorTime));
+
+          if (_enableTimeDiagnostics) Diagnostics.timeSanityCheck(nextTime);
+
           nextTime = priorTime + 0.001;
         }
 
@@ -310,11 +323,15 @@ public class DefaultModelRunner implements Runnable
     catch (InterruptedException ie)
     {
       // perfectly normal
-      LOGGER.warn("Interrupted, expecting termination ", ie);
+      LOGGER.warn("Interrupted, assuming termination ", ie);
     }
     catch (ExecutionException ee)
     {
-      LOGGER.error("Execution exception ", ee);
+      LOGGER.error("Execution exception, terminating ", ee);
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Unknown exception, terminating ", e);
     }
     finally
     {

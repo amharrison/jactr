@@ -50,6 +50,14 @@ public class LocalConnector implements IConnector
 
   public LocalConnector()
   {
+    if (!_warnedAboutIndependentClocks && _enableIndependentClocks)
+    {
+      LOGGER
+          .warn("Using independent clocks is an experimental option can cause strange behavior in systems that assume synchronized time.");
+
+      _warnedAboutIndependentClocks = true;
+    }
+
     _defaultClock = new OwnedClock(0.05);
     _clocks = new ConcurrentHashMap<IModel, IClock>();
     setClockConfigurator(new IClockConfigurator() {
@@ -64,22 +72,8 @@ public class LocalConnector implements IConnector
         if (!_enableIndependentClocks)
           return new WrappedClock(defaultClock);
         else
-        {
-          /*
-           * we need this clock to provide an authority, otherwise the model
-           * will not run properly (i.e., it will wait for time to advance, but
-           * without an authority, it cant)
-           */
-          if (!_warnedAboutIndependentClocks)
-          {
-            LOGGER
-                .warn("Using independent clocks is an experimental option can cause strange behavior in systems that assume synchronized time.");
-
-            _warnedAboutIndependentClocks = true;
-          }
           return new BasicClock(true, model.getProceduralModule()
               .getDefaultProductionFiringTime());
-        }
       }
 
       public IClock getClockFor(IModel model, IAgent agent)
