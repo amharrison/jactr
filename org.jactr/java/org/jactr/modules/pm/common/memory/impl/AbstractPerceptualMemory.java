@@ -665,7 +665,9 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
          * produce a stable ordering by the comparator, so we add some extra
          * entropy here to break things up.
          */
-        template.addSlot(new BasicSlot(":hidden-entroy", Math.random()));
+        long random = (long) (Math.random() * System.nanoTime());
+        template.addSlot(new BasicSlot(String.format(":%d", random),
+            random));
 
         for (IFeatureMap featureMap : featureMaps)
           featureMap.fillSlotValues(template, identifier, encodedPercept,
@@ -706,6 +708,9 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
          */
         PerceptualSearchResult result = new PerceptualSearchResult(
             encodedPercept, indexChunk, identifier, request, template);
+
+        // performance optimization to prevent recalc
+        template.lockHash();
 
         prioritizedResults.put(template, result);
       }

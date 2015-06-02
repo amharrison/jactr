@@ -3,6 +3,8 @@ package org.jactr.modules.pm.aural.memory.impl;
 /*
  * default logging
  */
+import java.util.SortedMap;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.agents.IAgent;
@@ -10,6 +12,8 @@ import org.jactr.core.buffer.six.IStatusBuffer;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISymbolicChunk;
 import org.jactr.core.chunk.IllegalChunkStateException;
+import org.jactr.core.logging.IMessageBuilder;
+import org.jactr.core.logging.Logger;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.IMutableSlot;
 import org.jactr.core.slot.ISlot;
@@ -29,6 +33,7 @@ import org.jactr.modules.pm.aural.memory.impl.map.OffsetFeatureMap;
 import org.jactr.modules.pm.aural.memory.impl.map.OnsetFeatureMap;
 import org.jactr.modules.pm.common.memory.IActivePerceptListener;
 import org.jactr.modules.pm.common.memory.IPerceptualEncoder;
+import org.jactr.modules.pm.common.memory.PerceptualSearchResult;
 import org.jactr.modules.pm.common.memory.filter.IIndexFilter;
 import org.jactr.modules.pm.common.memory.filter.NumericIndexFilter;
 import org.jactr.modules.pm.common.memory.impl.AbstractPerceptualMemory;
@@ -206,5 +211,31 @@ public class DefaultAuralMemory extends AbstractPerceptualMemory implements
   protected IChunk getRemovedErrorCodeChunk()
   {
     return _notAvailableChunk;
+  }
+
+  @Override
+  protected PerceptualSearchResult select(
+      SortedMap<ChunkTypeRequest, PerceptualSearchResult> results)
+  {
+    if (Logger.hasLoggers(getModule().getModel()))
+    {
+      IMessageBuilder mb = Logger.messageBuilder();
+      mb.append("Aural search candidates :");
+      results.values().forEach(
+          (psr) -> {
+            mb.append("[");
+            mb.append(psr.getPercept().getSymbolicChunk().getName());
+            mb.append(" @ ").append(
+                psr.getLocation().getSymbolicChunk().getName());
+            mb.append("] ");
+          });
+
+      Logger.log(getModule().getModel(), Logger.Stream.AURAL, mb);
+    }
+
+    if (LOGGER.isDebugEnabled()) LOGGER.debug("All results : " + results);
+    if (results.size() == 0) return null;
+
+    return results.get(results.firstKey());
   }
 }

@@ -134,8 +134,8 @@ public class ChainedComparator<T> implements Comparator<T>
      * that some relationship between the two hashcodes will be constant. So, we
      * change it up with an instance specific mask
      */
-    int h1 = one.hashCode() ^ _comparatorSeed;
-    int h2 = two.hashCode() ^ _comparatorSeed;
+    int h1 = one.hashCode() & _comparatorSeed;
+    int h2 = two.hashCode() & _comparatorSeed;
 
     int rtn = Integer.compare(h1, h2);
 

@@ -6,6 +6,7 @@ package org.jactr.modules.pm.visual.memory.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.SortedMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -14,6 +15,8 @@ import org.jactr.core.buffer.six.IStatusBuffer;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISymbolicChunk;
 import org.jactr.core.chunk.IllegalChunkStateException;
+import org.jactr.core.logging.IMessageBuilder;
+import org.jactr.core.logging.Logger;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.BasicSlot;
 import org.jactr.core.slot.IMutableSlot;
@@ -455,4 +458,33 @@ public class DefaultVisualMemory extends AbstractPerceptualMemory implements
     _stickyAttention = enabled;
   }
 
+  @Override
+  protected PerceptualSearchResult select(
+      SortedMap<ChunkTypeRequest, PerceptualSearchResult> results)
+  {
+    if (Logger.hasLoggers(getModule().getModel()))
+    {
+      IMessageBuilder mb = Logger.messageBuilder();
+      mb.append("Visual search candidates :");
+      results.values().forEach(
+          (psr) -> {
+            mb.append("[");
+            mb.append(psr.getPercept().getSymbolicChunk().getName());
+            mb.append(" @ ").append(
+                psr.getLocation().getSymbolicChunk().getName());
+            mb.append("] ");
+          });
+
+      Logger.log(getModule().getModel(), Logger.Stream.VISUAL, mb);
+    }
+
+    if (LOGGER.isDebugEnabled()) LOGGER.debug("All results : " + results);
+    PerceptualSearchResult rtn = null;
+    if (results.size() > 0) rtn = results.get(results.firstKey());
+
+    if (LOGGER.isDebugEnabled())
+      LOGGER.debug(String.format("Selected : [%s]=[%s]",
+          rtn != null ? results.firstKey() : "null", rtn));
+    return rtn;
+  }
 }

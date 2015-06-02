@@ -115,11 +115,27 @@ public abstract class AbstractPerceptualModule extends
 
   /**
    * called on model termination to give modules a chance to remove their
-   * listeners
+   * listeners. We just shutdown the CR executor (if it is not shared)
    */
   protected void disconnectFromCommonReality()
   {
+    boolean useShared = Boolean.getBoolean("jactr.pm.useSharedExecutor");
 
+    if (!useShared)
+    {
+      String exName = "CR-";
+      if (useShared)
+        exName += "shared";
+      else
+        exName += getModel().getName();
+
+      ExecutorService es = ExecutorServices.getExecutor(exName);
+      if (es != null && !es.isTerminated() && !es.isShutdown())
+      {
+        es.shutdown();
+        ExecutorServices.removeExecutor(exName);
+      }
+    }
   }
 
   @Override

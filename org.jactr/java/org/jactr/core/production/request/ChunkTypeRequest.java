@@ -33,6 +33,8 @@ public class ChunkTypeRequest extends SlotBasedRequest
 
   private IChunkType                 _chunkType;
 
+  private int                        _hashCode = -1;
+
   @SuppressWarnings("unchecked")
   public ChunkTypeRequest(IChunkType chunkType)
   {
@@ -112,6 +114,19 @@ public class ChunkTypeRequest extends SlotBasedRequest
 
   @Override
   public int hashCode()
+  {
+    if (_hashCode == -1)
+      return computeHashCode();
+    else
+      return _hashCode;
+  }
+
+  public void lockHash()
+  {
+    _hashCode = computeHashCode();
+  }
+
+  public int computeHashCode()
   {
     final int prime = 31;
     int result = super.hashCode();

@@ -44,4 +44,10 @@ public class TextMessageBuilder implements IMessageBuilder
     return this;
   }
 
+  @Override
+  public String toString()
+  {
+    return _internal.toString();
+  }
+
 }
