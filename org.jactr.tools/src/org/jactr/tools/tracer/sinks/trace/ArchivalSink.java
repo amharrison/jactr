@@ -4,17 +4,20 @@ package org.jactr.tools.tracer.sinks.trace;
  * default logging
  */
 import java.io.File;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.commonreality.util.LockUtilities;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.tools.tracer.ITraceSink;
 import org.jactr.tools.tracer.sinks.trace.internal.TraceFileManager;
-import org.jactr.tools.tracer.sinks.trace.internal.TraceIndex;
 import org.jactr.tools.tracer.transformer.ITransformedEvent;
 
 /**
@@ -28,26 +31,19 @@ public class ArchivalSink implements ITraceSink
   /**
    * Logger definition
    */
-  static private final transient Log LOGGER              = LogFactory
-                                                             .getLog(ArchivalSink.class);
+  static private final transient Log    LOGGER        = LogFactory
+                                                          .getLog(ArchivalSink.class);
 
-  private volatile boolean           _isActive           = true;
+  private volatile boolean              _isActive     = true;
 
-  private TraceFileManager           _fileManager;
+  private Executor                      _executor;
 
-  private TraceIndex                 _index;
+  private ReentrantReadWriteLock        _lock         = new ReentrantReadWriteLock();
 
-  private Executor                   _executor;
-
-  private double                     _lastSimulationTime = Double.NaN;
+  private Map<String, TraceFileManager> _fileManagers = new TreeMap<String, TraceFileManager>();
 
   public ArchivalSink()
   {
-    File outputDirectory = getOutputDirectory();
-    _index = new TraceIndex(outputDirectory);
-    _fileManager = new TraceFileManager(outputDirectory, _index);
-    _index.open();
-
     initializeCleanup();
 
     _executor = ExecutorServices.getExecutor("archivalSink");
@@ -76,25 +72,20 @@ public class ArchivalSink implements ITraceSink
 
       public void run()
       {
-        try
-        {
-          if (_index != null)
+        // no need to lock
+        _fileManagers.values().forEach((fm) -> {
+          try
           {
-            _index.flush();
-            _index.close();
+            fm.flush();
+            fm.close();
           }
+          catch (Exception e)
+          {
+            LOGGER.error("Failed to close file manager ", e);
+          }
+        });
 
-          if (_fileManager != null)
-          {
-            _fileManager.flush();
-            _fileManager.close();
-          }
-        }
-        finally
-        {
-          _index = null;
-          _fileManager = null;
-        }
+        _fileManagers.clear();
       }
 
     };
@@ -110,25 +101,45 @@ public class ArchivalSink implements ITraceSink
       return;
     }
 
-    double simTime = event.getSimulationTime();
+    String model = event.getModelName();
+    TraceFileManager tfm = null;
 
-    // if (Double.isNaN(_lastSimulationTime)) _lastSimulationTime = simTime;
-    //
-    // if (simTime - _lastSimulationTime < -0.000001)
-    // LOGGER.warn(String.format(
-    // "Time regression detected in event delivery!! (%.6f < %.6f)",
-    // simTime, _lastSimulationTime), new RuntimeException());
-    // else
-    _lastSimulationTime = simTime;
+    try
+    {
+      tfm = LockUtilities.runLocked(
+          _lock.writeLock(),
+          () -> {
+            TraceFileManager fm = _fileManagers.get(model.toLowerCase());
+            if (fm == null)
+            {
+              fm = new TraceFileManager(new File(getOutputDirectory(), model
+                  .toLowerCase()));
+              fm.open();
+              _fileManagers.put(model.toLowerCase(), fm);
+            }
+            return fm;
+          });
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("Failed to create trace file manager");
+    }
 
-    _executor.execute(new Runnable() {
+    if (tfm != null)
+    {
+      final TraceFileManager fTFM = tfm;
 
-      public void run()
-      {
-        _isActive = _fileManager.record(event);
-      }
+      _executor.execute(new Runnable() {
 
-    });
+        public void run()
+        {
+          _isActive = fTFM.record(event);
+        }
+
+      });
+    }
+    else if (LOGGER.isWarnEnabled())
+      LOGGER.warn(String.format("Could not save events for %s", model));
   }
 
   public void flush() throws Exception
@@ -137,8 +148,28 @@ public class ArchivalSink implements ITraceSink
 
       public void run()
       {
-        _isActive = _fileManager.flush();
-        _index.flush();
+        _isActive = true;
+        try
+        {
+          LockUtilities.runLocked(_lock.writeLock(), () -> {
+            _fileManagers.values().forEach((fm) -> {
+              try
+              {
+                fm.flush();
+              }
+              catch (Exception e)
+              {
+                _isActive = false;
+                LOGGER.error("Failed to flush fileManager", e);
+              }
+            });
+          });
+        }
+        catch (Exception e)
+        {
+          _isActive = false;
+          LOGGER.error("Failed to flush", e);
+        }
       }
     });
   }

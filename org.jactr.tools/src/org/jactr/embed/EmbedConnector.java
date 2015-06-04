@@ -30,6 +30,11 @@ public class EmbedConnector extends LocalConnector
     super();
   }
 
+  public EmbedConnector(boolean useIndependentClocks)
+  {
+    super(useIndependentClocks);
+  }
+
   /**
    * @see org.jactr.core.reality.connector.IConnector#connect(org.jactr.core.model.IModel)
    */

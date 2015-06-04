@@ -46,10 +46,10 @@ public class TraceFileManager
 
   private File                       _currentFile;
 
-  public TraceFileManager(File outputDirectory, TraceIndex index)
+  public TraceFileManager(File outputDirectory)
   {
     _pendingEvents = FastList.newInstance();
-    _traceIndex = index;
+    _traceIndex = new TraceIndex(outputDirectory);
     _outputDirectory = outputDirectory;
     _outputDirectory.mkdirs();
 
@@ -82,10 +82,12 @@ public class TraceFileManager
   public void open()
   {
     // noop
+    _traceIndex.open();
   }
 
   public void close()
   {
+    _traceIndex.close();
     if (_currentObjectOutputStream != null)
     {
       flush();
@@ -252,6 +254,7 @@ public class TraceFileManager
   {
     try
     {
+      _traceIndex.flush();
       flushInternal(_pendingEvents, _currentObjectOutputStream);
 
       return true;

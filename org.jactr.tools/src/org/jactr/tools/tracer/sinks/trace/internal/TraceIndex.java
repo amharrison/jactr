@@ -61,7 +61,7 @@ public class TraceIndex
   {
     try
     {
-      _outputStream.flush();
+      if (_outputStream != null) _outputStream.flush();
     }
     catch (Exception e)
     {

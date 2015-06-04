@@ -22,6 +22,7 @@ import java.util.ListIterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.tools.tracer.ITraceSink;
 import org.jactr.tools.tracer.transformer.ITransformedEvent;
 
@@ -40,8 +41,16 @@ public class FileSink implements ITraceSink
 
   private ObjectOutputStream           _outputStream;
 
+  private boolean                      _independentClocksEnabled = Boolean
+                                                                     .getBoolean("connector.independentClocks");
+
   public FileSink(URL file) throws IOException
   {
+    if (_independentClocksEnabled
+        && ACTRRuntime.getRuntime().getModels().size() > 1)
+      throw new IOException(
+          "Cannot use the file sink with independentClocks and multiple models. Reduce to one model, or enable dependent clocks");
+
     _queue = new ArrayList<ITransformedEvent>();
     _outputStream = new ObjectOutputStream(new BufferedOutputStream(file
         .openConnection().getOutputStream()));
