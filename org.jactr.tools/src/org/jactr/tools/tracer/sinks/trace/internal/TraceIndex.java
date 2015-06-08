@@ -47,6 +47,8 @@ public class TraceIndex
       _outputStream.writeDouble(timeWindow[1]);
       _outputStream.writeUTF(archiveFileName);
 
+      _outputStream.flush();
+
       if (LOGGER.isDebugEnabled())
         LOGGER.debug(String.format("wrote [%.2f, %.2f] %s", timeWindow[0],
             timeWindow[1], archiveFileName));

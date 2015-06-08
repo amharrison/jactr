@@ -82,6 +82,16 @@ public class ExecAnalyzer implements ISliceAnalyzer, IParameterized
 
   private String                     _script;
 
+  public ExecAnalyzer()
+  {
+
+  }
+
+  public ExecAnalyzer(String script)
+  {
+    _script = script;
+  }
+
   public Object analyze(ISliceAnalysis sliceAnalysis)
   {
     try

@@ -16,7 +16,7 @@ import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jactr.tools.grapher.core.message.StringTableMessage;
+import org.jactr.core.model.ModelTerminatedException;
 import org.jactr.tools.tracer.transformer.ITransformedEvent;
 
 public class TraceFileManager
@@ -37,7 +37,7 @@ public class TraceFileManager
 
   final private TraceIndex           _traceIndex;
 
-  private double                     _recordWindowSpan = 30;                               // 30sec
+  private double                     _recordWindowSpan = 60;                               // 30sec
 
   private double                     _recordWindow[]   = { Double.NaN,
       Double.MAX_VALUE                                };
@@ -79,13 +79,13 @@ public class TraceFileManager
     }
   }
 
-  public void open()
+  synchronized public void open()
   {
     // noop
     _traceIndex.open();
   }
 
-  public void close()
+  synchronized public void close()
   {
     _traceIndex.close();
     if (_currentObjectOutputStream != null)
@@ -95,7 +95,7 @@ public class TraceFileManager
     }
   }
 
-  public boolean record(ITransformedEvent event)
+  synchronized public boolean record(ITransformedEvent event)
   {
     boolean createRecord = false;
 
@@ -122,16 +122,16 @@ public class TraceFileManager
 
     if (Double.isNaN(_recordWindow[0]) || createRecord)
     {
-      if (Double.isNaN(_recordWindow[0]))
-        _recordWindow[0] = eventTime;
-      else
-        _recordWindow[0] = _recordWindow[1];
+      // if (Double.isNaN(_recordWindow[0]))
+      _recordWindow[0] = eventTime;
+      // else
+      // _recordWindow[0] = _recordWindow[1];
 
       _recordWindow[1] = _recordWindow[0] + _recordWindowSpan;
 
-      if (LOGGER.isDebugEnabled())
-        LOGGER.debug(String.format("Creating new timewindow [%.2f, %.2f]",
-            _recordWindow[0], _recordWindow[1]));
+      // if (LOGGER.isDebugEnabled())
+      // LOGGER.debug(String.format("Creating new timewindow [%.2f, %.2f]",
+      // _recordWindow[0], _recordWindow[1]));
       newRecord();
     }
 
@@ -167,12 +167,16 @@ public class TraceFileManager
         birthday.get(Calendar.SECOND)));
 
     if (fp.exists())
-      if (LOGGER.isWarnEnabled())
-        LOGGER
-            .warn(String
-                .format(
-                    "Tracefile %s already exists. This suggests you've got a long running model. Run with -Djactr.sink.archive.longRun=true",
-                    fp.getAbsolutePath()));
+    {
+      String msg = String
+          .format(
+              "Tracefile %s already exists. This suggests you've got a long running model. Run with -Djactr.sink.archive.longRun=true",
+              fp.getAbsolutePath());
+
+      if (LOGGER.isWarnEnabled()) LOGGER.warn(msg);
+
+      throw new ModelTerminatedException(msg);
+    }
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug(String.format(
@@ -250,11 +254,12 @@ public class TraceFileManager
    * 
    * @return true if all is good
    */
-  public boolean flush()
+  synchronized public boolean flush()
   {
     try
     {
       _traceIndex.flush();
+
       flushInternal(_pendingEvents, _currentObjectOutputStream);
 
       return true;
@@ -272,9 +277,9 @@ public class TraceFileManager
   {
     try
     {
-      if (LOGGER.isDebugEnabled())
-        LOGGER
-            .debug(String.format("Flushing %d events", _pendingEvents.size()));
+      // if (LOGGER.isDebugEnabled())
+      // LOGGER
+      // .debug(String.format("Flushing %d events", pendingEvents.size()));
 
       for (ITransformedEvent event : pendingEvents)
       {
@@ -289,10 +294,10 @@ public class TraceFileManager
 
         output.writeObject(event);
 
-        if (event instanceof StringTableMessage && LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format("Wrote (%.2f) %s to [%.2f, %.2f] : %s",
-              event.getSimulationTime(), event, _recordWindow[0],
-              _recordWindow[1], _currentFile.getCanonicalPath()));
+        // if (event instanceof StringTableMessage && LOGGER.isDebugEnabled())
+        // LOGGER.debug(String.format("Wrote (%.2f) %s to [%.2f, %.2f] : %s",
+        // event.getSimulationTime(), event, _recordWindow[0],
+        // _recordWindow[1], _currentFile.getCanonicalPath()));
       }
 
       if (output != null) output.flush();

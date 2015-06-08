@@ -19,7 +19,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javolution.util.FastList;
 
@@ -37,9 +39,9 @@ import org.jactr.core.runtime.controller.debug.event.BreakpointEvent;
 import org.jactr.core.runtime.controller.debug.event.IBreakpointListener;
 import org.jactr.core.runtime.event.ACTRRuntimeAdapter;
 import org.jactr.core.runtime.event.ACTRRuntimeEvent;
-import org.jactr.core.runtime.event.IACTRRuntimeListener;
 import org.jactr.core.utils.parameter.IParameterized;
 import org.jactr.instrument.IInstrument;
+import org.jactr.tools.misc.ModelsLock;
 import org.jactr.tools.tracer.listeners.ITraceListener;
 import org.jactr.tools.tracer.sinks.ChainedSink;
 
@@ -55,45 +57,83 @@ public class RuntimeTracer implements IInstrument, IParameterized
   /**
    * logger definition
    */
-  static public final Log            LOGGER              = LogFactory
-                                                             .getLog(RuntimeTracer.class);
+  static public final Log            LOGGER                = LogFactory
+                                                               .getLog(RuntimeTracer.class);
 
-  static public final String         EXECUTOR_PARAM      = "Executor";
+  static public final String         EXECUTOR_PARAM        = "Executor";
 
-  static public final String         SINK_CLASS          = "ITraceSinkClass";
+  static public final String         SINK_CLASS            = "ITraceSinkClass";
 
-  static public final String         LISTENERS           = "ListenerClasses";
+  static public final String         LISTENERS             = "ListenerClasses";
 
   private ITraceSink                 _dataSink;
 
   private Collection<ITraceListener> _listeners;
 
-  private Set<IModel>                _attachedModels     = new HashSet<IModel>();
+  private Set<IModel>                _attachedModels       = new HashSet<IModel>();
 
-  private Map<String, String>        _deferredParameters = new TreeMap<String, String>();
+  private Map<String, String>        _deferredParameters   = new TreeMap<String, String>();
 
-  private IModelListener             _modelListener      = null;
+  private IModelListener             _modelListener        = null;
 
-  private String                     _executorName       = ExecutorServices.BACKGROUND;
+  private String                     _executorName         = ExecutorServices.BACKGROUND;
 
-  private Executor                   _executor           = ExecutorServices
-                                                             .getExecutor(_executorName);
+  private Executor                   _executor             = ExecutorServices
+                                                               .getExecutor(_executorName);
+
+  private static long                SYNCHRONIZATION_THRESHOLD;
+
+  static
+  {
+    try
+    {
+      SYNCHRONIZATION_THRESHOLD = Long.parseLong(System.getProperty(
+          "jactr.runtimeTracer.synchronizationInterval", "2000"));
+    }
+    catch (Exception e)
+    {
+      SYNCHRONIZATION_THRESHOLD = 1000;
+    }
+  }
+
+  private AtomicLong                 _synchronizationCount = new AtomicLong(0);
+
+  private ModelsLock                 _modelsLock           = new ModelsLock();
 
   public RuntimeTracer()
   {
+
     _listeners = new ArrayList<ITraceListener>();
 
     _modelListener = new ModelListenerAdaptor() {
       @Override
       public void cycleStopped(ModelEvent me)
       {
-        if (_dataSink != null) try
+        if (_synchronizationCount.incrementAndGet() % SYNCHRONIZATION_THRESHOLD == 0)
         {
-          _dataSink.flush();
-        }
-        catch (Exception e)
-        {
-          LOGGER.error(".cycleStopped threw Exception while flushing: ", e);
+          if (LOGGER.isDebugEnabled())
+            LOGGER.debug(String
+                .format("Requesting models to suspend until we can catch up"));
+          // trigger the synchronization, but fire it on the our executor
+          // so we know we've caught up.
+          CompletableFuture<Boolean> allClosed = _modelsLock.close();
+          allClosed.thenRunAsync(
+              () -> {
+                if (LOGGER.isDebugEnabled())
+                  LOGGER.debug(String.format("All models stopped. Sinking"));
+                if (_dataSink != null)
+                  try
+                  {
+                    _dataSink.flush();
+                  }
+                  catch (Exception e)
+                  {
+                    LOGGER.error(
+                        ".cycleStopped threw Exception while flushing: ", e);
+                  }
+                // and release
+                _modelsLock.open();
+              }, getExecutor());
         }
       }
     };
@@ -156,7 +196,9 @@ public class RuntimeTracer implements IInstrument, IParameterized
     for (ITraceListener listener : _listeners)
       listener.install(model, getExecutor());
 
-    model.addListener(_modelListener, getExecutor());
+    model.addListener(_modelListener, ExecutorServices.INLINE_EXECUTOR);
+
+    _modelsLock.install(model);
 
     _attachedModels.add(model);
   }
@@ -167,6 +209,7 @@ public class RuntimeTracer implements IInstrument, IParameterized
     for (ITraceListener listener : _listeners)
       listener.uninstall(model);
 
+    _modelsLock.uninstall(model);
     _attachedModels.remove(model);
   }
 
@@ -179,9 +222,11 @@ public class RuntimeTracer implements IInstrument, IParameterized
    */
   public void initialize()
   {
+    _modelsLock.initialize();
     ACTRRuntime runtime = ACTRRuntime.getRuntime();
     runtime.addListener(new ACTRRuntimeAdapter() {
 
+      @Override
       public void modelAdded(ACTRRuntimeEvent event)
       {
         /*
@@ -192,6 +237,7 @@ public class RuntimeTracer implements IInstrument, IParameterized
         // install(event.getModel());
       }
 
+      @Override
       public void runtimeStopped(ACTRRuntimeEvent event)
       {
         try
@@ -274,8 +320,8 @@ public class RuntimeTracer implements IInstrument, IParameterized
         if (sinkClass.length() > 0)
           try
           {
-            sinks.add((ITraceSink) getClass().getClassLoader().loadClass(
-                sinkClass).newInstance());
+            sinks.add((ITraceSink) getClass().getClassLoader()
+                .loadClass(sinkClass).newInstance());
           }
           catch (Exception e)
           {

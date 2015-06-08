@@ -92,7 +92,8 @@ public class DeadLockUtilities
       for (ThreadInfo threadInfo : threadInfos)
       {
         pw.println();
-        pw.println(threadInfo.getThreadName());
+        pw.println(threadInfo.getThreadName() + " ID:"
+            + threadInfo.getThreadId());
         Thread.State state = threadInfo.getThreadState();
         pw.print("   java.lang.Thread.State: ");
         pw.println(state);

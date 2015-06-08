@@ -7,9 +7,9 @@ import java.io.File;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,7 +36,7 @@ public class ArchivalSink implements ITraceSink
 
   private volatile boolean              _isActive     = true;
 
-  private Executor                      _executor;
+  private Executor                      _executor     = ExecutorServices.INLINE_EXECUTOR;
 
   private ReentrantReadWriteLock        _lock         = new ReentrantReadWriteLock();
 
@@ -46,12 +46,13 @@ public class ArchivalSink implements ITraceSink
   {
     initializeCleanup();
 
-    _executor = ExecutorServices.getExecutor("archivalSink");
-    if (_executor == null)
-    {
-      _executor = Executors.newSingleThreadExecutor();
-      ExecutorServices.addExecutor("archivalSink", (ExecutorService) _executor);
-    }
+    // _executor = ExecutorServices.getExecutor("archivalSink");
+    // if (_executor == null)
+    // {
+    // _executor = Executors.newSingleThreadExecutor();
+    // ExecutorServices.addExecutor("archivalSink", (ExecutorService)
+    // _executor);
+    // }
 
   }
 
@@ -151,18 +152,22 @@ public class ArchivalSink implements ITraceSink
         _isActive = true;
         try
         {
+          FastList<TraceFileManager> managers = FastList.newInstance();
+
           LockUtilities.runLocked(_lock.writeLock(), () -> {
-            _fileManagers.values().forEach((fm) -> {
-              try
-              {
-                fm.flush();
-              }
-              catch (Exception e)
-              {
-                _isActive = false;
-                LOGGER.error("Failed to flush fileManager", e);
-              }
-            });
+            managers.addAll(_fileManagers.values());
+          });
+
+          managers.forEach((fm) -> {
+            try
+            {
+              fm.flush();
+            }
+            catch (Exception e)
+            {
+              _isActive = false;
+              LOGGER.error("Failed to flush fileManager", e);
+            }
           });
         }
         catch (Exception e)
