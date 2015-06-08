@@ -3,7 +3,8 @@ package org.jactr.modules.pm.aural.memory.impl;
 /*
  * default logging
  */
-import java.util.SortedMap;
+import java.util.Collection;
+import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -215,27 +216,47 @@ public class DefaultAuralMemory extends AbstractPerceptualMemory implements
 
   @Override
   protected PerceptualSearchResult select(
-      SortedMap<ChunkTypeRequest, PerceptualSearchResult> results)
+      Collection<PerceptualSearchResult> results)
   {
+    IMessageBuilder mb = null;
     if (Logger.hasLoggers(getModule().getModel()))
     {
-      IMessageBuilder mb = Logger.messageBuilder();
+      mb = Logger.messageBuilder();
+      IMessageBuilder fmb = mb;
       mb.append("Aural search candidates :");
-      results.values().forEach(
+      results.forEach(
           (psr) -> {
-            mb.append("[");
-            mb.append(psr.getPercept().getSymbolicChunk().getName());
-            mb.append(" @ ").append(
+        fmb.append("[");
+        fmb.append(psr.getPercept().getSymbolicChunk().getName());
+        fmb.append(" @ ")
+            .append(
                 psr.getLocation().getSymbolicChunk().getName());
-            mb.append("] ");
+        fmb.append("] ");
           });
 
-      Logger.log(getModule().getModel(), Logger.Stream.AURAL, mb);
     }
 
     if (LOGGER.isDebugEnabled()) LOGGER.debug("All results : " + results);
-    if (results.size() == 0) return null;
+    PerceptualSearchResult rtn = null;
+    if (results.size() > 0)
+    {
+      // grab one at random
+      Iterator<PerceptualSearchResult> itr = results.iterator();
+      int which = (int) Math.floor(Math.random() * results.size());
 
-    return results.get(results.firstKey());
+      if (mb != null) mb.prepend(String.format("Selecting %d", which));
+
+      for (int i = 0; i <= which && itr.hasNext(); i++)
+        rtn = itr.next();
+    }
+
+    if (LOGGER.isDebugEnabled())
+      LOGGER.debug(String.format("Selected : [%s]=[%s]",
+          rtn != null ? rtn.getLocation() : "null", rtn));
+
+    if (mb != null)
+      Logger.log(getModule().getModel(), Logger.Stream.AURAL, mb);
+    return rtn;
   }
+
 }

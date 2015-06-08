@@ -11,7 +11,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -55,8 +54,8 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
   /**
    * Logger definition
    */
-  static private final transient Log                                           LOGGER           = LogFactory
-                                                                                                    .getLog(AbstractPerceptualMemory.class);
+  static private final transient Log                                           LOGGER             = LogFactory
+                                                                                                      .getLog(AbstractPerceptualMemory.class);
 
   static public final String                                                   PRECODE_ONSET_TIME = ":precode-onset";
 
@@ -71,17 +70,17 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
 
   private IFINSTFeatureMap                                                     _finstFeatureMap;
 
-  private int                                                                  _finstLimit      = 4;
+  private int                                                                  _finstLimit        = 4;
 
-  private double                                                               _finstDuration   = 3;
+  private double                                                               _finstDuration     = 3;
 
-  private double                                                               _onsetDuration   = 0.5;
+  private double                                                               _onsetDuration     = 0.5;
 
   private final IPerceptualModule                                              _module;
 
   private final IIndexManager                                                  _indexManager;
 
-  private final ACTREventDispatcher<IPerceptualMemory, IActivePerceptListener> _dispatcher      = new ACTREventDispatcher<IPerceptualMemory, IActivePerceptListener>();
+  private final ACTREventDispatcher<IPerceptualMemory, IActivePerceptListener> _dispatcher        = new ACTREventDispatcher<IPerceptualMemory, IActivePerceptListener>();
 
   private IAgent                                                               _agent;
 
@@ -89,7 +88,7 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
 
   private List<PerceptualSearchResult>                                         _recentResults;
 
-  private Map<String, IChunk>                                                  _namedChunkCache = new TreeMap<String, IChunk>();
+  private Map<String, IChunk>                                                  _namedChunkCache   = new TreeMap<String, IChunk>();
 
   @SuppressWarnings("unchecked")
   public AbstractPerceptualMemory(IPerceptualModule module,
@@ -204,8 +203,6 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
     // handle any potentially missed
     _agentListener.processExistingObjects();
   }
-
-
 
   protected DefaultAfferentObjectListener getAfferentObjectListener()
   {
@@ -471,12 +468,18 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
 
   /**
    * create a default comparator when none is specified from the search request.
-   * By default this prioritizes by the most recent encoding time (highest to
-   * lowest)
+   * by default this returns null. A good alternative is
+   * {@link #createLatestOnsetComparator()}
    * 
    * @return null
    */
   protected Comparator<ChunkTypeRequest> createDefaultComparator()
+  {
+
+    return null;
+  }
+
+  protected Comparator<ChunkTypeRequest> createLatestOnsetComparator()
   {
     return new Comparator<ChunkTypeRequest>() {
 
@@ -563,7 +566,7 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
      * which then build the priority sort
      */
     ChainedComparator<ChunkTypeRequest> prioritySort = new ChainedComparator<ChunkTypeRequest>(
-        false);
+        true);
     for (IIndexFilter filter : filters)
     {
       Comparator<ChunkTypeRequest> comparator = filter.getComparator();
@@ -580,7 +583,7 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
       if (comparator != null) prioritySort.add(comparator);
     }
 
-    TreeMap<ChunkTypeRequest, PerceptualSearchResult> prioritizedResults = new TreeMap<ChunkTypeRequest, PerceptualSearchResult>(
+    TreeMap<ChunkTypeRequest, Collection<PerceptualSearchResult>> prioritizedResults = new TreeMap<ChunkTypeRequest, Collection<PerceptualSearchResult>>(
         prioritySort);
 
     /*
@@ -654,7 +657,10 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
         ChunkTypeRequest template = new ChunkTypeRequest(request.getChunkType());
 
         /*
-         * explicitly add precode onset
+         * explicitly add precode onset. except that this could screw up if
+         * onsets actually span two cycles. This is not a problem with the lisp
+         * since all updates are in the same cycle. But by defaulting to
+         * prioritizing the most recent, we could get a literal recency effect.
          */
         template.addSlot(new BasicSlot(PRECODE_ONSET_TIME, encodedPercept
             .getMetaData(IPerceptualEncoder.COMMONREALITY_ONSET_TIME_KEY)));
@@ -665,9 +671,9 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
          * produce a stable ordering by the comparator, so we add some extra
          * entropy here to break things up.
          */
-        long random = (long) (Math.random() * System.nanoTime());
-        template.addSlot(new BasicSlot(String.format(":%d", random),
-            random));
+        // long random = (long) (Math.random() * System.nanoTime());
+        // template.addSlot(new BasicSlot(String.format(":%d", random),
+        // random));
 
         for (IFeatureMap featureMap : featureMaps)
           featureMap.fillSlotValues(template, identifier, encodedPercept,
@@ -712,7 +718,18 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
         // performance optimization to prevent recalc
         template.lockHash();
 
-        prioritizedResults.put(template, result);
+        /**
+         * if this has a value, the template was ranked as equivalent.
+         */
+        Collection<PerceptualSearchResult> equivalentResults = prioritizedResults
+            .get(template);
+        if (equivalentResults == null)
+        {
+          equivalentResults = FastList.newInstance();
+          prioritizedResults.put(template, equivalentResults);
+        }
+        equivalentResults.add(result);
+
       }
     }
 
@@ -729,7 +746,8 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
       return psr;
     }
 
-    PerceptualSearchResult rtn = select(prioritizedResults);
+    PerceptualSearchResult rtn = select(prioritizedResults.firstEntry()
+        .getValue());
 
     if (rtn != null)
       try
@@ -778,11 +796,11 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
    * @return
    */
   protected PerceptualSearchResult select(
-      SortedMap<ChunkTypeRequest, PerceptualSearchResult> results)
+      Collection<PerceptualSearchResult> results)
   {
     if (LOGGER.isDebugEnabled()) LOGGER.debug("All results : " + results);
     if (results.size() == 0) return null;
-    return results.get(results.firstKey());
+    return results.iterator().next();
   }
 
   protected void addRecentSearch(PerceptualSearchResult result)

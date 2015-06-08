@@ -8,6 +8,7 @@ import java.util.function.BiConsumer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.time.impl.BasicClock;
+import org.jactr.core.model.ModelTerminatedException;
 
 /**
  * static class with various diagnostic tools. Exposes the following system
@@ -49,20 +50,77 @@ public class Diagnostics
 
   static public final BiConsumer<Double, Double>     PRECISION_IGNORE    = (c,
                                                                              p) -> {
+                                                                           String msg = String
+                                                                               .format(
+                                                                                   "Precision violation. Desired [%.5f], got [%.5f]",
+                                                                                   c,
+                                                                                   p);
+                                                                           LOGGER
+                                                                               .debug(msg);
+                                                                         };
+
+  static public final BiConsumer<Double, Double>     PRECISION_STOP      = (c,
+                                                                             p) -> {
+                                                                           String msg = String
+                                                                               .format(
+                                                                                   "Precision violation. Desired [%.5f], got [%.5f]",
+                                                                                   c,
+                                                                                   p);
+                                                                           LOGGER
+                                                                               .error(msg);
+                                                                           throw new ModelTerminatedException(
+                                                                               msg);
                                                                          };
 
   static public final BiConsumer<Double, Double>     PRECISION_TERMINATE = (c,
                                                                              p) -> {
+                                                                           String msg = String
+                                                                               .format(
+                                                                                   "Precision violation. Desired [%.5f], got [%.5f]",
+                                                                                   c,
+                                                                                   p);
+                                                                           LOGGER
+                                                                               .error(msg);
                                                                            System
                                                                                .exit(-1);
                                                                          };
 
   static public final BiConsumer<Double, TimeWindow> SANITY_IGNORE       = (c,
                                                                              w) -> {
+                                                                           String msg = String
+                                                                               .format(
+                                                                                   "Age violation. [%.5f] exceeded [%s:%.5f]",
+                                                                                   c,
+                                                                                   w,
+                                                                                   w.getSeconds());
+                                                                           LOGGER
+                                                                               .debug(msg);
+                                                                         };
+
+  static public final BiConsumer<Double, TimeWindow> SANITY_STOP         = (c,
+                                                                             w) -> {
+                                                                           String msg = String
+                                                                               .format(
+                                                                                   "Age violation. [%.5f] exceeded [%s:%.5f]",
+                                                                                   c,
+                                                                                   w,
+                                                                                   w.getSeconds());
+                                                                           LOGGER
+                                                                               .error(msg);
+                                                                           throw new ModelTerminatedException(
+                                                                               msg);
                                                                          };
 
   static public final BiConsumer<Double, TimeWindow> SANITY_TERMINATE    = (c,
                                                                              w) -> {
+                                                                           String msg = String
+                                                                                   .format(
+                                                                                       "Age violation. [%.5f] exceeded [%s:%.5f]",
+                                                                                       c,
+                                                                                       w,
+                                                                                   w.getSeconds());
+                                                                           LOGGER
+                                                                               .error(msg);
                                                                            System
                                                                                .exit(-1);
                                                                          };
@@ -84,12 +142,17 @@ public class Diagnostics
       DEFAULT_WINDOW = TimeWindow.YEAR;
     }
 
-    Boolean terminateOnError = Boolean
-        .getBoolean("jactr.diagnostics.terminateOnFail");
-    if (terminateOnError)
+    String strat = System.getProperty("jactr.diagnostics.onFail", "stop");
+
+    if (strat.equalsIgnoreCase("terminate"))
     {
       DEFAULT_PRECISION_FAILURE = PRECISION_TERMINATE;
       DEFAULT_SANITY_FAILURE = SANITY_TERMINATE;
+    }
+    else if (strat.equalsIgnoreCase("stop"))
+    {
+      DEFAULT_PRECISION_FAILURE = PRECISION_STOP;
+      DEFAULT_SANITY_FAILURE = SANITY_STOP;
     }
     else
     {

@@ -61,8 +61,7 @@ import org.jactr.modules.pm.common.memory.IPerceptualMemory;
  * There is still much improvement that can be made in terms of the granularity
  * and speed, the current thread safety is course and rather slow. [the old,
  * unprotected version ran allowed models to run at 500x real time, this version
- * brings it down to 250x]
- * <br>
+ * brings it down to 250x] <br>
  * <br>
  * Note: this does not fire events
  * 
@@ -73,30 +72,29 @@ public class DefaultFINSTFeatureMap implements IFINSTFeatureMap
   /**
    * logger definition
    */
-  static private final Log       LOGGER = LogFactory
-                                            .getLog(DefaultFINSTFeatureMap.class);
+  static private final Log                                      LOGGER      = LogFactory
+                                                                                .getLog(DefaultFINSTFeatureMap.class);
 
-  private int                    _maximumFINSTs;
+  private int                                                   _maximumFINSTs;
 
-  private String                 _attendedSlotName;
+  private String                                                _attendedSlotName;
 
-  IModel                         _model;
+  IModel                                                        _model;
 
-  IChunk                         _newChunk;
+  IChunk                                                        _newChunk;
 
-  Map<IIdentifier, FINST>        _attendedIdentifiers;
+  Map<IIdentifier, FINST>                                       _attendedIdentifiers;
 
-  Map<IIdentifier, FINST>        _oldIdentifiers;
+  Map<IIdentifier, FINST>                                       _oldIdentifiers;
 
-  Map<IIdentifier, FINST>        _newIdentifiers;
-  
+  Map<IIdentifier, FINST>                                       _newIdentifiers;
+
   @SuppressWarnings("unchecked")
   private ACTREventDispatcher<IFeatureMap, IFeatureMapListener> _dispatcher = new ACTREventDispatcher<IFeatureMap, IFeatureMapListener>();
 
   private IPerceptualMemory                                     _memory;
-  
 
-  private ReentrantReadWriteLock _lock  = new ReentrantReadWriteLock();
+  private ReentrantReadWriteLock                                _lock       = new ReentrantReadWriteLock();
 
   public DefaultFINSTFeatureMap(IModel model, String attendedSlotName)
   {
@@ -108,7 +106,7 @@ public class DefaultFINSTFeatureMap implements IFINSTFeatureMap
     _oldIdentifiers = new HashMap<IIdentifier, FINST>();
     _attendedIdentifiers = new HashMap<IIdentifier, FINST>();
   }
-  
+
   public void addListener(IFeatureMapListener listener, Executor executor)
   {
     _dispatcher.addListener(listener, executor);
@@ -323,6 +321,7 @@ public class DefaultFINSTFeatureMap implements IFINSTFeatureMap
   {
     FINST finst = null;
 
+    FlagAsOld fao = this.new FlagAsOld(identifier, chunk, duration);
     try
     {
       _lock.writeLock().lock();
@@ -349,21 +348,21 @@ public class DefaultFINSTFeatureMap implements IFINSTFeatureMap
         LOGGER.debug("Old: " + _oldIdentifiers.keySet() + " New: "
             + _newIdentifiers.keySet() + " Att:"
             + _attendedIdentifiers.keySet());
+
+      finst.setFlagAsOld(fao);
     }
     finally
     {
       _lock.writeLock().unlock();
     }
 
-    FlagAsOld fao = this.new FlagAsOld(identifier, chunk, duration);
-    finst.setFlagAsOld(fao);
 
     // add the timed event to expire the attended
     _model.getTimedEventQueue().enqueue(fao);
-    
-    if(hasListeners())
-      dispatch(new FeatureMapEvent(this, ACTRRuntime.getRuntime().getClock(
-          getPerceptualMemory().getModule().getModel()).getTime(),
+
+    if (hasListeners())
+      dispatch(new FeatureMapEvent(this, ACTRRuntime.getRuntime()
+          .getClock(getPerceptualMemory().getModule().getModel()).getTime(),
           FeatureMapEvent.Type.UPDATED, Collections.singleton(identifier)));
   }
 
@@ -374,6 +373,7 @@ public class DefaultFINSTFeatureMap implements IFINSTFeatureMap
   public void flagAsNew(IIdentifier identifier, IChunk chunk, double duration)
   {
     FINST finst = null;
+    FlagAsOld fao = this.new FlagAsOld(identifier, chunk, duration);
     try
     {
       _lock.writeLock().lock();
@@ -396,21 +396,20 @@ public class DefaultFINSTFeatureMap implements IFINSTFeatureMap
             + _newIdentifiers.keySet() + " Att:"
             + _attendedIdentifiers.keySet());
 
+      finst.setFlagAsOld(fao);
     }
     finally
     {
       _lock.writeLock().unlock();
     }
 
-    FlagAsOld fao = this.new FlagAsOld(identifier, chunk, duration);
-    finst.setFlagAsOld(fao);
 
     // add the timed event to expire the new
     _model.getTimedEventQueue().enqueue(fao);
-    
-    if(hasListeners())
-      dispatch(new FeatureMapEvent(this, ACTRRuntime.getRuntime().getClock(
-          getPerceptualMemory().getModule().getModel()).getTime(),
+
+    if (hasListeners())
+      dispatch(new FeatureMapEvent(this, ACTRRuntime.getRuntime()
+          .getClock(getPerceptualMemory().getModule().getModel()).getTime(),
           FeatureMapEvent.Type.UPDATED, Collections.singleton(identifier)));
   }
 
@@ -428,7 +427,8 @@ public class DefaultFINSTFeatureMap implements IFINSTFeatureMap
 
       if (finst == null)
       {
-        LOGGER.warn("Flagging " + identifier
+        if (LOGGER.isDebugEnabled())
+          LOGGER.debug("Flagging " + identifier
             + " as old, but it was never new or attended");
         finst = new FINST(identifier, chunk);
       }
@@ -445,10 +445,10 @@ public class DefaultFINSTFeatureMap implements IFINSTFeatureMap
     {
       _lock.writeLock().unlock();
     }
-    
-    if(hasListeners())
-      dispatch(new FeatureMapEvent(this, ACTRRuntime.getRuntime().getClock(
-          getPerceptualMemory().getModule().getModel()).getTime(),
+
+    if (hasListeners())
+      dispatch(new FeatureMapEvent(this, ACTRRuntime.getRuntime()
+          .getClock(getPerceptualMemory().getModule().getModel()).getTime(),
           FeatureMapEvent.Type.UPDATED, Collections.singleton(identifier)));
   }
 
@@ -523,19 +523,17 @@ public class DefaultFINSTFeatureMap implements IFINSTFeatureMap
     else
       mutableRequest.addSlot(new BasicSlot(_attendedSlotName, null));
   }
-  
+
   public FINSTState getInformation(IIdentifier identifier)
   {
     try
     {
       _lock.readLock().lock();
-      if(_newIdentifiers.containsKey(identifier))
-        return FINSTState.NEW;
-      if(_oldIdentifiers.containsKey(identifier))
-        return FINSTState.OLD;
-      if(_attendedIdentifiers.containsKey(identifier))
+      if (_newIdentifiers.containsKey(identifier)) return FINSTState.NEW;
+      if (_oldIdentifiers.containsKey(identifier)) return FINSTState.OLD;
+      if (_attendedIdentifiers.containsKey(identifier))
         return FINSTState.ATTENDED;
-      
+
       return FINSTState.UNKNOWN;
     }
     finally
@@ -705,8 +703,11 @@ public class DefaultFINSTFeatureMap implements IFINSTFeatureMap
     public void fire(double currentTime)
     {
       if (LOGGER.isDebugEnabled()) LOGGER.debug("firing " + this);
-      super.fire(currentTime);
-      flagAsOld(_identifier, _afferentChunk);
+      if (!hasFired() && !hasAborted())
+      {
+        super.fire(currentTime);
+        flagAsOld(_identifier, _afferentChunk);
+      }
     }
 
     @Override
@@ -742,7 +743,8 @@ public class DefaultFINSTFeatureMap implements IFINSTFeatureMap
 
     public void setFlagAsOld(FlagAsOld timedEvent)
     {
-      if (_timedEvent != null)
+      if (_timedEvent != null && !_timedEvent.hasAborted()
+          && !_timedEvent.hasFired())
       {
         if (LOGGER.isDebugEnabled())
           LOGGER.debug("Aborting old timed event " + _timedEvent);
@@ -780,11 +782,7 @@ public class DefaultFINSTFeatureMap implements IFINSTFeatureMap
 
   public void normalizeRequest(ChunkTypeRequest request)
   {
-    
-    
+
   }
-
-  
-
 
 }

@@ -186,8 +186,20 @@ public class DefaultModelRunner implements Runnable
       return 0;
     }
 
-    waitForTime = BasicClock.constrainPrecision(waitForTime);
     IClock clock = ACTRRuntime.getRuntime().getClock(_model);
+    double now = clock.getTime();
+    if (waitForTime <= now)
+    {
+      LOGGER
+          .error(String
+              .format(
+                  "WARNING: Time discrepancy detected. Clock regression requested : %.10f(desired) < %.10f(current). Should be >=",
+                  waitForTime, now));
+
+      if (_enableTimeDiagnostics) Diagnostics.timeSanityCheck(waitForTime);
+    }
+
+    waitForTime = BasicClock.constrainPrecision(waitForTime);
     Optional<IAuthoritativeClock> auth = clock.getAuthority();
 
     double rtn = waitForTime;
@@ -299,7 +311,7 @@ public class DefaultModelRunner implements Runnable
 
           if (_enableTimeDiagnostics) Diagnostics.timeSanityCheck(nextTime);
 
-          nextTime = priorTime + 0.001;
+          // nextTime = priorTime + 0.001;
         }
 
         postCycle(priorTime);

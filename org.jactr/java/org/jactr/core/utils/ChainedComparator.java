@@ -36,7 +36,7 @@ public class ChainedComparator<T> implements Comparator<T>
 
   boolean                            _permitEqualities = true;
 
-  int                                _comparatorSeed   = (int) (Math.random() * System
+  int                                _comparatorSeed   = (int) ((Math.random() + 1) * System
                                                            .currentTimeMillis());
 
   /**
@@ -140,8 +140,16 @@ public class ChainedComparator<T> implements Comparator<T>
     int rtn = Integer.compare(h1, h2);
 
     if (rtn == 0)
+    {
+      // one last attempt
+      h1 *= hashCode();
+      h2 *= hashCode();
+      rtn = Integer.compare(h1, h2);
+
+      if (rtn == 0)
       LOGGER.error(String.format("functional equality %s.%d = %s.%d ", one,
           one.hashCode(), two, two.hashCode()));
+    }
 
     return rtn;
   }

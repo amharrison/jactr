@@ -376,7 +376,7 @@ public class AttendToRequestDelegate extends AbstractRequestDelegate
       {
         String msg = "No aural object could be encoded at " + location;
         LOGGER.debug(msg);
-        Logger.log(model, Logger.Stream.VISUAL, msg);
+        Logger.log(model, Logger.Stream.AURAL, msg);
       }
 
       actBuffer.setStateChunk(errorChunk);

@@ -6,7 +6,7 @@ package org.jactr.modules.pm.visual.memory.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.SortedMap;
+import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -460,31 +460,44 @@ public class DefaultVisualMemory extends AbstractPerceptualMemory implements
 
   @Override
   protected PerceptualSearchResult select(
-      SortedMap<ChunkTypeRequest, PerceptualSearchResult> results)
+      Collection<PerceptualSearchResult> results)
   {
+    IMessageBuilder mb = null;
+
     if (Logger.hasLoggers(getModule().getModel()))
     {
-      IMessageBuilder mb = Logger.messageBuilder();
+      mb = Logger.messageBuilder();
+      IMessageBuilder fB = mb;
       mb.append("Visual search candidates :");
-      results.values().forEach(
-          (psr) -> {
-            mb.append("[");
-            mb.append(psr.getPercept().getSymbolicChunk().getName());
-            mb.append(" @ ").append(
+      results
+          .forEach((psr) -> {
+            fB.append("[");
+            fB.append(psr.getPercept().getSymbolicChunk().getName());
+            fB.append(" @ ").append(
                 psr.getLocation().getSymbolicChunk().getName());
-            mb.append("] ");
+            fB.append("] ");
           });
-
-      Logger.log(getModule().getModel(), Logger.Stream.VISUAL, mb);
     }
 
     if (LOGGER.isDebugEnabled()) LOGGER.debug("All results : " + results);
     PerceptualSearchResult rtn = null;
-    if (results.size() > 0) rtn = results.get(results.firstKey());
+    if (results.size() > 0)
+    {
+      // grab one at random
+      Iterator<PerceptualSearchResult> itr = results.iterator();
+      int which = (int) Math.floor(Math.random() * results.size());
+
+      if (mb != null) mb.prepend(String.format("Selecting %d", which));
+
+      for (int i = 0; i <= which && itr.hasNext(); i++)
+        rtn = itr.next();
+    }
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug(String.format("Selected : [%s]=[%s]",
-          rtn != null ? results.firstKey() : "null", rtn));
+          rtn != null ? rtn.getLocation() : "null", rtn));
+
+    if (mb != null) Logger.log(getModule().getModel(), Logger.Stream.VISUAL, mb);
     return rtn;
   }
 }

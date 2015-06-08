@@ -27,6 +27,9 @@ import org.commonreality.time.impl.WrappedClock;
 import org.jactr.core.model.IModel;
 
 /**
+ * local connector responsible for providing the clocks to the models, and any
+ * and all attachment handling for the non-existant perceptual interfaces.
+ * 
  * @author developer
  */
 public class LocalConnector implements IConnector
@@ -48,15 +51,28 @@ public class LocalConnector implements IConnector
 
   private IClockConfigurator   _configurator;
 
+  private boolean              _useIndependentClocks         = false;
+
+  /**
+   * default will use the system property connector.independentClocks
+   * effectively new
+   * LocalConnector(Boolean.getBoolean("connector.independentClocks"))
+   */
   public LocalConnector()
   {
-    if (!_warnedAboutIndependentClocks && _enableIndependentClocks)
+    this(_enableIndependentClocks);
+  }
+
+  public LocalConnector(boolean useIndependentClocks)
+  {
+    if (!_warnedAboutIndependentClocks && useIndependentClocks)
     {
       LOGGER
           .warn("Using independent clocks is an experimental option can cause strange behavior in systems that assume synchronized time.");
 
       _warnedAboutIndependentClocks = true;
     }
+    _useIndependentClocks = useIndependentClocks;
 
     _defaultClock = new OwnedClock(0.05);
     _clocks = new ConcurrentHashMap<IModel, IClock>();
@@ -69,7 +85,7 @@ public class LocalConnector implements IConnector
 
       public IClock getClockFor(IModel model, IClock defaultClock)
       {
-        if (!_enableIndependentClocks)
+        if (!_useIndependentClocks)
           return new WrappedClock(defaultClock);
         else
           return new BasicClock(true, model.getProceduralModule()
@@ -89,7 +105,7 @@ public class LocalConnector implements IConnector
    */
   public void connect(IModel model)
   {
-    if (!_enableIndependentClocks)
+    if (!_useIndependentClocks)
     {
       OwnedAuthoritativeClock auth = (OwnedAuthoritativeClock) _defaultClock
           .getAuthority().get();
@@ -106,7 +122,7 @@ public class LocalConnector implements IConnector
    */
   public void disconnect(IModel model)
   {
-    if (!_enableIndependentClocks)
+    if (!_useIndependentClocks)
     {
       OwnedAuthoritativeClock auth = (OwnedAuthoritativeClock) _defaultClock
           .getAuthority().get();

@@ -163,7 +163,7 @@ public class DefaultBaseLevelActivationEquation implements
 
       StringBuilder logMsg = null;
       if (Logger.hasLoggers(model))
-        logMsg = getStringBuilder(String.format(" refCount %d refs ",
+        logMsg = getStringBuilder(String.format(" refCount %d relativeRefs ",
             numberOfTotalTimeSamples));
 
       if (LOGGER.isDebugEnabled())
@@ -177,7 +177,7 @@ public class DefaultBaseLevelActivationEquation implements
 
       /*
        * exact portion. We cannot iterate blindly since the recycled container
-       * may be larger than the actual number of samples
+       * may be larger than the actual number of samples. This is WRONG.
        */
       for (int i = 0; i < numberOfActualTimeSamples; i++)
       {

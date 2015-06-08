@@ -124,9 +124,6 @@ public abstract class AbstractModule extends DefaultAdaptable implements
       String snippet = name.substring(lastIndex + 1, name.length());
       try
       {
-        /*
-         * if snippet is a number, we cut it off
-         */
         Integer.parseInt(snippet);
         name = name.substring(0, lastIndex);
       }
@@ -137,7 +134,7 @@ public abstract class AbstractModule extends DefaultAdaptable implements
 
     StringBuilder sb = new StringBuilder(name);
 
-    if (sb.charAt(sb.length() - 1) != '-') sb.append("-");
+    if (sb.length() > 1 && sb.charAt(sb.length() - 1) != '-') sb.append("-");
 
     sb.append(mapping.size());
     while (mapping.containsKey(sb.toString()))

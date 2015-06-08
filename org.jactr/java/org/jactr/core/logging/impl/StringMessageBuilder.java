@@ -47,4 +47,18 @@ public class StringMessageBuilder implements IMessageBuilder
   {
     return _internal.toString();
   }
+
+  @Override
+  public IMessageBuilder append(Object obj)
+  {
+    _internal.append(obj);
+    return this;
+  }
+
+  @Override
+  public IMessageBuilder prepend(Object obj)
+  {
+    _internal.insert(0, obj);
+    return this;
+  }
 }

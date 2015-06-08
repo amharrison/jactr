@@ -19,5 +19,9 @@ public interface IMessageBuilder
 
   public IMessageBuilder append(String str);
 
+  public IMessageBuilder append(Object obj);
+
   public IMessageBuilder prepend(String str);
+
+  public IMessageBuilder prepend(Object obj);
 }

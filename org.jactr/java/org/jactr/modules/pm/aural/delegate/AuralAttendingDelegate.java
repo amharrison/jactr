@@ -127,7 +127,7 @@ public class AuralAttendingDelegate extends
       if (LOGGER.isWarnEnabled()) LOGGER.warn(message);
 
       if (Logger.hasLoggers(model))
-        Logger.log(model, Logger.Stream.VISUAL, message);
+        Logger.log(model, Logger.Stream.AURAL, message);
 
       return false;
     }

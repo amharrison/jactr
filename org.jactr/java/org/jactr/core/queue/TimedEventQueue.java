@@ -70,7 +70,6 @@ public class TimedEventQueue
 
                                                                     };
 
-
   ACTREventDispatcher<TimedEventQueue, ITimedEventListener> _eventDispatcher;
 
   /**
@@ -243,31 +242,62 @@ public class TimedEventQueue
     for (ITimedEvent expiredEvent : _firingEvents)
     {
       boolean firedEvent = false;
+      boolean shouldFire = false;
+
+      /*
+       * not genuinely thread safe...
+       */
       synchronized (expiredEvent)
       {
-        if (!expiredEvent.hasAborted())
-          try
-          {
-            if (LOGGER.isDebugEnabled())
-              LOGGER.debug("firing " + expiredEvent);
-            expiredEvent.fire(currentTime);
-
-            firedEvent = true;
-          }
-          catch (IllegalStateException e)
-          {
-            /*
-             * why might an exception occur at this point? we're not going to
-             * synchronized on the timed events, so a separate thread may abort
-             * a timed event even with that check. so we catch the possiblity
-             * here and log it.
-             */
-            firedEvent = false;
-            if (!expiredEvent.hasAborted() && LOGGER.isWarnEnabled())
-              LOGGER.warn(
-                  "Timed event [" + expiredEvent + "] failed to fire. ", e);
-          }
+        shouldFire = !expiredEvent.hasAborted() && !expiredEvent.hasFired();
       }
+
+      if (shouldFire)
+        try
+        {
+          if (LOGGER.isDebugEnabled()) LOGGER.debug("firing " + expiredEvent);
+          expiredEvent.fire(currentTime);
+          firedEvent = true;
+        }
+        catch (IllegalStateException e)
+        {
+          /*
+           * why might an exception occur at this point? we're not going to
+           * synchronized on the timed events, so a separate thread may abort a
+           * timed event even with that check. so we catch the possiblity here
+           * and log it.
+           */
+          firedEvent = false;
+          if (!expiredEvent.hasAborted() && LOGGER.isWarnEnabled())
+            LOGGER.warn("Timed event [" + expiredEvent + "] failed to fire. ",
+                e);
+        }
+
+      // synchronized (expiredEvent)
+      // {
+      // if (!expiredEvent.hasAborted())
+      // try
+      // {
+      // if (LOGGER.isDebugEnabled())
+      // LOGGER.debug("firing " + expiredEvent);
+      // expiredEvent.fire(currentTime);
+      //
+      // firedEvent = true;
+      // }
+      // catch (IllegalStateException e)
+      // {
+      // /*
+      // * why might an exception occur at this point? we're not going to
+      // * synchronized on the timed events, so a separate thread may abort
+      // * a timed event even with that check. so we catch the possiblity
+      // * here and log it.
+      // */
+      // firedEvent = false;
+      // if (!expiredEvent.hasAborted() && LOGGER.isWarnEnabled())
+      // LOGGER.warn(
+      // "Timed event [" + expiredEvent + "] failed to fire. ", e);
+      // }
+      // }
 
       if (firedEvent)
       {

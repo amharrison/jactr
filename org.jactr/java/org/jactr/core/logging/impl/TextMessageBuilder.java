@@ -50,4 +50,17 @@ public class TextMessageBuilder implements IMessageBuilder
     return _internal.toString();
   }
 
+  @Override
+  public IMessageBuilder append(Object obj)
+  {
+    throw new IllegalStateException("pending impl");
+  }
+
+  @Override
+  public IMessageBuilder prepend(Object obj)
+  {
+    throw new IllegalStateException("pending impl");
+
+  }
+
 }
