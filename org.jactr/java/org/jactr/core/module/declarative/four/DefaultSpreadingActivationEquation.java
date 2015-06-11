@@ -67,6 +67,7 @@ public class DefaultSpreadingActivationEquation implements
       _linkCollection.set(collection);
     }
 
+
     StringBuilder logMsg = null;
     if (Logger.hasLoggers(model)) logMsg = getStringBuilder("");
 

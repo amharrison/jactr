@@ -23,7 +23,7 @@ public class DefaultSubsymbolicChunkFactory5 implements
   static private final transient Log LOGGER              = LogFactory
                                                              .getLog(DefaultSubsymbolicChunkFactory5.class);
 
-  private boolean                    _warnedAboutMerging = false;
+  static private boolean             _warnedAboutMerging = false;
 
   private boolean                    _copyILinks         = false;
 
@@ -80,10 +80,13 @@ public class DefaultSubsymbolicChunkFactory5 implements
    */
   public void merge(ISubsymbolicChunk master, ISubsymbolicChunk copy)
   {
-    if (LOGGER.isWarnEnabled() && !_warnedAboutMerging)
+    synchronized (this.getClass())
     {
-      LOGGER.warn("Merging of similarities not implemented");
-      _warnedAboutMerging = true;
+      if (LOGGER.isWarnEnabled() && !_warnedAboutMerging)
+      {
+        LOGGER.warn("Merging of similarities not implemented");
+        _warnedAboutMerging = true;
+      }
     }
   }
 

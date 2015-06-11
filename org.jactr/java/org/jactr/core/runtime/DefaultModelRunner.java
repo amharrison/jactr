@@ -61,6 +61,8 @@ public class DefaultModelRunner implements Runnable
 
   private NumberFormat      _format;
 
+  private boolean           _firstRun              = true;
+
   public DefaultModelRunner(ExecutorService service, IModel model,
       ICycleProcessor cycleRunner)
   {
@@ -188,7 +190,7 @@ public class DefaultModelRunner implements Runnable
 
     IClock clock = ACTRRuntime.getRuntime().getClock(_model);
     double now = clock.getTime();
-    if (waitForTime <= now)
+    if (waitForTime <= now && !_firstRun)
     {
       LOGGER
           .error(String
@@ -198,6 +200,7 @@ public class DefaultModelRunner implements Runnable
 
       if (_enableTimeDiagnostics) Diagnostics.timeSanityCheck(waitForTime);
     }
+    _firstRun = false;
 
     waitForTime = BasicClock.constrainPrecision(waitForTime);
     Optional<IAuthoritativeClock> auth = clock.getAuthority();

@@ -43,7 +43,6 @@ public class ChunkListener extends ChunkListenerAdaptor
   static private final Log                       LOGGER           = LogFactory
                                                                       .getLog(ChunkListener.class);
 
-  private static boolean                         _selfLinkWarning = false;
 
   private final DefaultAssociativeLinkageSystem4 _linkageSystem;
 
@@ -70,14 +69,6 @@ public class ChunkListener extends ChunkListenerAdaptor
   @Override
   public void mergingInto(ChunkEvent event)
   {
-    if (!_selfLinkWarning)
-    {
-      if (LOGGER.isWarnEnabled())
-        LOGGER.warn(String
-            .format("Self links are not currently handled during merging"));
-      _selfLinkWarning = true;
-    }
-
     IChunk self = event.getSource();
     IChunk master = event.getChunk();
 

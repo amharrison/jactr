@@ -68,7 +68,7 @@ public class LocalConnector implements IConnector
     if (!_warnedAboutIndependentClocks && useIndependentClocks)
     {
       LOGGER
-          .warn("Using independent clocks is an experimental option can cause strange behavior in systems that assume synchronized time.");
+          .warn("Independent clocks can cause strange behavior when models interact or in systems that assume synchronized time.");
 
       _warnedAboutIndependentClocks = true;
     }
@@ -114,7 +114,10 @@ public class LocalConnector implements IConnector
 
     IClock clock = getClockConfigurator().getClockFor(model, _defaultClock);
 
-    _clocks.put(model, clock);
+    synchronized (this)
+    {
+      _clocks.put(model, clock);
+    }
   }
 
   /**
@@ -131,7 +134,11 @@ public class LocalConnector implements IConnector
     }
 
     // _defaultClock.removeOwner(Thread.currentThread());
-    IClock defined = _clocks.remove(model);
+    IClock defined = null;
+    synchronized (this)
+    {
+      defined = _clocks.remove(model);
+    }
 
     getClockConfigurator().release(model, defined);
   }

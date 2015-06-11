@@ -18,6 +18,7 @@ import org.commonreality.object.IAfferentObject;
 import org.commonreality.object.delta.IObjectDelta;
 import org.jactr.core.buffer.BufferUtilities;
 import org.jactr.core.chunk.IChunk;
+import org.jactr.core.chunk.IllegalChunkStateException;
 import org.jactr.core.chunk.event.ChunkEvent;
 import org.jactr.core.chunk.event.IChunkListener;
 import org.jactr.core.concurrent.ExecutorServices;
@@ -191,13 +192,34 @@ public class PerceptualEncoderBridge implements IAfferentObjectListener
        */
       boolean removedFired = false;
 
-      if (BufferUtilities.getContainingBuffers(oldChunk, true).size() != 0)
-        if (_memory.hasListeners())
-        {
-          _memory.dispatch(new ActivePerceptEvent(_memory,
-              ActivePerceptEvent.Type.REMOVED, identifier, oldChunk));
-          removedFired = true;
-        }
+      try
+      {
+        if (BufferUtilities.getContainingBuffers(oldChunk, true).size() != 0)
+          if (_memory.hasListeners())
+          {
+            _memory.dispatch(new ActivePerceptEvent(_memory,
+                ActivePerceptEvent.Type.REMOVED, identifier, oldChunk));
+            removedFired = true;
+          }
+      }
+      catch (NullPointerException e)
+      {
+        if (LOGGER.isDebugEnabled())
+          LOGGER.debug(String.format(
+              "priorPercept %s has already been disposed of, ignoring.",
+              identifier));
+
+        removedFired = true;
+      }
+      catch (IllegalChunkStateException e)
+      {
+        if (LOGGER.isDebugEnabled())
+          LOGGER.debug(String.format(
+              "priorPercept %s has already been disposed of, ignoring.",
+              identifier));
+
+        removedFired = true;
+      }
 
       /*
        * is it part of a search result?

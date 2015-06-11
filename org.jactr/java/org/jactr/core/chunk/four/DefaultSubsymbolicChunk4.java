@@ -438,12 +438,17 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
   public void setBaseLevelActivationEquation(
       IBaseLevelActivationEquation equation)
   {
+    if (_baseLevelActivationEquation != null)
+      removeActivationParticipant(_baseLevelActivationEquation);
+
     _baseLevelActivationEquation = equation;
     addActivationParticipant(equation);
   }
 
   public void setRandomActivationEquation(IRandomActivationEquation equation)
   {
+    if (_randomActivationEquation != null)
+      removeActivationParticipant(_randomActivationEquation);
     _randomActivationEquation = equation;
     addActivationParticipant(equation);
   }
@@ -451,6 +456,9 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
   public void setSpreadingActivationEquation(
       ISpreadingActivationEquation equation)
   {
+    if (_spreadingActivationEquation != null)
+      removeActivationParticipant(_spreadingActivationEquation);
+
     _spreadingActivationEquation = equation;
     addActivationParticipant(equation);
   }

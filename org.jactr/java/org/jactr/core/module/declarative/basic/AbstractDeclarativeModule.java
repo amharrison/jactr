@@ -133,7 +133,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
 
   private ISubsymbolicChunkFactory                                            _subsymbolicChunkFactory;
 
-  private IChunkConfigurator                                                  _chunkConfigurator;
+  private IChunkConfigurator                                                  _chunkConfigurator = new ChainedChunkConfigurator();
 
   private IChunkNamer                                                         _chunkNamer;
 

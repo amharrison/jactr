@@ -383,7 +383,7 @@ public class DefaultChunk extends DefaultAdaptable implements IChunk
    */
   public Object getMetaData(String key)
   {
-    if (hasBeenDisposed())
+    if (hasBeenDisposed() || _chunkData == null)
       throw new IllegalChunkStateException(this + " has been disposed!");
     return _chunkData.getMetaData().get(key);
   }

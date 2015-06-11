@@ -36,15 +36,14 @@ public class DefaultSourceActivationSpreader implements
   /**
    * Logger definition
    */
-  static private final transient Log LOGGER         = LogFactory
-                                                        .getLog(DefaultSourceActivationSpreader.class);
+  static private final transient Log LOGGER = LogFactory
+                                                .getLog(DefaultSourceActivationSpreader.class);
 
   private final IActivationBuffer    _buffer;
 
   private final Map<IChunk, Integer> _activatedChunks;
 
   private double                     _activationPortion;
-
 
   public DefaultSourceActivationSpreader(IActivationBuffer buffer)
   {
@@ -64,13 +63,11 @@ public class DefaultSourceActivationSpreader implements
     return _buffer;
   }
 
-
   /**
    * divies source activation amoung the chunks linked to the source chunks.
    */
   public void spreadSourceActivation()
   {
-
     clearSourceActivation();
     // nothing to spread
     if (_buffer.getActivation() == 0) return;
@@ -188,8 +185,7 @@ public class DefaultSourceActivationSpreader implements
             logMsg.append(chunk.getSymbolicChunk().getName()).append(" ");
         }
 
-        if (logMsg != null)
- Logger.log(model, Stream.ACTIVATION, logMsg);
+        if (logMsg != null) Logger.log(model, Stream.ACTIVATION, logMsg);
       }
       else if (LOGGER.isDebugEnabled())
         LOGGER.debug(String.format("No associated chunks to activate"));
