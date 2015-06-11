@@ -149,11 +149,13 @@ public class JACTRBuilder extends TreeParser {
 
     public void reportException(Exception e)
     {
-     LOGGER.error(e.getMessage(), e);
      if(e instanceof BuilderWarning)
       _warnings.add(e);
      else
+     {
+       LOGGER.error(e.getMessage(), e);
       _errors.add(e);
+     }
     }
 
     public Collection<Exception> getWarnings()

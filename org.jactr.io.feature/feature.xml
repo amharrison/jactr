@@ -54,7 +54,7 @@ USA
       <import plugin="org.jactr"/>
       <import plugin="org.jactr.support"/>
       <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="org.commonreality"/>
+      <import plugin="org.commonreality.core"/>
    </requires>
 
    <plugin
