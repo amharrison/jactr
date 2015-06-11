@@ -3,13 +3,17 @@ package org.jactr.embed;
 /*
  * default logging
  */
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.agents.IAgent;
 import org.commonreality.agents.ThinAgent;
 import org.commonreality.time.IClock;
+import org.commonreality.util.LockUtilities;
 import org.jactr.core.model.IModel;
 import org.jactr.core.reality.connector.LocalConnector;
+import org.jactr.core.runtime.ACTRRuntime;
 
 public class EmbedConnector extends LocalConnector
 {
@@ -19,11 +23,11 @@ public class EmbedConnector extends LocalConnector
   static private final transient Log LOGGER          = LogFactory
                                                          .getLog(EmbedConnector.class);
 
-
   static private final String        EMBED_AGENT_KEY = "embedConnector.thinAgent";
 
-
   private boolean                    _running        = false;
+
+  private ReentrantReadWriteLock     _lock           = new ReentrantReadWriteLock();
 
   public EmbedConnector()
   {
@@ -41,9 +45,27 @@ public class EmbedConnector extends LocalConnector
   @Override
   public void connect(IModel model)
   {
-    super.connect(model);
 
-    startThinAgent(model, getClock(model));
+    try
+    {
+      LockUtilities.runLocked(_lock.writeLock(), () -> {
+        if (!isConnected(model))
+        {
+          super.connect(model);
+          startThinAgent(model, getClock(model));
+        }
+      });
+    }
+    catch (InterruptedException e)
+    {
+      // totally expected if we are haulting, but very unlikely
+      LOGGER.debug("EmbedConnector.connect threw InterruptedException : ", e);
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("EmbedConnector.connect threw Exception : ", e);
+    }
+
   }
 
   /**
@@ -52,9 +74,29 @@ public class EmbedConnector extends LocalConnector
   @Override
   public void disconnect(IModel model)
   {
-    super.disconnect(model);
+    try
+    {
+      LockUtilities.runLocked(_lock.writeLock(), () -> {
+        if (isConnected(model))
+        {
+          super.disconnect(model);
+          stopThinAgent(model);
+        }
+      });
+    }
+    catch (InterruptedException e)
+    {
+      LOGGER.debug("EmbedConnector.connect threw InterruptedException : ", e);
+    }
+    catch (Exception e)
+    {
+      LOGGER.error("EmbedConnector.connect threw Exception : ", e);
+    }
+  }
 
-    stopThinAgent(model);
+  public boolean isConnected(IModel model)
+  {
+    return getAgent(model) != null;
   }
 
   /**
@@ -75,15 +117,30 @@ public class EmbedConnector extends LocalConnector
     return _running;
   }
 
-
-
   /**
+   * We create and start the thin agents at start, not connect, so that we are
+   * sure they are available immediately. It is common to require the thinagent
+   * slightly before the model has fully started.
+   * 
    * @see org.jactr.core.reality.connector.IConnector#start()
    */
   @Override
   public void start()
   {
-    _running = true;
+    try
+    {
+      LockUtilities.runLocked(_lock.writeLock(), () -> {
+        if (!_running)
+          for (IModel model : ACTRRuntime.getRuntime().getModels())
+            connect(model);
+        _running = true;
+      });
+    }
+    catch (InterruptedException e)
+    {
+      // TODO Auto-generated catch block
+      LOGGER.error("EmbedConnector.start threw InterruptedException : ", e);
+    }
   }
 
   /**
@@ -92,9 +149,20 @@ public class EmbedConnector extends LocalConnector
   @Override
   public void stop()
   {
-    _running = false;
+    try
+    {
+      LockUtilities.runLocked(_lock.writeLock(), () -> {
+        if (_running) for (IModel model : ACTRRuntime.getRuntime().getModels())
+          disconnect(model);
+        _running = false;
+      });
+    }
+    catch (InterruptedException e)
+    {
+      // TODO Auto-generated catch block
+      LOGGER.error("EmbedConnector.start threw InterruptedException : ", e);
+    }
   }
-
 
   protected void startThinAgent(IModel model, IClock clock)
   {
@@ -121,6 +189,8 @@ public class EmbedConnector extends LocalConnector
   protected void stopThinAgent(IModel model)
   {
     ThinAgent agent = (ThinAgent) model.getMetaData(EMBED_AGENT_KEY);
+    model.setMetaData(EMBED_AGENT_KEY, null);
+
     if (agent != null)
       try
       {
