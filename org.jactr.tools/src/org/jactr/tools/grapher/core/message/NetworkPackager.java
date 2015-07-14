@@ -22,11 +22,11 @@ public class NetworkPackager
   static private final transient Log LOGGER = LogFactory
                                                 .getLog(NetworkPackager.class);
 
-  private Map<String, Long>          _stringTable;
+  private Map<String, Map<String, Long>> _stringTables;
 
   public NetworkPackager()
   {
-    _stringTable = new TreeMap<String, Long>();
+    _stringTables = new TreeMap<String, Map<String, Long>>();
   }
 
   synchronized public Collection<ITransformedEvent> process(String modelName,
@@ -58,13 +58,21 @@ public class NetworkPackager
     return rtn;
   }
 
-  private Long getStringId(String key, Map<Long, String> newStrings)
+  private Long getStringId(String modelName, String key,
+      Map<Long, String> newStrings)
   {
-    Long rtn = _stringTable.get(key);
+    Map<String, Long> stringTable = _stringTables.get(modelName);
+    if (stringTable == null)
+    {
+      stringTable = new TreeMap<String, Long>();
+      _stringTables.put(modelName, stringTable);
+    }
+
+    Long rtn = stringTable.get(key);
     if (rtn == null)
     {
-      rtn = new Long(_stringTable.size());
-      _stringTable.put(key, rtn);
+      rtn = new Long(stringTable.size());
+      stringTable.put(key, rtn);
       newStrings.put(rtn, key);
     }
 
@@ -90,7 +98,7 @@ public class NetworkPackager
 
       if (value instanceof Number)
       {
-        Long stringId = getStringId(key, newStrings);
+        Long stringId = getStringId(root, key, newStrings);
         actualData.put(stringId, (Number) value);
       }
       else if (value instanceof Map) try

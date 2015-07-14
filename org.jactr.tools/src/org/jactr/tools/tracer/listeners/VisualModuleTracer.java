@@ -19,6 +19,7 @@ import javolution.util.FastList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.identifier.IIdentifier;
+import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.event.IParameterEvent;
 import org.jactr.core.model.IModel;
 import org.jactr.core.model.event.IModelListener;
@@ -186,8 +187,12 @@ public class VisualModuleTracer extends BaseTraceListener
   public void install(IModel model, Executor executor)
   {
     _traceExecutor = executor;
+    // we dump to sink async..
     model.addListener(_outputListener, _traceExecutor);
 
+    // but since these come in on CR thread, we want to create
+    // the transformed event immediately, and let the async dump
+    executor = ExecutorServices.INLINE_EXECUTOR;
     IVisualModule vis = (IVisualModule) model.getModule(IVisualModule.class);
     if (vis != null)
     {
@@ -199,7 +204,7 @@ public class VisualModuleTracer extends BaseTraceListener
       for (IFeatureMap map : featureMaps)
       {
         if (LOGGER.isDebugEnabled()) LOGGER.debug("Attaching to " + map);
-        map.addListener(_featureListener, _traceExecutor);
+        map.addListener(_featureListener, executor);
       }
       FastList.recycle(featureMaps);
     }
@@ -223,45 +228,68 @@ public class VisualModuleTracer extends BaseTraceListener
 
   }
 
-  protected Collection<TransformedVisualEvent> getEvents(IModel model)
+  synchronized protected Collection<TransformedVisualEvent> getEvents(
+      IModel model)
   {
     Collection<TransformedVisualEvent> events = _pendingEvents.get(model);
     if (events == null)
     {
-      events = new ArrayList<TransformedVisualEvent>(100);
+      events = Collections
+          .synchronizedList(new ArrayList<TransformedVisualEvent>(100));
       _pendingEvents.put(model, events);
     }
     return events;
   }
 
-  protected Set<IIdentifier> getAdded(IModel model)
+  synchronized protected Set<IIdentifier> getAdded(IModel model)
   {
     Set<IIdentifier> added = _addedIds.get(model);
     if (added == null)
     {
-      added = new HashSet<IIdentifier>();
+      added = Collections.synchronizedSet(new HashSet<IIdentifier>());
       _addedIds.put(model, added);
     }
     return added;
   }
 
-  protected Set<IIdentifier> getRemoved(IModel model)
+  synchronized protected void getAdded(IModel model, Set<IIdentifier> container)
+  {
+    Set<IIdentifier> source = getAdded(model);
+    synchronized (source)
+    {
+      container.addAll(source);
+    }
+  }
+
+  synchronized protected Set<IIdentifier> getRemoved(IModel model)
   {
     Set<IIdentifier> removed = _removedIds.get(model);
     if (removed == null)
     {
-      removed = new HashSet<IIdentifier>();
+      removed = Collections.synchronizedSet(new HashSet<IIdentifier>());
       _removedIds.put(model, removed);
     }
     return removed;
   }
 
-  protected Map<IIdentifier, Map<String, Object>> getUpdates(IModel model)
+  synchronized protected void getRemoved(IModel model,
+      Set<IIdentifier> container)
+  {
+    Set<IIdentifier> source = getRemoved(model);
+    synchronized (source)
+    {
+      container.addAll(source);
+    }
+  }
+
+  synchronized protected Map<IIdentifier, Map<String, Object>> getUpdates(
+      IModel model)
   {
     Map<IIdentifier, Map<String, Object>> updates = _updates.get(model);
     if (updates == null)
     {
-      updates = new HashMap<IIdentifier, Map<String, Object>>();
+      updates = Collections
+          .synchronizedMap(new HashMap<IIdentifier, Map<String, Object>>());
       _updates.put(model, updates);
     }
     return updates;
@@ -310,12 +338,14 @@ public class VisualModuleTracer extends BaseTraceListener
       data.put(featureMap.getClass().getSimpleName(), info);
   }
 
-  protected void dumpPendingEvents(IModel model)
+  synchronized protected void dumpPendingEvents(IModel model)
   {
     Map<IIdentifier, Map<String, Object>> updates = getUpdates(model);
     /*
      * make sure the added have all their data
      */
+
+    // need to make thread safe.
     Collection<IIdentifier> added = getAdded(model);
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("Getting full data for " + added.size() + " add events");
