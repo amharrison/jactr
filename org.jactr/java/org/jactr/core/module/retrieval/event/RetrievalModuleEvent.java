@@ -38,13 +38,13 @@ public class RetrievalModuleEvent extends
     INITIATED, COMPLETED
   };
 
-  private Type         _type;
+  private Type               _type;
 
-  private ChunkTypeRequest _request;
+  private ChunkTypeRequest   _request;
 
-  private IChunk       _chunk;
+  private IChunk             _chunk;
 
-  private double           _retrievalTime;
+  private double             _retrievalTime;
 
   private Collection<IChunk> _allCandidates;
 
@@ -60,8 +60,14 @@ public class RetrievalModuleEvent extends
     _request = pattern;
   }
 
-  public RetrievalModuleEvent(IRetrievalModule source, ChunkTypeRequest pattern,
- IChunk chunk, double retrievalTime,
+  public RetrievalModuleEvent(IRetrievalModule source,
+      ChunkTypeRequest pattern, IChunk chunk, double retrievalTime)
+  {
+    this(source, pattern, chunk, retrievalTime, null);
+  }
+
+  public RetrievalModuleEvent(IRetrievalModule source,
+      ChunkTypeRequest pattern, IChunk chunk, double retrievalTime,
       Collection<IChunk> allCandidates)
   {
     this(source, ACTRRuntime.getRuntime().getClock(source.getModel()).getTime());
