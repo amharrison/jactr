@@ -35,6 +35,9 @@ public class DataLoggerHandler implements INodeHandler<ITrial>
       ExperimentParser.LOGGER.error(
           "Could not create " + className + ", using default xml ", e);
       collector = new XMLDataLogger();
+      path = experiment.getVariableResolver()
+          .resolve("${actrWorkingDir}/data", experiment.getVariableContext())
+          .toString();
     }
 
     collector.setExperiment(experiment);

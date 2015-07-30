@@ -22,6 +22,7 @@ import org.jactr.core.model.IModel;
 import org.jactr.core.model.event.ModelEvent;
 import org.jactr.core.model.event.ModelListenerAdaptor;
 import org.jactr.core.runtime.ACTRRuntime;
+import org.jactr.scripting.ScriptingManager;
 import org.jactr.tools.experiment.IExperiment;
 import org.jactr.tools.experiment.dc.DataCollector;
 import org.w3c.dom.Document;
@@ -58,6 +59,11 @@ public class StartModelExperiments implements Runnable
 
   public void run()
   {
+    /*
+     * exposes model's experiment as jactrExperiment
+     */
+    ScriptingManager.install(new ScriptConfig());
+
     Collection<IExperiment> experiments = new ArrayList<IExperiment>();
 
     /*
@@ -78,6 +84,9 @@ public class StartModelExperiments implements Runnable
           ex.getVariableContext().set(EXPERIMENT_MODEL, model);
           model.setMetaData(MODELS_EXPERIMENT, ex);
         });
+
+      experiment.getVariableResolver().addAlias("actrWorkingDir",
+          ACTRRuntime.getRuntime().getWorkingDirectory().getAbsolutePath());
 
       model.addListener(new ModelListenerAdaptor() {
         @Override

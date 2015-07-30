@@ -13,6 +13,7 @@ import org.jactr.core.production.VariableBindings;
 import org.jactr.core.utils.ModelerException;
 import org.jactr.scripting.IScriptableFactory;
 import org.jactr.scripting.ScriptSupport;
+import org.jactr.scripting.ScriptingManager;
 import org.jactr.scripting.action.IActionScript;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
@@ -90,6 +91,8 @@ public class JavascriptAction implements IActionScript
     Scriptable scope = ScopeManager.newScope(ScopeManager
         .getScopeForModel(model));
     ScopeManager.defineVariable(scope, "jactr", scriptSupport);
+
+    ScriptingManager.configureScripting(_factory, model, scriptSupport, scope);
 
     try
     {

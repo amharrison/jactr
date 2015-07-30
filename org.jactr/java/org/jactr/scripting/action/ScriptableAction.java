@@ -13,7 +13,6 @@
 
 package org.jactr.scripting.action;
 
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.production.CannotInstantiateException;
@@ -22,7 +21,7 @@ import org.jactr.core.production.VariableBindings;
 import org.jactr.core.production.action.DefaultAction;
 import org.jactr.core.production.action.IAction;
 import org.jactr.scripting.IScriptableFactory;
-import org.jactr.scripting.ScriptSupport;
+import org.jactr.scripting.ScriptingManager;
 
 /**
  * ScriptableAction allows for custom actions. You set the script via
@@ -36,8 +35,8 @@ import org.jactr.scripting.ScriptSupport;
 public class ScriptableAction extends DefaultAction
 {
 
-  static private transient Log LOGGER         = LogFactory
-                                                  .getLog(ScriptableAction.class);
+  static private transient Log LOGGER = LogFactory
+                                          .getLog(ScriptableAction.class);
 
   private final IActionScript  _script;
 
@@ -48,8 +47,6 @@ public class ScriptableAction extends DefaultAction
   {
     _script = script;
   }
-
-
 
   /**
    * Description of the Method
@@ -83,7 +80,6 @@ public class ScriptableAction extends DefaultAction
     return _script.getFactory();
   }
 
-
   /**
    * Description of the Method
    * 
@@ -96,7 +92,8 @@ public class ScriptableAction extends DefaultAction
   @Override
   public double fire(IInstantiation instantiation, double firingTime)
   {
-    return _script.fire(new ScriptSupport(_script.getFactory(), instantiation),
+    return _script.fire(
+        ScriptingManager.newScriptSupport(getFactory(), instantiation),
         instantiation, firingTime);
   }
 }

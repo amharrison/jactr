@@ -12,6 +12,7 @@ import org.jactr.core.production.condition.match.ExceptionMatchFailure;
 import org.jactr.core.utils.ModelerException;
 import org.jactr.scripting.IScriptableFactory;
 import org.jactr.scripting.ScriptSupport;
+import org.jactr.scripting.ScriptingManager;
 import org.jactr.scripting.condition.IConditionScript;
 import org.jactr.scripting.condition.ScriptExecutionFailure;
 import org.mozilla.javascript.Context;
@@ -129,6 +130,9 @@ public class JavascriptCondition implements IConditionScript
       Scriptable scope = ScopeManager.newScope(ScopeManager
           .getScopeForModel(model));
       ScopeManager.defineVariable(scope, "jactr", scriptSupport);
+
+      ScriptingManager
+          .configureScripting(_factory, model, scriptSupport, scope);
 
       _compiledScript.exec(cx, scope);
 

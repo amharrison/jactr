@@ -193,10 +193,12 @@ public class DefaultModelRunner implements Runnable
     if (waitForTime <= now && !_firstRun)
     {
       LOGGER
-          .error(String
+          .warn(String
               .format(
-                  "WARNING: Time discrepancy detected. Clock regression requested : %.10f(desired) < %.10f(current). Should be >=",
+                  "WARNING: Time discrepancy detected. Clock regression requested : %.10f(desired) < %.10f(current). Should be >=. Incrementing request by 0.05",
                   waitForTime, now));
+
+      waitForTime = now + 0.05;
 
       if (_enableTimeDiagnostics) Diagnostics.timeSanityCheck(waitForTime);
     }

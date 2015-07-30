@@ -22,6 +22,7 @@ import org.jactr.core.production.condition.ICondition;
 import org.jactr.core.production.condition.match.IMatchFailure;
 import org.jactr.scripting.IScriptableFactory;
 import org.jactr.scripting.ScriptSupport;
+import org.jactr.scripting.ScriptingManager;
 
 /**
  * ScriptableCondition allows for custom actions. You set the script via
@@ -55,7 +56,7 @@ public class ScriptableCondition implements ICondition
   {
     ScriptableCondition condition = new ScriptableCondition(
         _conditionScript.clone(model, bindings));
-    condition._scriptableSupport = new ScriptSupport(
+    condition._scriptableSupport = ScriptingManager.newScriptSupport(
         _conditionScript.getFactory(), model, bindings);
     return condition;
   }

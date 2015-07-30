@@ -60,12 +60,30 @@ public class RetrievalModuleEvent extends
     _request = pattern;
   }
 
+  /**
+   * pattern for a retrieval completion when there are no retrieval candidates
+   * (i.e., error). If candidates are available, use
+   * {@link #RetrievalModuleEvent(IRetrievalModule, ChunkTypeRequest, IChunk, double, Collection)}
+   * 
+   * @param source
+   * @param pattern
+   * @param chunk
+   * @param retrievalTime
+   */
   public RetrievalModuleEvent(IRetrievalModule source,
       ChunkTypeRequest pattern, IChunk chunk, double retrievalTime)
   {
     this(source, pattern, chunk, retrievalTime, null);
   }
 
+  /**
+   * @param source
+   * @param pattern
+   * @param chunk
+   * @param retrievalTime
+   * @param allCandidates
+   *          all the retrieval candidates, including chunk
+   */
   public RetrievalModuleEvent(IRetrievalModule source,
       ChunkTypeRequest pattern, IChunk chunk, double retrievalTime,
       Collection<IChunk> allCandidates)
