@@ -31,8 +31,7 @@ public class TraceFileManagerTest {
 		
 		File outputDirectory = File.createTempFile("output", "dir");
 		try {
-			TraceIndex index = new TraceIndex(outputDirectory);
-			TraceFileManager manager = new TraceFileManager(outputDirectory, index);
+			TraceFileManager manager = new TraceFileManager(outputDirectory);
 			manager.flush();
 			manager.record(event);
 			assertTrue(true);
