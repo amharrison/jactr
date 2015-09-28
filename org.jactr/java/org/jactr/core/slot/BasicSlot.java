@@ -211,7 +211,17 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
    */
   final protected Object setValueInternal(Object value)
   {
-    if (!(value instanceof String || value instanceof Number
+    if (value != null
+        && !(value instanceof String || value instanceof Number
+            || value instanceof Boolean || value instanceof StringBuilder /*
+                                                                           * SB
+                                                                           * is
+                                                                           * used
+                                                                           * internally
+                                                                           * during
+                                                                           * build
+                                                                           * phase
+                                                                           */
         || value instanceof IChunk || value instanceof IChunkType
         || value instanceof IProduction || value instanceof IActivationBuffer || value instanceof IModel))
       LOGGER
