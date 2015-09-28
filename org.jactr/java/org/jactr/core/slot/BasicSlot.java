@@ -16,6 +16,14 @@ package org.jactr.core.slot;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jactr.core.buffer.IActivationBuffer;
+import org.jactr.core.chunk.IChunk;
+import org.jactr.core.chunktype.IChunkType;
+import org.jactr.core.model.IModel;
+import org.jactr.core.production.IProduction;
+
 /**
  * @author harrison TODO To change the template for this generated type comment
  *         go to Window - Preferences - Java - Code Style - Code Templates
@@ -23,16 +31,19 @@ import java.lang.ref.WeakReference;
 public class BasicSlot implements ISlot, Comparable<ISlot>
 {
 
-  private Object _value;
+  static private final transient Log LOGGER = LogFactory
+                                                .getLog(BasicSlot.class);
 
-  private String   _name;
+  private Object                     _value;
+
+  private String                     _name;
 
   /**
    * we cache the toString representation since it will be called so frequently,
    * however this creates a ton of strings that are actually relatively short
    * lived, so we use references to hold onto it for a short term
    */
-  private Reference<String> _toString;
+  private Reference<String>          _toString;
 
   public BasicSlot(String name)
   {
@@ -49,7 +60,6 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
   {
     this(slot.getName(), slot.getValue());
   }
-
 
   /**
    * @see org.jactr.core.slot.ISlot#getValue()
@@ -96,7 +106,6 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
    * @see java.lang.Object#equals(java.lang.Object)
    */
 
-
   /**
    * @see org.jactr.core.utils.Duplicateable#duplicate()
    */
@@ -105,8 +114,6 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
   {
     return new BasicSlot(_name, _value);
   }
-
-
 
   @Override
   public int hashCode()
@@ -157,7 +164,7 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
     }
     return false;
   }
-  
+
   @Deprecated
   public boolean isVariable()
   {
@@ -195,20 +202,30 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
   {
     return String.format("%1$s(%2$s)", getName(), getValue());
   }
-  
+
   /**
    * set the value of the slot, returning the prior value
+   * 
    * @param value
    * @return
    */
   final protected Object setValueInternal(Object value)
   {
+    if (!(value instanceof String || value instanceof Number
+        || value instanceof IChunk || value instanceof IChunkType
+        || value instanceof IProduction || value instanceof IActivationBuffer || value instanceof IModel))
+      LOGGER
+          .warn(String
+              .format(
+                  "Unexpected slot value found. Not critical, but could cause issues down the line. [%s : %s]",
+                  value, value.getClass().getSimpleName()));
+
     Object old = _value;
     _value = value;
     clearToString();
     return old;
   }
-  
+
   final protected Object setNameInternal(String name)
   {
     String old = _name;
@@ -216,5 +233,5 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
     clearToString();
     return old;
   }
-  
+
 }
