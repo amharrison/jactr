@@ -20,6 +20,17 @@ public class WaitForACTRAction implements IAction
   static private final transient Log LOGGER = LogFactory
                                                 .getLog(WaitForACTRAction.class);
 
+  private boolean                    _waitForStart = true;
+
+  /**
+   * @param waitForStart
+   *          false if waiting for completion
+   */
+  public WaitForACTRAction(boolean waitForStart)
+  {
+    _waitForStart = waitForStart;
+  }
+
   public void fire(IVariableContext context)
   {
     IController controller = ACTRRuntime.getRuntime().getController();
@@ -29,7 +40,12 @@ public class WaitForACTRAction implements IAction
 
     try
     {
-      Future<Boolean> future = controller.waitForStart();
+      Future<Boolean> future = null;
+      if (_waitForStart)
+        future = controller.waitForStart();
+      else
+        future = controller.waitForCompletion();
+
       if (!future.get())
         throw new IllegalStateException("Runtime has stopped prematurely");
     }

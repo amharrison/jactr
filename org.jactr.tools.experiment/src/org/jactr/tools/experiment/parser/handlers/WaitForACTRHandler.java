@@ -17,7 +17,11 @@ public class WaitForACTRHandler implements INodeHandler<IAction>
 
   public IAction process(Element element, IExperiment experiment)
   {
-    return new WaitForACTRAction();
+    boolean waitForStart = true;
+    if (element.hasAttribute("start"))
+      waitForStart = Boolean.parseBoolean(element.getAttribute("start"));
+
+    return new WaitForACTRAction(waitForStart);
   }
 
   public boolean shouldDecend()

@@ -37,5 +37,7 @@ Bundle-ManifestVersion: 2
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Eclipse-BuddyPolicy: registered
 Bundle-Vendor: harrison
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .
 
 

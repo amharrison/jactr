@@ -19,6 +19,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.model.IModel;
+import org.jactr.core.model.ModelTerminatedException;
 import org.jactr.core.model.event.ModelEvent;
 import org.jactr.core.model.event.ModelListenerAdaptor;
 import org.jactr.core.runtime.ACTRRuntime;
@@ -116,6 +117,10 @@ public class StartModelExperiments implements Runnable
   static public IExperiment loadExperiment(String location,
       Consumer<IExperiment> config)
   {
+    if (location == null)
+      throw new ModelTerminatedException(
+          "No experiment configuration file found. Cannot conintue");
+
     Document document = loadConfiguration(location);
 
     String className = document.getDocumentElement().getAttribute(CLASS_ATTR);
