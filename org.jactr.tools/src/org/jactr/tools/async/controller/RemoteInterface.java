@@ -261,12 +261,10 @@ public class RemoteInterface extends NetworkedEndpoint implements IInstrument,
           if (session != null)
             if (event.getException() != null)
               session.writeAndWait(new RuntimeStateEvent(event.getException(),
-                  event
-                  .getSimulationTime()));
+                  event.getSimulationTime()));
             else
               session.writeAndWait(new RuntimeStateEvent(
-                  IStateEvent.State.STOPPED,
-                  event.getSimulationTime()));
+                  IStateEvent.State.STOPPED, event.getSimulationTime()));
 
           // send the logout, shadow controller will echo it back and we'll
           // disconnect then.
@@ -435,8 +433,9 @@ public class RemoteInterface extends NetworkedEndpoint implements IInstrument,
     session.addExceptionHandler((s, t) -> {
       try
       {
-        if (!(t instanceof IOException)
-            && t.getMessage().indexOf("Connection reset") == -1)
+        String message = t.getMessage();
+        if (!(t instanceof IOException) && message != null
+            && message.indexOf("Connection reset") == -1)
           LOGGER.error(String.format("Exception caught from %s, closing ", s),
               t);
         else

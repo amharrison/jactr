@@ -76,6 +76,10 @@ public class NetworkPackager
       newStrings.put(rtn, key);
     }
 
+    if (LOGGER.isDebugEnabled())
+      LOGGER.debug(String.format("StringIndex for %s.%s = %d", modelName, key,
+          rtn));
+
     return rtn;
   }
 
