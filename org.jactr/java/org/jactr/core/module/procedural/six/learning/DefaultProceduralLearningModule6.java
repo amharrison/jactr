@@ -51,6 +51,15 @@ import org.jactr.core.utils.parameter.ParameterHandler;
  * production learning is accomplished by listening to the procedural module for
  * firing events..<br>
  * <br>
+ * This module will update a production's 'ExpectedUtility' based on reward
+ * signals (if any), and it's Utility. A production may have a 'Reward' value
+ * which is the reward applied when that production fires and back propogates a
+ * discounted reward signal all the way back to the most recently rewarded
+ * production. A 'Reward' value of NaN/'default' is the default and merely marks
+ * this production as participating in the reward process, but not to start it.
+ * 'Reward' of 'skip'/-Infinity will allow the production to be skipped during
+ * reward, or 'stop'/+Inf will permit the production to terminate the reward
+ * sequence.
  * 
  * @see http://jactr.org/node/67
  * @author developer
@@ -58,6 +67,12 @@ import org.jactr.core.utils.parameter.ParameterHandler;
 public class DefaultProceduralLearningModule6 extends AbstractModule implements
     IProceduralLearningModule6, IParameterized
 {
+  static public final double                                                                  SKIP_REWARD                   = Double.NEGATIVE_INFINITY;
+
+  static public final double                                                                  STOP_REWARD                   = Double.POSITIVE_INFINITY;
+
+  static public final double                                                                  PARTICIPATE                   = Double.NaN;
+
   static public final String                                                                  INCLUDE_BUFFERS_PARAM         = "IncludeBuffers";
 
   static final public String                                                                  PRODUCTION_COMPILER_PARAM     = "ProductionCompiler";
@@ -100,6 +115,7 @@ public class DefaultProceduralLearningModule6 extends AbstractModule implements
    * or RHS
    */
   private Set<String>                                                                         _includeBuffers;
+
 
   public DefaultProceduralLearningModule6()
   {
@@ -235,12 +251,13 @@ public class DefaultProceduralLearningModule6 extends AbstractModule implements
       _firedProductions.put(when, production);
 
       /*
-       * if the production has a reward value that is not nan..
+       * if the production has a reward value that is finite, we start the
+       * rewarding
        */
       double reward = ((ISubsymbolicProduction6) production
           .getSubsymbolicProduction()).getReward();
 
-      if (!Double.isNaN(reward)) reward(reward);
+      if (!Double.isNaN(reward) && Double.isFinite(reward)) reward(reward);
     }
   }
 
@@ -319,24 +336,58 @@ public class DefaultProceduralLearningModule6 extends AbstractModule implements
         ISubsymbolicProduction6 ssp = (ISubsymbolicProduction6) p
             .getSubsymbolicProduction();
 
-        double utility = equation.computeExpectedUtility(p, model,
-            discountedReward);
+        double productionsReward = ssp.getReward();
 
-        if (!(Double.isNaN(utility) || Double.isInfinite(utility)))
-          ssp.setExpectedUtility(utility);
-
-        if (log)
+        /*
+         * we only apply the utility learning if the production's reward is a
+         * discrete or NaN value.
+         */
+        if (Double.isFinite(productionsReward)
+            || Double.isNaN(productionsReward))
         {
-          String msg = "Discounted reward for " + p + " to " + discountedReward
-              + " for a learned utility of " + utility;
-          if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
-          if (Logger.hasLoggers(model))
-            Logger.log(model, Logger.Stream.PROCEDURAL, msg);
+          double utility = equation.computeExpectedUtility(p, model,
+              discountedReward);
+
+          if (!(Double.isNaN(utility) || Double.isInfinite(utility)))
+            ssp.setExpectedUtility(utility);
+
+          if (log)
+          {
+            String msg = "Discounted reward for " + p + " to "
+                + discountedReward + " for a learned utility of " + utility;
+            if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
+            if (Logger.hasLoggers(model))
+              Logger.log(model, Logger.Stream.PROCEDURAL, msg);
+          }
+
+          if (_dispatcher.hasListeners())
+            _dispatcher.fire(new ProceduralLearningEvent(this, p,
+                discountedReward));
+        }
+        else if (productionsReward < 0) // negative inf, skip
+        {
+          if(log)
+          {
+            String msg = String.format("Skipping rewarding of %s",p);
+            if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
+            if (Logger.hasLoggers(model))
+              Logger.log(model, Logger.Stream.PROCEDURAL, msg);
+          }
+          continue; //skip
+        }
+        else
+        // pos inf, stop
+        {
+          if(log)
+          {
+            String msg = String.format("Stopping reward crediation at %s",p);
+            if (LOGGER.isDebugEnabled()) LOGGER.debug(msg);
+            if (Logger.hasLoggers(model))
+              Logger.log(model, Logger.Stream.PROCEDURAL, msg);
+          }
+          break; //stop entirely
         }
 
-        if (_dispatcher.hasListeners())
-          _dispatcher.fire(new ProceduralLearningEvent(this, p,
-              discountedReward));
       }
     }
     finally
@@ -349,7 +400,7 @@ public class DefaultProceduralLearningModule6 extends AbstractModule implements
     }
   }
 
-  private boolean shouldInclude(IProduction production)
+  protected boolean shouldInclude(IProduction production)
   {
     for (ICondition condition : production.getSymbolicProduction()
         .getConditions())

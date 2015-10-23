@@ -34,10 +34,7 @@ public class ProductionUtilityComparator implements
    */
   public int compare(IProduction one, IProduction two)
   {
-    if (one == two)
-    {
-      return 0;
-    }
+    if (one == two) return 0;
 
     ISubsymbolicProduction6 sp1 = (ISubsymbolicProduction6) one
         .getSubsymbolicProduction();
@@ -46,6 +43,13 @@ public class ProductionUtilityComparator implements
 
     double base1 = sp1.getExpectedUtility();
     double base2 = sp2.getExpectedUtility();
+
+    /*
+     * if utility learning is not on, we will only have the utility value to
+     * work with, not expected.
+     */
+    if (Double.isNaN(base1)) base1 = sp1.getUtility();
+    if (Double.isNaN(base2)) base2 = sp1.getUtility();
 
     if (base1 == base2)
       return 0;
@@ -61,6 +65,7 @@ public class ProductionUtilityComparator implements
    *            Description of the Parameter
    * @return Description of the Return Value
    */
+  @Override
   public boolean equals(Object one)
   {
     return false;
