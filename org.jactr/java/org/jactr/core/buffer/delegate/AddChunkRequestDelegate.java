@@ -4,6 +4,7 @@ package org.jactr.core.buffer.delegate;
  * default logging
  */
 import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 import org.apache.commons.logging.Log;
@@ -41,6 +42,8 @@ public class AddChunkRequestDelegate extends AsynchronousRequestDelegate
 
   private boolean                    _copyEncodedChunks = true;
 
+  private boolean                    _delayCopies       = true;
+
   /**
    * default is to copy encoded chunks
    */
@@ -58,6 +61,16 @@ public class AddChunkRequestDelegate extends AsynchronousRequestDelegate
   public boolean willAccept(IRequest request)
   {
     return request instanceof ChunkRequest;
+  }
+
+  public void setDelayCopiesEnabled(boolean enable)
+  {
+    _delayCopies = enable;
+  }
+
+  public boolean shouldDelayCopies()
+  {
+    return _delayCopies;
   }
 
   @Override
@@ -97,10 +110,11 @@ public class AddChunkRequestDelegate extends AsynchronousRequestDelegate
     ChunkRequest cRequest = (ChunkRequest) request;
     IChunk originalChunk = cRequest.getChunk();
     Future<IChunk> copiedChunk = null;
-    cRequest.getSlots();
 
     if (shouldCopy(originalChunk))
     {
+      if (shouldDelayCopies()) return null;
+
       if (LOGGER.isDebugEnabled())
         LOGGER.debug(String.format("copying %s", originalChunk));
       copiedChunk = buffer.getModel().getDeclarativeModule()
@@ -111,7 +125,7 @@ public class AddChunkRequestDelegate extends AsynchronousRequestDelegate
 
     if (copiedChunk != null) return copiedChunk;
 
-    return originalChunk;
+    return CompletableFuture.completedFuture(originalChunk);
   }
 
   protected boolean shouldCopy(IChunk chunk)
@@ -138,28 +152,32 @@ public class AddChunkRequestDelegate extends AsynchronousRequestDelegate
       Object startValue)
   {
     ChunkRequest cRequest = (ChunkRequest) request;
-    Collection<? extends ISlot> slots = cRequest.getSlots();
+    cRequest.getSlots();
     IChunk toAdd = null;
+    CompletableFuture<IChunk> future = null;
 
-    if (startValue instanceof IChunk)
-      toAdd = (IChunk) startValue;
+    // startValue is either a completableFuture, or null.
+
+    if (startValue == null)
+    {
+      IChunk original = cRequest.getChunk();
+      // null value, we are doing a delayed copy
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug(String.format("delayed copy %s", original));
+      future = buffer.getModel().getDeclarativeModule().copyChunk(original);
+    }
     else
-      try
-      {
-        toAdd = ((Future<IChunk>) startValue).get();
-      }
-      catch (Exception e)
-      {
-        LOGGER.error("Failed to get chunk from future reference. Request:"
-            + request + " Buffer:" + buffer + " Start:" + startValue, e);
+      future = (CompletableFuture<IChunk>) startValue;
 
-        // bail out, shop probably do some model logging
-        return;
-      }
+    future.thenAccept((c) -> {
+      modifyChunk(c, cRequest);
+      buffer.addSourceChunk(toAdd);
+    });
+  }
 
-    /*
-     * set the values...safely with the lock
-     */
+  protected void modifyChunk(IChunk toAdd, ChunkRequest request)
+  {
+    Collection<? extends ISlot> slots = request.getSlots();
     try
     {
       toAdd.getWriteLock().lock();
@@ -173,11 +191,6 @@ public class AddChunkRequestDelegate extends AsynchronousRequestDelegate
     {
       toAdd.getWriteLock().unlock();
     }
-
-    /*
-     * and add to the buffer..
-     */
-    buffer.addSourceChunk(toAdd);
   }
 
 }
