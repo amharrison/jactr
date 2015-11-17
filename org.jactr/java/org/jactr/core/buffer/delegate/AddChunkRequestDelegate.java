@@ -152,12 +152,9 @@ public class AddChunkRequestDelegate extends AsynchronousRequestDelegate
       Object startValue)
   {
     ChunkRequest cRequest = (ChunkRequest) request;
-    cRequest.getSlots();
-    IChunk toAdd = null;
     CompletableFuture<IChunk> future = null;
 
     // startValue is either a completableFuture, or null.
-
     if (startValue == null)
     {
       IChunk original = cRequest.getChunk();
@@ -171,7 +168,7 @@ public class AddChunkRequestDelegate extends AsynchronousRequestDelegate
 
     future.thenAccept((c) -> {
       modifyChunk(c, cRequest);
-      buffer.addSourceChunk(toAdd);
+      buffer.addSourceChunk(c);
     });
   }
 
