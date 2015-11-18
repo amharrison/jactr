@@ -38,20 +38,14 @@ public interface IAssociativeLinkageSystem extends IInstallable
   
   
   /**
-   * copy all the specified links from source, replacing all occurences of
+   * copy all the specified links from source, replacing all occurrences of
    * source with destination, and added to destination.
    * 
-   * @param copySourceIs
-   *          copy those links where source is iChunk (i.e., these links spread
-   *          to the source chunk)
-   * @param copySourceJs
-   *          copy those links where source is jChunk (i.e., these links spread
-   *          to the source chunk)
    * @param source
    * @param destination
    */
   public void copyAndRemapLinks(IChunk source, IChunk destination,
-      boolean copySourceIs, boolean copySourceJs);
+      boolean copyInboundLinks, boolean copyOutboundLinks);
 
   public IAssociativeLinkEquation getAssociativeLinkEquation();
 

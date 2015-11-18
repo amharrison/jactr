@@ -25,36 +25,39 @@ public class DefaultSubsymbolicChunkFactory5 implements
 
   static private boolean             _warnedAboutMerging = false;
 
-  private boolean                    _copyILinks         = false;
+  private boolean                    _copyInboundLinks   = true;
 
-  private boolean                    _copyJLinks         = true;
-
-  /**
-   * @return true, if, when copying chunks, we want to duplicate the j links
-   *         (those that would spread to the copied chunk) (default: true)
-   */
-  public boolean shouldCopyJLinks()
-  {
-    return _copyJLinks;
-  }
+  private boolean                    _copyOutboundLinks  = false;
 
   /**
-   * @return true, if, when copying chunks, we want to duplicate the i links
-   *         (those that the copy would spread through)
+   * @return true, if, when copying chunks, we want to duplicate the links that
+   *         spread from original->other. creating copy->other. (default: false)
    */
-  public boolean shouldCopyILinks()
+  public boolean shouldCopyOutboundLinks()
   {
-    return _copyILinks;
+    return _copyOutboundLinks;
   }
 
-  public void setShouldCopyJLinks(boolean enable)
+  /**
+   * @return true, if, when copying chunks, we want to duplicate the links that
+   *         spread from other->original. creating other->copy. (default: true)
+   *         This is the normative containment link for slot values. That is,
+   *         copy has a slot that equals other, resulting in the other->copy
+   *         link.
+   */
+  public boolean shouldCopyInboundLinks()
   {
-    _copyJLinks = enable;
+    return _copyInboundLinks;
   }
 
-  public void setShouldCopyILinks(boolean enable)
+  public void setShouldCopyOutboundLinks(boolean enable)
   {
-    _copyILinks = enable;
+    _copyOutboundLinks = enable;
+  }
+
+  public void setShouldCopyInboundLinks(boolean enable)
+  {
+    _copyInboundLinks = enable;
   }
 
   public ISubsymbolicChunk newSubsymbolicChunk()
@@ -122,8 +125,8 @@ public class DefaultSubsymbolicChunkFactory5 implements
             .getDeclarativeModule().getAssociativeLinkageSystem();
 
         if (linkage != null)
-          linkage.copyAndRemapLinks(source, dest, shouldCopyILinks(),
-              shouldCopyJLinks());
+          linkage.copyAndRemapLinks(source, dest, shouldCopyInboundLinks(),
+              shouldCopyOutboundLinks());
         else if (LOGGER.isWarnEnabled())
           LOGGER
               .warn(String

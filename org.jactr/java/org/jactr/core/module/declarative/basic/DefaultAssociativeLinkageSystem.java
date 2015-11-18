@@ -151,15 +151,11 @@ public class DefaultAssociativeLinkageSystem implements
     if (LOGGER.isDebugEnabled())
       LOGGER.debug(String.format("Detaching link %s", link));
 
-
     if (!iChunk.hasBeenDisposed())
       iChunk.getAdapter(IAssociativeLinkContainer.class).removeLink(link);
-    ;
-
 
     if (!jChunk.hasBeenDisposed())
       jChunk.getAdapter(IAssociativeLinkContainer.class).removeLink(link);
-    ;
   }
 
   /*
@@ -171,7 +167,7 @@ public class DefaultAssociativeLinkageSystem implements
    * org.jactr.core.chunk.IChunk)
    */
   public void copyAndRemapLinks(IChunk source, IChunk destination,
-      boolean copySourceIs, boolean copySourceJs)
+      boolean copyInboundLinks, boolean copyOutboundLinks)
   {
     if (LOGGER.isDebugEnabled())
       LOGGER.debug(String.format("Copying and remapping links from %s to %s",
@@ -179,15 +175,17 @@ public class DefaultAssociativeLinkageSystem implements
 
     // zip through all of sources links
 
-    IAssociativeLinkContainer srcCont = source.getAdapter(IAssociativeLinkContainer.class);
-    IAssociativeLinkContainer destCont = destination.getAdapter(IAssociativeLinkContainer.class);
+    IAssociativeLinkContainer srcCont = source
+        .getAdapter(IAssociativeLinkContainer.class);
+    IAssociativeLinkContainer destCont = destination
+        .getAdapter(IAssociativeLinkContainer.class);
 
     if (srcCont != null && destCont != null)
     {
       // remove the associative links.
       FastList<IAssociativeLink> links = FastList.newInstance();
       // j links, that is these links spread activation from source
-      if (copySourceJs)
+      if (copyOutboundLinks)
       {
         srcCont.getOutboundLinks(links);
 
@@ -195,14 +193,14 @@ public class DefaultAssociativeLinkageSystem implements
           LOGGER
               .debug(String
                   .format(
-                      "Copying and remapping %d j Links (those that spread activation from destination)",
+                      "Copying and remapping %d outbound links (those that spread activation from destination)",
                       links.size()));
 
         for (IAssociativeLink link : links)
           remapAndInstall(source, destination, link);
       }
 
-      if (copySourceIs)
+      if (copyInboundLinks)
       {
         links.clear();
 
@@ -213,7 +211,7 @@ public class DefaultAssociativeLinkageSystem implements
           LOGGER
               .debug(String
                   .format(
-                      "Copying and remapping %d i Links (those that spread activation into destination)",
+                      "Copying and remapping %d inbound links (those that spread activation into destination)",
                       links.size()));
 
         for (IAssociativeLink link : links)
@@ -234,8 +232,17 @@ public class DefaultAssociativeLinkageSystem implements
     boolean sourceIsI = link.getIChunk().equals(source);
     boolean sourceIsJ = link.getJChunk().equals(source);
 
-    Link4 newLink = (Link4) createLink(sourceIsI ? dest : link.getIChunk(),
-        sourceIsJ ? dest : link.getJChunk());
+    /*
+     * we need to see if the link has already been created in dest.This can
+     * happen for the slot values of dest (already copied) - which will
+     * automatically have links to the slot values (dependening on the
+     * containment linking policy)
+     */
+
+    Link4 newLink = (Link4) getOrCreateLink(dest, link, sourceIsI, sourceIsJ);
+
+    // Link4 newLink = (Link4) createLink(sourceIsI ? dest : link.getIChunk(),
+    // sourceIsJ ? dest : link.getJChunk());
     Link4 oldLink = (Link4) link;
 
     newLink.setCount(oldLink.getCount());
@@ -244,21 +251,85 @@ public class DefaultAssociativeLinkageSystem implements
     newLink.setStrength(oldLink.getStrength());
 
     if (LOGGER.isDebugEnabled())
-      LOGGER.debug(String.format("Remapped link from %s to %s, adding",
-          oldLink, newLink));
+      LOGGER.debug(String.format("Remapped link from %s (%d) to %s (%d)",
+          oldLink, oldLink.hashCode(), newLink, newLink.hashCode()));
+  }
 
-    // now add to both dest and the other side of the link
-    dest.getAdapter(IAssociativeLinkContainer.class).addLink(newLink);
+  protected IAssociativeLink getOrCreateLink(IChunk destinationChunk,
+      IAssociativeLink link, boolean destIsI, boolean destIsJ)
+  {
+    // may need to be ISubsymbolicChunk4 for older code
+    IAssociativeLinkContainer destContainer = destinationChunk
+        .getAdapter(IAssociativeLinkContainer.class);
+    FastList<IAssociativeLink> container = FastList.newInstance();
+    IChunk other = null;
 
-    if (sourceIsI && sourceIsJ)
-      return;
-    else if (sourceIsI)
-      oldLink.getJChunk().getAdapter(IAssociativeLinkContainer.class)
-          .addLink(newLink);
-    else if (sourceIsJ)
-      oldLink.getIChunk().getAdapter(IAssociativeLinkContainer.class)
-          .addLink(newLink);
+    try
+    {
 
+      if (destIsI)
+      {
+        other = link.getJChunk();
+        // ISubsymbolicChunk4.getJAssociation(destinationChunk)
+        destContainer.getInboundLinks(other, container);
+      }
+      else
+      {
+        other = link.getIChunk();
+        // ISubsymbolicChunk4.getIAssociation(destinationChunk)
+        destContainer.getOutboundLinks(other, container);
+      }
+
+      /*
+       * the link already exists
+       */
+      if (container.size() > 0)
+      {
+        if (container.size() == 1)
+        {
+          if (LOGGER.isDebugEnabled())
+            LOGGER.debug(String.format(
+                "%s already has a link to %s, returning %s", destinationChunk,
+                other, link));
+        }
+        else if (LOGGER.isWarnEnabled())
+          LOGGER.warn(String.format(
+              "Multiple links between %s and %s found, returning first",
+              destinationChunk, other));
+
+        return container.iterator().next();
+      }
+      else
+      {
+        /* new link */
+        IAssociativeLink newLink = createLink(destIsI ? destinationChunk
+            : other, destIsJ ? destinationChunk : other);
+        if (LOGGER.isDebugEnabled())
+          LOGGER.debug(String.format(
+              "No existing link between %s and %s, creating and adding %s",
+              destinationChunk, other, newLink));
+
+        /*
+         * add the new link to the other chunk, but only if this isn't naturally
+         * a self-link. (that should be caught above)
+         */
+        // dest.getSubsymbolicChunk().addLink
+        destContainer.addLink(newLink);
+        if (!(destIsI && destIsJ))
+        {
+          // other.getSubsymbolicChunk().addLink
+          other.getAdapter(IAssociativeLinkContainer.class).addLink(newLink);
+          if (LOGGER.isDebugEnabled())
+            LOGGER.debug(String.format("Added %s to %s", newLink, other));
+        }
+
+        return newLink;
+      }
+    }
+    finally
+    {
+      FastList.recycle(container);
+    }
   }
 
   public void addLink(IAssociativeLink link)

@@ -196,17 +196,17 @@ public class ChunkListener extends ChunkListenerAdaptor
    * @param absorbLinks
    *          true if copies links should override master's values. false if
    *          they are to be merged instead
-   * @param processJLinks
+   * @param processInboundLinks
    *          true to process the links where copy and master are the i, false
    *          if they are the j
    */
   protected void processLinks(IChunk master, IChunk copy, boolean absorbLinks,
-      boolean processJLinks, double fnicjCorrection)
+      boolean processInboundLinks, double fnicjCorrection)
   {
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug(String.format("%s merging into %s, processing %sLinks",
-          copy, master, processJLinks ? "j" : "i"));
+          copy, master, processInboundLinks ? "j" : "i"));
 
     ISubsymbolicChunk4 masterSSC = master.getSubsymbolicChunk().getAdapter(
         ISubsymbolicChunk4.class);
@@ -216,7 +216,7 @@ public class ChunkListener extends ChunkListenerAdaptor
     master.getAdapter(IAssociativeLinkContainer.class);
 
     FastList<IAssociativeLink> links = FastList.newInstance();
-    if (processJLinks)
+    if (processInboundLinks)
       cCont.getInboundLinks(links);
     else
       cCont.getOutboundLinks(links);
@@ -236,7 +236,7 @@ public class ChunkListener extends ChunkListenerAdaptor
        * otherChunk is the other side of the link. If we are processing jLinks
        * (i.e., copy is the iChunk), the otherChunk is link.getJChunk();
        */
-      IChunk otherChunk = processJLinks ? oldLink.getJChunk() : oldLink
+      IChunk otherChunk = processInboundLinks ? oldLink.getJChunk() : oldLink
           .getIChunk();
 
       /*
@@ -269,7 +269,7 @@ public class ChunkListener extends ChunkListenerAdaptor
        * now we process the link, either merging it or absorbing its values
        */
       Link4 masterLink = (Link4) getAssociativeLink(master, otherChunk,
-          !processJLinks); // we need to flip this so that I/Js match
+          !processInboundLinks); // we need to flip this so that I/Js match
       if (masterLink != null)
       {
         if (LOGGER.isDebugEnabled())
@@ -312,7 +312,7 @@ public class ChunkListener extends ChunkListenerAdaptor
       else
       {
         Link4 newLink = null;
-        if (processJLinks)
+        if (processInboundLinks)
           newLink = (Link4) _linkageSystem.createLink(master, otherChunk);
         else
           newLink = (Link4) _linkageSystem.createLink(otherChunk, master);
