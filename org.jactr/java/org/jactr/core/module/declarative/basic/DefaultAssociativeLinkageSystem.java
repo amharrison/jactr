@@ -270,13 +270,13 @@ public class DefaultAssociativeLinkageSystem implements
       if (destIsI)
       {
         other = link.getJChunk();
-        // ISubsymbolicChunk4.getJAssociation(destinationChunk)
+        // ISubsymbolicChunk4.getJAssociation(other)
         destContainer.getInboundLinks(other, container);
       }
       else
       {
         other = link.getIChunk();
-        // ISubsymbolicChunk4.getIAssociation(destinationChunk)
+        // ISubsymbolicChunk4.getIAssociation(other)
         destContainer.getOutboundLinks(other, container);
       }
 
