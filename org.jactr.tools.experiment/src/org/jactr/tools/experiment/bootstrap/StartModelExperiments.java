@@ -119,7 +119,7 @@ public class StartModelExperiments implements Runnable
   {
     if (location == null)
       throw new ModelTerminatedException(
-          "No experiment configuration file found. Cannot conintue");
+          "No experiment configuration file found. Cannot continue");
 
     Document document = loadConfiguration(location);
 
@@ -205,6 +205,6 @@ public class StartModelExperiments implements Runnable
     }
 
     throw new IllegalArgumentException("Could not resolve " + location
-        + " to a valid url");
+            + " to a valid url. Is org.jactr.tools.experiment an Eclipse-RegisterBuddy? Is location on the classpath?");
   }
 }
