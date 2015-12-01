@@ -19,8 +19,8 @@ public class NetworkPackager
   /**
    * Logger definition
    */
-  static private final transient Log LOGGER = LogFactory
-                                                .getLog(NetworkPackager.class);
+  static private final transient Log     LOGGER = LogFactory
+                                                    .getLog(NetworkPackager.class);
 
   private Map<String, Map<String, Long>> _stringTables;
 
@@ -35,7 +35,7 @@ public class NetworkPackager
     Map<Long, String> newStrings = new HashMap<Long, String>();
     Map<Long, Number> actualData = new TreeMap<Long, Number>();
 
-    process(modelName, probeContents, newStrings, actualData);
+    process(modelName, modelName, probeContents, newStrings, actualData);
 
     if (newStrings.size() == 0 && actualData.size() == 0)
       return Collections.emptyList();
@@ -64,6 +64,10 @@ public class NetworkPackager
     Map<String, Long> stringTable = _stringTables.get(modelName);
     if (stringTable == null)
     {
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug(String.format("No stringTable found for %s, creating",
+            modelName));
+
       stringTable = new TreeMap<String, Long>();
       _stringTables.put(modelName, stringTable);
     }
@@ -83,9 +87,13 @@ public class NetworkPackager
     return rtn;
   }
 
-  protected void process(String root, Map<String, Object> probeContents,
+  protected void process(String modelName, String root,
+      Map<String, Object> probeContents,
       Map<Long, String> newStrings, Map<Long, Number> actualData)
   {
+    if (LOGGER.isDebugEnabled())
+      LOGGER.debug(String.format("Processing data for %s", root));
+
     for (Map.Entry<String, Object> entry : probeContents.entrySet())
     {
       String key = root + "." + entry.getKey();
@@ -102,13 +110,13 @@ public class NetworkPackager
 
       if (value instanceof Number)
       {
-        Long stringId = getStringId(root, key, newStrings);
+        Long stringId = getStringId(modelName, key, newStrings);
         actualData.put(stringId, (Number) value);
       }
       else if (value instanceof Map) try
       {
-          process(entry.getKey(), (Map<String, Object>) value, newStrings,
-              actualData);
+          process(modelName, entry.getKey(), (Map<String, Object>) value,
+              newStrings, actualData);
       }
       catch (Exception e)
       {
