@@ -22,9 +22,16 @@ import org.apache.commons.logging.LogFactory;
 import org.jactr.core.event.AbstractACTREvent;
 import org.jactr.core.event.IParameterEvent;
 import org.jactr.core.module.procedural.IProceduralModule;
+import org.jactr.core.production.IInstantiation;
 import org.jactr.core.production.IProduction;
 import org.jactr.core.runtime.ACTRRuntime;
 
+/**
+ * event describing the most common events that occur within the procedural
+ * module.
+ * 
+ * @author harrison
+ */
 public class ProceduralModuleEvent extends
     AbstractACTREvent<IProceduralModule, IProceduralModuleListener> implements
     IParameterEvent<IProceduralModule, IProceduralModuleListener>
@@ -89,11 +96,23 @@ public class ProceduralModuleEvent extends
     return _type;
   }
 
+  /**
+   * the production(s) for create, add, merge, change and parameter events. the
+   * {@link IInstantiation}(s) for conflict set, will fire and fire events.
+   * 
+   * @return
+   */
   public Collection<IProduction> getProductions()
   {
     return Collections.unmodifiableCollection(_productions);
   }
 
+  /**
+   * the production for create, add, merge and change events. the
+   * {@link IInstantiation} for will fire and fired events.
+   * 
+   * @return
+   */
   public IProduction getProduction()
   {
     return _productions.iterator().next();
