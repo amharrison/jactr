@@ -235,10 +235,9 @@ public class DefaultAssociativeLinkageSystem implements
     /*
      * we need to see if the link has already been created in dest.This can
      * happen for the slot values of dest (already copied) - which will
-     * automatically have links to the slot values (dependening on the
-     * containment linking policy)
+     * automatically have links to the slot values (depending on the containment
+     * linking policy)
      */
-
     Link4 newLink = (Link4) getOrCreateLink(dest, link, sourceIsI, sourceIsJ);
 
     // Link4 newLink = (Link4) createLink(sourceIsI ? dest : link.getIChunk(),
@@ -251,7 +250,7 @@ public class DefaultAssociativeLinkageSystem implements
     newLink.setStrength(oldLink.getStrength());
 
     if (LOGGER.isDebugEnabled())
-      LOGGER.debug(String.format("Remapped link from %s (%d) to %s (%d)",
+      LOGGER.debug(String.format("Remapped link from %s (0x%d) to %s (0x%d)",
           oldLink, oldLink.hashCode(), newLink, newLink.hashCode()));
   }
 
