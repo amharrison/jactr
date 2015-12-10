@@ -310,7 +310,7 @@ public class DefaultProceduralLearningModule6 extends AbstractModule implements
 
     if (_dispatcher.hasListeners())
       _dispatcher.fire(new ProceduralLearningEvent(this,
-          ProceduralLearningEvent.Type.START_REWARDING));
+          ProceduralLearningEvent.Type.START_REWARDING, initialReward));
     try
     {
 
@@ -394,7 +394,7 @@ public class DefaultProceduralLearningModule6 extends AbstractModule implements
     {
       if (_dispatcher.hasListeners())
         _dispatcher.fire(new ProceduralLearningEvent(this,
-            ProceduralLearningEvent.Type.END_REWARDING));
+            ProceduralLearningEvent.Type.END_REWARDING, initialReward));
 
       _firedProductions.clear();
     }

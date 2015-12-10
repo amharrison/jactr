@@ -23,13 +23,14 @@ public class ProceduralLearningEvent
 
   final private IProduction _production;
 
-  public ProceduralLearningEvent(IProceduralLearningModule6 source, Type type)
+  public ProceduralLearningEvent(IProceduralLearningModule6 source, Type type,
+      double reward)
   {
     super(source, ACTRRuntime.getRuntime().getClock(source.getModel())
         .getTime());
     _type = type;
     _production = null;
-    _reward = Double.NaN;
+    _reward = reward;
   }
 
   public ProceduralLearningEvent(IProceduralLearningModule6 source,
