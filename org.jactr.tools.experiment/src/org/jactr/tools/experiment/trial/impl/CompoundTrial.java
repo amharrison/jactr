@@ -89,6 +89,7 @@ public class CompoundTrial extends Trial implements ICompoundTrial
     }
   }
 
+  @Override
   protected void runInternal()
   {
     super.runInternal();
@@ -104,6 +105,7 @@ public class CompoundTrial extends Trial implements ICompoundTrial
     return _currentTrial;
   }
 
+  @Override
   public void stop()
   {
     if (_currentTrial != null) _currentTrial.stop();
@@ -111,7 +113,7 @@ public class CompoundTrial extends Trial implements ICompoundTrial
     super.stop();
   }
 
-  private List<ITrial> select(boolean shuffle, int choose)
+  protected List<ITrial> select(boolean shuffle, int choose)
   {
     ArrayList<ITrial> rtn = new ArrayList<ITrial>(_trials);
 
