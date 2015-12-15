@@ -94,22 +94,19 @@
 									<id>nl.jqno.equalsverifier:equalsverifier:1.7.5</id>
 									<source>true</source>
 								</artifact>
-<!-- 								Is not referenced in bundle class-path in MANIFEST.MF -->
-<!-- 								<artifact> -->
-<!-- 									<id>org.javolution:javolution-core-java:6.0.0</id> -->
-<!-- 									<source>true</source> -->
-<!-- 									<instructions> -->
-<!-- 										<Import-Package>*</Import-Package> -->
-<!-- 										<Export-Package>*</Export-Package> -->
-<!-- 									</instructions> -->
-<!-- 								</artifact> -->
+								<!-- Is not referenced in bundle class-path in MANIFEST.MF -->
+								<!-- <artifact> -->
+								<!-- <id>org.javolution:javolution-core-java:6.0.0</id> -->
+								<!-- <source>true</source> -->
+								<!-- <instructions> -->
+								<!-- <Import-Package>*</Import-Package> -->
+								<!-- <Export-Package>*</Export-Package> -->
+								<!-- </instructions> -->
+								<!-- </artifact> -->
 								<artifact>
 									<id>org.javolution:javolution-core-java:6.0.0</id>
 									<source>true</source>
-									<instructions>
-										<Import-Package>*</Import-Package>
-										<Export-Package>*</Export-Package>
-									</instructions>
+									<!-- Is already a bundle, hence no instructions are specified. -->
 								</artifact>
 								<artifact>
 									<id>org.jscience:jscience:4.3.1</id>
