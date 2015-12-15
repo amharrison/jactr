@@ -98,6 +98,11 @@
 									<id>org.javolution:javolution-core-java:6.0.0</id>
 									<source>true</source>
 									<!-- Is already a bundle, hence no instructions are specified. -->
+									<excludes>
+										<!-- Avoid interference with the "bnd" tool. -->
+										<exclude>org.osgi:org.osgi.core:jar:4.3.1</exclude>
+										<exclude>org.osgi:org.osgi.compendium:jar:4.3.1</exclude>
+									</excludes>
 								</artifact>
 								<artifact>
 									<id>org.jscience:jscience:4.3.1</id>
