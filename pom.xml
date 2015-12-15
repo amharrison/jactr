@@ -1,0 +1,61 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.jactr</groupId>
+	<artifactId>aggregator</artifactId>
+	<version>${newVersion}</version>
+	<packaging>pom</packaging>
+
+	<properties>
+		<maven.deploy.skip>true</maven.deploy.skip>
+		<maven.site.skip>true</maven.site.skip>
+		<maven.site.deploy.skip>true</maven.site.deploy.skip>
+	</properties>
+
+	<developers>
+		<developer>
+			<name>Anthony Harrison</name>
+			<email>amharrison@gmail.com</email>
+			<url>http://anthonymharrison.com/</url>
+		</developer>
+		<developer>
+			<name>Sebastian Lohmeier</name>
+			<email>sl@monochromata.de</email>
+			<url>http://www.monochromata.de</url>
+		</developer>
+	</developers>
+
+	<!-- TODO: GPG key/signing -->
+
+	<licenses>
+		<license>
+			<name>GNU Lesser General Public License</name>
+			<url>http://www.gnu.org/licenses/lgpl-3.0.en.html</url>
+		</license>
+	</licenses>
+
+	<!-- TODO: Switch to Anthony's/JactrTeam's repository -->
+	<scm>
+		<connection>scm:git:https://github.com/amharrison/jactr.git/</connection>
+		<developerConnection>scm:git:https://github.com/amharrison/jactr.git/</developerConnection>
+		<url>https://github.com/amharrison/jactr/</url>
+	</scm>
+
+	<modules>
+		<!-- Note that libs is built separately up-front -->
+		<!-- TODO: Add further modules and make sure libs is deployed first ... -->
+	</modules>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-scm-plugin</artifactId>
+				<version>1.9.4</version>
+				<configuration>
+					<tag>${project.groupId}-${project.version}</tag>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

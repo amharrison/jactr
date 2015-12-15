@@ -1,0 +1,233 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.junit</groupId>
+	<artifactId>parent</artifactId>
+	<version>${newVersion}</version>
+	<packaging>pom</packaging>
+	<description>A parent for artifacts in group org.junit.</description>
+
+	<developers>
+		<developer>
+			<name>Anthony Harrison</name>
+			<email>amharrison@gmail.com</email>
+			<url>http://anthonymharrison.com/</url>
+		</developer>
+		<developer>
+			<name>Sebastian Lohmeier</name>
+			<email>sl@monochromata.de</email>
+			<url>http://www.monochromata.de</url>
+		</developer>
+	</developers>
+
+	<!-- TODO: GPG key/signing -->
+
+	<licenses>
+		<license>
+			<name>GNU Lesser General Public License</name>
+			<url>http://www.gnu.org/licenses/lgpl-3.0.en.html</url>
+		</license>
+	</licenses>
+
+	<!-- TODO: Switch to Anthony's/JactrTeam's repository -->
+	<scm>
+		<connection>scm:git:https://github.com/amharrison/jactr.git/</connection>
+		<developerConnection>scm:git:https://github.com/amharrison/jactr.git/</developerConnection>
+		<url>https://github.com/amharrison/jactr/</url>
+	</scm>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<!-- Copy nested JavaDoc resources -->
+		<docfilessubdirs>true</docfilessubdirs>
+		<!-- Include sources in JavaDoc -->
+		<linksource>true</linksource>
+		<mars-repo.url>http://download.eclipse.org/releases/mars</mars-repo.url>
+		<!-- TODO: Use a URL on jactr.org -->
+		<jactr.libs.repo.url>http://monochromata.de/eclipse/sites/org.jactr.libs</jactr.libs.repo.url>
+		<tycho.version>0.24.0</tycho.version>
+		<jactr.path>maven/releases/${project.groupId}</jactr.path>
+		<!-- TODO: Use a URL on jactr.org -->
+		<jactr.repo.url>http://monochromata.de/${jactr.path}</jactr.repo.url>
+		<!-- TODO: Use a URL on jactr.org -->
+		<jactr.upload.url>sftp://ftp.monochromata.de/webseiten/${jactr.path}</jactr.upload.url>
+	</properties>
+
+	<!-- The repository contents constitute an implicit target platform definition. -->
+	<repositories>
+		<repository>
+			<id>mars</id>
+			<url>${mars-repo.url}</url>
+			<layout>p2</layout>
+		</repository>
+		<repository>
+			<id>jactr-libs</id>
+			<url>${jactr.libs.repo.url}</url>
+			<layout>p2</layout>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<!-- Provides snapshots of jacoco-maven-plugin -->
+			<id>sonatype-oss-snapshots</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<distributionManagement>
+		<repository>
+			<id>release-repository</id>
+			<url>${jactr.upload.url}</url>
+		</repository>
+		<!-- TODO: there are no snapshots, actually -->
+		<snapshotRepository>
+			<id>snapshot-repository</id>
+			<url>${jactr.upload.url}</url>
+			<uniqueVersion>false</uniqueVersion>
+		</snapshotRepository>
+	</distributionManagement>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>2.10.3</version>
+					<configuration>
+						<quiet>true</quiet>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.7.6-SNAPSHOT</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-maven-plugin</artifactId>
+				<version>${tycho.version}</version>
+				<extensions>true</extensions>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>target-platform-configuration</artifactId>
+				<version>${tycho.version}</version>
+				<configuration>
+					<environments>
+						<!-- 32bit environments are disabled to save time and space -->
+						<!-- <environment> -->
+						<!-- <os>linux</os> -->
+						<!-- <ws>gtk</ws> -->
+						<!-- <arch>x86</arch> -->
+						<!-- </environment> -->
+						<!-- <environment> -->
+						<!-- <os>win32</os> -->
+						<!-- <ws>win32</ws> -->
+						<!-- <arch>x86</arch> -->
+						<!-- </environment> -->
+						<environment>
+							<os>linux</os>
+							<ws>gtk</ws>
+							<arch>x86_64</arch>
+						</environment>
+						<!-- Windows and Mac are temporarily disabled to save time -->
+						<!-- <environment> -->
+						<!-- <os>win32</os> -->
+						<!-- <ws>win32</ws> -->
+						<!-- <arch>x86_64</arch> -->
+						<!-- </environment> -->
+						<!-- <environment> -->
+						<!-- <os>macosx</os> -->
+						<!-- <ws>cocoa</ws> -->
+						<!-- <arch>x86_64</arch> -->
+						<!-- </environment> -->
+					</environments>
+					<!-- TODO: This is actually misplaced, but see https://www.eclipse.org/forums/index.php?t=msg&th=1068443&goto=1701679&#msg_1701679 
+						and https://bugs.eclipse.org/bugs/attachment.cgi?id=248973 and http://wiki.eclipse.org/OTJ -->
+					<filters>
+						<filter>
+							<type>eclipse-plugin</type>
+							<id>org.eclipse.jdt.core</id>
+							<restrictTo>
+								<version>3.11.0.v20150602-1242</version>
+							</restrictTo>
+						</filter>
+					</filters>
+				</configuration>
+			</plugin>
+		</plugins>
+		<extensions>
+			<!-- Enabling the use of SFTP -->
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh</artifactId>
+				<version>2.9</version>
+			</extension>
+		</extensions>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>replace-version-in-xml-files</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.google.code.maven-replacer-plugin</groupId>
+						<artifactId>replacer</artifactId>
+						<version>1.5.3</version>
+						<goals>
+							<goal>replace</goal>
+						</goals>
+						<configuration>
+							<preserveDir>true</preserveDir>
+							<includes>
+								<include>${basedir}/**/feature.xml</include>
+								<include>${basedir}/**/*.product</include>
+							</includes>
+							<token>version="${oldVersion}"</token>
+							<value>version="${newVersion}"</value>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>replace-version-in-manifest-mf-files</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.google.code.maven-replacer-plugin</groupId>
+						<artifactId>replacer</artifactId>
+						<version>1.5.3</version>
+						<goals>
+							<goal>replace</goal>
+						</goals>
+						<configuration>
+							<preserveDir>true</preserveDir>
+							<includes>
+								<include>${basedir}/**/META-INF/MANIFEST.MF</include>
+							</includes>
+							<token>Bundle-Version: ${oldVersion}</token>
+							<value>Bundle-Version: ${newVersion}</value>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+</project>
