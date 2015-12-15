@@ -1,0 +1,78 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.jactr</groupId>
+		<artifactId>parent</artifactId>
+		<version>${newVersion}</version>
+		<relativePath>../parent/pom.xml</relativePath>
+	</parent>
+	<groupId>org.jactr</groupId>
+	<artifactId>tycho-parent</artifactId>
+	<version>${newVersion}</version>
+	<packaging>pom</packaging>
+	<description>A parent for tycho-based artifacts in group org.junit.</description>
+
+	<properties>
+		<tycho.version>0.24.0</tycho.version>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-maven-plugin</artifactId>
+				<version>${tycho.version}</version>
+				<extensions>true</extensions>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>target-platform-configuration</artifactId>
+				<version>${tycho.version}</version>
+				<configuration>
+					<environments>
+						<!-- 32bit environments are disabled to save time and space -->
+						<!-- <environment> -->
+						<!-- <os>linux</os> -->
+						<!-- <ws>gtk</ws> -->
+						<!-- <arch>x86</arch> -->
+						<!-- </environment> -->
+						<!-- <environment> -->
+						<!-- <os>win32</os> -->
+						<!-- <ws>win32</ws> -->
+						<!-- <arch>x86</arch> -->
+						<!-- </environment> -->
+						<environment>
+							<os>linux</os>
+							<ws>gtk</ws>
+							<arch>x86_64</arch>
+						</environment>
+						<!-- Windows and Mac are temporarily disabled to save time -->
+						<!-- <environment> -->
+						<!-- <os>win32</os> -->
+						<!-- <ws>win32</ws> -->
+						<!-- <arch>x86_64</arch> -->
+						<!-- </environment> -->
+						<!-- <environment> -->
+						<!-- <os>macosx</os> -->
+						<!-- <ws>cocoa</ws> -->
+						<!-- <arch>x86_64</arch> -->
+						<!-- </environment> -->
+					</environments>
+					<!-- TODO: This is actually misplaced, but see https://www.eclipse.org/forums/index.php?t=msg&th=1068443&goto=1701679&#msg_1701679 
+						and https://bugs.eclipse.org/bugs/attachment.cgi?id=248973 and http://wiki.eclipse.org/OTJ -->
+					<filters>
+						<filter>
+							<type>eclipse-plugin</type>
+							<id>org.eclipse.jdt.core</id>
+							<restrictTo>
+								<version>3.11.0.v20150602-1242</version>
+							</restrictTo>
+						</filter>
+					</filters>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
