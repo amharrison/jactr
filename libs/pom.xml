@@ -132,10 +132,7 @@
 									<!-- TODO: Update to org.apache.commons:commons-lang3:3.4 -->
 									<id>commons-lang:commons-lang:2.5</id>
 									<source>true</source>
-									<instructions>
-										<Import-Package>*</Import-Package>
-										<Export-Package>*</Export-Package>
-									</instructions>
+									<!-- Is already a bundle, hence no instructions are specified. -->
 								</artifact>
 								<artifact>
 									<id>commons-primitives:commons-primitives:1.0</id>
