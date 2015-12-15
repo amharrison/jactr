@@ -108,7 +108,7 @@
 									</instructions>
 									<excludes>
 										<!-- Use the version of javolution specified above, instead. -->
-										<exclude>org.javolution:javolution:5.2.3</exclude>
+										<exclude>org.javolution:javolution:jar:5.2.3</exclude>
 									</excludes>
 								</artifact>
 								<artifact>
