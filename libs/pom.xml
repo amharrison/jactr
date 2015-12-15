@@ -120,10 +120,7 @@
 									<!-- TODO: Update to version 1.3.1 -->
 									<id>commons-cli:commons-cli:1.2</id>
 									<source>true</source>
-									<instructions>
-										<Import-Package>*</Import-Package>
-										<Export-Package>*</Export-Package>
-									</instructions>
+									<!-- Is already a bundle, hence no instructions are specified. -->
 								</artifact>
 								<artifact>
 									<!-- TODO: Update to org.apache.commons:commons-collections4:4.1 -->
