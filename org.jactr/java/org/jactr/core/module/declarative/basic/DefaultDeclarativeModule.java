@@ -527,12 +527,12 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
       logMessage = new TextBuilder();
 
     if (Logger.hasLoggers(getModel()))
+    {
       logMessage.insert(0,
           String.format("Evaluating partial matches : %s \n", candidates));
 
-    if (Logger.hasLoggers(getModel()))
       Logger.log(getModel(), Logger.Stream.DECLARATIVE, logMessage.toString());
-
+    }
 
     return candidates;
   }
