@@ -530,88 +530,9 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
       logMessage.insert(0,
           String.format("Evaluating partial matches : %s \n", candidates));
 
-    // if (LOGGER.isDebugEnabled())
-    // LOGGER.debug("find partial matches evaluating " + candidates.size()
-    // + " candidates");
-    // ArrayList<IChunk> finalChunks = new ArrayList<IChunk>();
-    // StringBuilder logMessage = null;
-    // if (Logger.hasLoggers(getModel()))
-    // {
-    // logMessage = new StringBuilder("Evaluating partial search matches ");
-    // logMessage.append(candidates).append("\n ");
-    // }
-    //
-    // /*
-    // * we can't be sure that the sorting used is actually relevant to us so we
-    // * have to zip through the entire results
-    // */
-    // double highestActivation = Double.NEGATIVE_INFINITY;
-    // IChunk bestChunk = null;
-    // for (IChunk chunk : candidates)
-    // {
-    // ISubsymbolicChunk ssc = chunk.getSubsymbolicChunk();
-    // int matches = pattern.countMatches(chunk, new VariableBindings());
-    // if (matches < 1)
-    // {
-    // if (logMessage != null)
-    // logMessage.append(String.format(
-    // "rejecting %s, there is no overlap with retrieval pattern %s\n",
-    // chunk, pattern));
-    //
-    // continue;
-    // }
-    //
-    // /*
-    // * snag the activation and see if this is the highest chunk so far we need
-    // * to use the pattern to evaluate mismatch with activation
-    // */
-    // double tmpAct = ssc.getActivation();
-    // double maxAct = tmpAct;
-    //
-    // ISubsymbolicChunk5 ssc5 = (ISubsymbolicChunk5) ssc
-    // .getAdapter(ISubsymbolicChunk5.class);
-    // if (ssc5 != null) tmpAct = ssc5.getActivation(pattern);
-    //
-    // double base = ssc.getBaseLevelActivation();
-    // double spread = ssc.getSpreadingActivation();
-    // double delta = maxAct - tmpAct;
-    //
-    // if (tmpAct > highestActivation)
-    // {
-    // bestChunk = chunk;
-    // highestActivation = tmpAct;
-    // if (logMessage != null)
-    // logMessage.append(String.format(
-    // "%s has highest activation (%.2f=%.2f+%.2f [%.2f discount])\n",
-    // bestChunk, tmpAct, base, spread, delta));
-    // }
-    // else if (logMessage != null)
-    // logMessage
-    // .append(String
-    // .format(
-    // "%s doesn't have the highest activation (%.2f=%.2f+%.2f [%.2f discount])\n",
-    // chunk, tmpAct, base, spread, delta));
-    //
-    // /*
-    // * if we are selecting the best one only, don't add it to the list
-    // */
-    // if (!bestOne && tmpAct >= activationThreshold) finalChunks.add(chunk);
-    // }
-    //
-    // /*
-    // * here's the best one, assuming we only want one
-    // */
-    // if (bestOne && bestChunk != null
-    // && highestActivation >= activationThreshold)
-    // finalChunks.add(bestChunk);
-    //
-    // if (LOGGER.isDebugEnabled())
-    // LOGGER.debug("find partial matches returning " + finalChunks);
-
     if (Logger.hasLoggers(getModel()))
       Logger.log(getModel(), Logger.Stream.DECLARATIVE, logMessage.toString());
 
-    logMessage.delete(0, logMessage.length());
 
     return candidates;
   }
