@@ -17,6 +17,8 @@ import org.jactr.core.chunk.ISymbolicChunk;
 import org.jactr.core.chunk.IllegalChunkStateException;
 import org.jactr.core.logging.IMessageBuilder;
 import org.jactr.core.logging.Logger;
+import org.jactr.core.module.random.IRandomModule;
+import org.jactr.core.module.random.six.DefaultRandomModule;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.BasicSlot;
 import org.jactr.core.slot.IMutableSlot;
@@ -484,8 +486,13 @@ public class DefaultVisualMemory extends AbstractPerceptualMemory implements
     if (results.size() > 0)
     {
       // grab one at random
+      IRandomModule rand = (IRandomModule) getVisualModule().getModel()
+          .getModule(IRandomModule.class);
+      if (rand == null) rand = DefaultRandomModule.getInstance();
+
       Iterator<PerceptualSearchResult> itr = results.iterator();
-      int which = (int) Math.floor(Math.random() * results.size());
+      int which = (int) Math.floor(rand.getGenerator().nextDouble()
+          * results.size());
 
       if (mb != null) mb.prepend(String.format("Selecting %d", which));
 
