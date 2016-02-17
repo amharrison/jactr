@@ -20,20 +20,31 @@ public class DataLoggerHandler implements INodeHandler<ITrial>
   public ITrial process(Element element, IExperiment experiment)
   {
     String className = element.getAttribute("class");
-    String path = experiment.getVariableResolver().resolve(element.getAttribute("path"), experiment.getVariableContext()).toString();
-    String file = experiment.getVariableResolver().resolve(element.getAttribute("file"), experiment.getVariableContext()).toString();
+    // String path = experiment.getVariableResolver()
+    // .resolve(element.getAttribute("path"), experiment.getVariableContext())
+    // .toString();
+
+    String path = experiment.getVariableResolver().resolveValues(
+        element.getAttribute("path"), experiment.getVariableContext());
+
+    // String file = experiment.getVariableResolver()
+    // .resolve(element.getAttribute("file"), experiment.getVariableContext())
+    // .toString();
+
+    String file = experiment.getVariableResolver().resolveValues(
+        element.getAttribute("file"), experiment.getVariableContext());
 
     IDataLogger collector = null;
 
     try
     {
-      collector = (IDataLogger) getClass().getClassLoader().loadClass(
-          className).newInstance();
+      collector = (IDataLogger) getClass().getClassLoader()
+          .loadClass(className).newInstance();
     }
     catch (Exception e)
     {
-      ExperimentParser.LOGGER.error(
-          "Could not create " + className + ", using default xml ", e);
+      ExperimentParser.LOGGER.error("Could not create " + className
+          + ", using default xml ", e);
       collector = new XMLDataLogger();
       path = experiment.getVariableResolver()
           .resolve("${actrWorkingDir}/data", experiment.getVariableContext())
