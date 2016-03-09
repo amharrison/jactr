@@ -59,6 +59,9 @@ public class IterativeRunTracker extends NetworkedEndpoint
 
   private IDeadLockListener _listener;
 
+  static private DateFormat _longTimeFormat      = DateFormat
+                                                     .getTimeInstance(DateFormat.LONG);
+
   public IterativeRunTracker()
   {
   }
@@ -117,7 +120,7 @@ public class IterativeRunTracker extends NetworkedEndpoint
             + " remainingTime : "
             + remainingTime
             + "ms eta "
-            + DateFormat.getTimeInstance(DateFormat.LONG).format(
+            + _longTimeFormat.format(
                 _estimatedCompletionTime));
     }
 
@@ -131,10 +134,10 @@ public class IterativeRunTracker extends NetworkedEndpoint
       else
         sb.append(" stopped @ ");
 
-      DateFormat format = DateFormat.getTimeInstance(DateFormat.LONG);
-      sb.append(format.format(new Date(message.getWhen())));
+      sb.append(_longTimeFormat.format(new Date(message.getWhen())));
       LOGGER.debug(sb.toString());
-      LOGGER.debug("Will finish @ " + format.format(new Date(getETA()))
+      LOGGER.debug("Will finish @ "
+          + _longTimeFormat.format(new Date(getETA()))
           + " in " + getTimeToCompletion() + "ms");
     }
   }
@@ -151,6 +154,7 @@ public class IterativeRunTracker extends NetworkedEndpoint
     }
   }
 
+  @Override
   public ISessionInfo getActiveSession()
   {
     return getSession();
