@@ -165,6 +165,10 @@ public class VariableResolver
   }
 
   /**
+   * find and attempt to resolve all variables in this string, returning the
+   * resolved string. resolution follows
+   * {@link #resolve(String, IVariableContext)}
+   * 
    * @param variablizedTemplate
    * @param context
    * @return
@@ -189,12 +193,24 @@ public class VariableResolver
     return sb.toString();
   }
 
+  /**
+   * attempts to resolve the variable key. It will resolve to the actual object,
+   * not necessarily a string. If it cannot be resolved, the key is returned. In
+   * this way, you can differentiate between a null value (
+   * resolve(key,context)==null ), and undefined ( resolve(key,context)==key)
+   * 
+   * @param key
+   * @param context
+   * @return
+   */
   public Object resolve(String key, IVariableContext context)
   {
     if (!isVariable(key)) return key;
 
     String oKey = key;
-    key = key.substring(key.indexOf(PREFIX) + 2, key.lastIndexOf(SUFFIX));
+    int start = key.indexOf(PREFIX) + 2;
+    int end = key.indexOf(SUFFIX, start);
+    key = key.substring(start, end);
 
     Object rtn = null;
     for (IResolver resolver : _resolvers)
@@ -207,9 +223,9 @@ public class VariableResolver
     if (rtn == null)
     {
       if (LOGGER.isWarnEnabled())
-        LOGGER.warn(String.format("Could not resolve %s, returing %s", oKey,
-            key));
-      rtn = key;
+        LOGGER.warn(String.format("Could not resolve %s, returing %s", key,
+            oKey));
+      rtn = oKey;
     }
     return rtn;
   }
