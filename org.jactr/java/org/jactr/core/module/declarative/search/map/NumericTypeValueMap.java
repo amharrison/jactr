@@ -18,7 +18,6 @@ import java.util.Collection;
 import org.apache.commons.collections.set.CompositeSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jactr.core.slot.DefaultConditionalSlot;
 import org.jactr.core.utils.collections.CompositeSetFactory;
 public class NumericTypeValueMap<I> extends AbstractTypeValueMap<Double, I> implements ITypeValueMap<Double, I>
 {
@@ -27,8 +26,6 @@ public class NumericTypeValueMap<I> extends AbstractTypeValueMap<Double, I> impl
    */
   static private final Log LOGGER = LogFactory.getLog(NumericTypeValueMap.class);
 
-  static public final double EPSILON = DefaultConditionalSlot.EPSILON;
-  
   private SortedValueMap<Double,I> _valueMap;
   
   public NumericTypeValueMap()
@@ -70,14 +67,14 @@ public class NumericTypeValueMap<I> extends AbstractTypeValueMap<Double, I> impl
   @Override
   public Collection<I> lessThan(Object value) throws UnsupportedOperationException
   {
-    double val = asKeyType(value) + EPSILON;
+    double val = asKeyType(value);
     return getValueMap().lessThan(val);
   }
   
   @Override
   public Collection<I> greaterThan(Object value) throws UnsupportedOperationException
   {
-    double val = asKeyType(value) - EPSILON;
+    double val = asKeyType(value);
     return getValueMap().greaterThan(val);
   }
   
@@ -85,8 +82,8 @@ public class NumericTypeValueMap<I> extends AbstractTypeValueMap<Double, I> impl
   @Override
   public Collection<I> not(Object value)
   {
-    double low = asKeyType(value)-EPSILON;
-    double hi = asKeyType(value)+EPSILON;
+    double low = asKeyType(value);
+    double hi = asKeyType(value);
     CompositeSet rtn = CompositeSetFactory.newInstance();
 
     rtn.addComposited(getValueMap().lessThan(low));
