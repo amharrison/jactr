@@ -254,16 +254,22 @@ public class ChunkListener extends ChunkListenerAdaptor
       double fNiCj = oldLink.getFNICJ();
       int count = oldLink.getCount();
 
-      if (fnicjCorrection > 0)
-      {
-        /**
-         * 
-         */
-        fNiCj = Math.max(0, fNiCj - fnicjCorrection);
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format("Original FNiCj(%.2f) corrected (%.2f)",
-              oldLink.getFNICJ(), fNiCj));
-      }
+      /*
+       * further traces support that this correction code is actually creating a
+       * problem that was inadvertantly corrected downstream. This is a test
+       * change - commenting out the correct, until confirmation (AMH 6/30/16)
+       */
+
+      // if (fnicjCorrection > 0)
+      // {
+      // /**
+      // *
+      // */
+      // fNiCj = Math.max(0, fNiCj - fnicjCorrection);
+      // if (LOGGER.isDebugEnabled())
+      // LOGGER.debug(String.format("Original FNiCj(%.2f) corrected (%.2f)",
+      // oldLink.getFNICJ(), fNiCj));
+      // }
 
       /*
        * now we process the link, either merging it or absorbing its values
