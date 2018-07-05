@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: jACT-R Core
-Bundle-Version: 2.0.0.qualifier
+Bundle-Version: 2.1.0.qualifier
 Bundle-SymbolicName: org.jactr; singleton:=true
 Bundle-Vendor: jactr.org
 DynamicImport-Package: *
@@ -70,6 +70,7 @@ Export-Package: org.jactr.core.buffer,
  org.jactr.core.module.retrieval,
  org.jactr.core.module.retrieval.buffer,
  org.jactr.core.module.retrieval.event,
+ org.jactr.core.module.retrieval.familiarity,
  org.jactr.core.module.retrieval.four,
  org.jactr.core.module.retrieval.six,
  org.jactr.core.module.retrieval.time,
@@ -168,7 +169,6 @@ Eclipse-BuddyPolicy: registered
 Eclipse-RegisterBuddy: org.commonreality, org.apache.log4j
 Require-Bundle: org.jactr.support;visibility:=reexport,
  org.commonreality.core,
- org.mozilla.javascript,
  org.commonreality.api;bundle-version="1.0.0",
  org.commonreality.time;bundle-version="1.0.0",
  org.commonreality.net;bundle-version="1.0.0",

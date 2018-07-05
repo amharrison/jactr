@@ -1,5 +1,11 @@
 package org.jactr.scripting.javascript;
 
+import javax.script.Compilable;
+import javax.script.CompiledScript;
+import javax.script.Invocable;
+import javax.script.ScriptContext;
+import javax.script.ScriptException;
+
 /*
  * default logging
  */
@@ -15,13 +21,6 @@ import org.jactr.scripting.IScriptableFactory;
 import org.jactr.scripting.ScriptSupport;
 import org.jactr.scripting.ScriptingManager;
 import org.jactr.scripting.action.IActionScript;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Function;
-import org.mozilla.javascript.JavaScriptException;
-import org.mozilla.javascript.Script;
-import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.ScriptableObject;
-import org.mozilla.javascript.WrappedException;
 
 public class JavascriptAction implements IActionScript
 {
@@ -35,18 +34,17 @@ public class JavascriptAction implements IActionScript
 
   private final String               _script;
 
-  private final Script               _compiledScript;
+  private final CompiledScript       _compiledScript;
 
   public JavascriptAction(String script, IScriptableFactory factory)
   {
     _script = script;
     _factory = factory;
 
-    ScopeManager.getPublicScope();
-    Context cx = Context.enter();
     try
     {
-      _compiledScript = cx.compileString(_script, "ScriptableAction", 0, null);
+      _compiledScript = ((Compilable) ScopeManager.getEngine())
+          .compile(_script);
     }
     catch (Exception ioe)
     {
@@ -54,13 +52,9 @@ public class JavascriptAction implements IActionScript
       throw new ModelerException("Error in Scriptable IAction", ioe,
           "double check your sytanx. The script parser detected an error");
     }
-    finally
-    {
-      Context.exit();
-    }
   }
 
-  private JavascriptAction(String script, Script compiled,
+  private JavascriptAction(String script, CompiledScript compiled,
       IScriptableFactory factory)
   {
     _script = script;
@@ -87,8 +81,9 @@ public class JavascriptAction implements IActionScript
 
     // enter the context for the thread and get the shared scope for
     // the model..
-    Context cx = Context.enter();
-    Scriptable scope = ScopeManager.newScope(ScopeManager
+
+    ScriptContext scope = ScopeManager
+        .newScope(ScopeManager
         .getScopeForModel(model));
     ScopeManager.defineVariable(scope, "jactr", scriptSupport);
 
@@ -96,24 +91,14 @@ public class JavascriptAction implements IActionScript
 
     try
     {
-      _compiledScript.exec(cx, scope);
+      _compiledScript.eval(scope);
     }
-    catch (JavaScriptException jse)
+    catch (ScriptException jse)
     {
-      Context.exit();
       LOGGER.error("Error in scriptable condition", jse);
       throw new ModelerException("Error in Scriptable IAction", jse,
           "double check your sytanx in " + instantiation
               + ". The script was unable to be run..");
-    }
-
-    // let's get the function fire(model, prod, bindings)
-    Object fire = ScriptableObject.getProperty(scope, "fire");
-    if (!(fire instanceof Function))
-    {
-      Context.exit();
-      throw new ModelerException("Could not find fire() in script", null,
-          "ScriptableActions must defined function fire(instantiation)");
     }
 
     // and fire that beatch
@@ -121,18 +106,18 @@ public class JavascriptAction implements IActionScript
     try
     {
       Object[] args = {};
-      Object result = ((Function) fire).call(cx, scope, scope, args);
-      fireTime = Context.toNumber(result);
+      Number result = (Number) ((Invocable) ScopeManager.getEngine())
+          .invokeFunction("fire", args);
+
+      fireTime = result.doubleValue();
       return fireTime;
     }
-    catch (WrappedException we)
+    catch (NoSuchMethodException e)
     {
-      Throwable cause = we.getWrappedException();
-      if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-
-      throw new RuntimeException(cause);
+      throw new ModelerException("Could not find fire() in script", null,
+          "ScriptableActions must defined function fire(instantiation)");
     }
-    catch (JavaScriptException jse2)
+    catch (ScriptException jse2)
     {
       LOGGER.error("Error in scriptable action", jse2);
       throw new ModelerException(
@@ -141,10 +126,6 @@ public class JavascriptAction implements IActionScript
           "double check your sytanx in "
               + instantiation
               + ". Scripting failed to execute fire(model, production, bindings)");
-    }
-    finally
-    {
-      Context.exit();
     }
   }
 

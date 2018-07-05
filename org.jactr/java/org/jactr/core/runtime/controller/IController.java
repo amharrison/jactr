@@ -57,7 +57,8 @@ public interface IController
   public Future<Boolean> start(boolean suspendImmediately);
   
   /**
-   * complete().get() will block until completeds
+   * complete().get() will block until all models complete or are terminated
+   * 
    * @return
    */
   public Future<Boolean> complete();

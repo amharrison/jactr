@@ -1,5 +1,11 @@
 package org.jactr.scripting.javascript;
 
+import javax.script.Compilable;
+import javax.script.CompiledScript;
+import javax.script.Invocable;
+import javax.script.ScriptContext;
+import javax.script.ScriptException;
+
 /*
  * default logging
  */
@@ -15,13 +21,6 @@ import org.jactr.scripting.ScriptSupport;
 import org.jactr.scripting.ScriptingManager;
 import org.jactr.scripting.condition.IConditionScript;
 import org.jactr.scripting.condition.ScriptExecutionFailure;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Function;
-import org.mozilla.javascript.JavaScriptException;
-import org.mozilla.javascript.Script;
-import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.ScriptableObject;
-import org.mozilla.javascript.WrappedException;
 
 public class JavascriptCondition implements IConditionScript
 {
@@ -29,13 +28,13 @@ public class JavascriptCondition implements IConditionScript
    * Logger definition
    */
   static private final transient Log LOGGER           = LogFactory
-                                                          .getLog(JavascriptCondition.class);
+      .getLog(JavascriptCondition.class);
 
   private final IScriptableFactory   _factory;
 
   private final String               _script;
 
-  private final Script               _compiledScript;
+  private final CompiledScript       _compiledScript;
 
   private boolean                    _hasFiredCleanly = false;
 
@@ -46,16 +45,13 @@ public class JavascriptCondition implements IConditionScript
     _factory = factory;
     _script = script;
 
-    ScopeManager.getPublicScope();
-    Context cx = Context.enter();
     try
     {
-      _compiledScript = cx.compileString(_script, "ScriptableCondition", 0,
-          null);
+      _compiledScript = ((Compilable) ScopeManager.getEngine())
+          .compile(_script);
     }
     catch (Exception ioe)
     {
-      Context.exit();
       LOGGER.error("Error in scriptable condition", ioe);
 
       throw new ModelerException("Error in Scriptable ICondition", ioe,
@@ -63,7 +59,7 @@ public class JavascriptCondition implements IConditionScript
     }
   }
 
-  private JavascriptCondition(String script, Script compiled,
+  private JavascriptCondition(String script, CompiledScript compiled,
       IScriptableFactory factory)
   {
     _script = script;
@@ -81,8 +77,8 @@ public class JavascriptCondition implements IConditionScript
     return _factory;
   }
 
-  public IConditionScript clone(IModel model,
-      VariableBindings variableBindings) throws CannotMatchException
+  public IConditionScript clone(IModel model, VariableBindings variableBindings)
+      throws CannotMatchException
   {
     return new JavascriptCondition(_script, _compiledScript, _factory);
   }
@@ -94,8 +90,8 @@ public class JavascriptCondition implements IConditionScript
     try
     {
       if (!execute(scriptSupport, model, variableBindings))
-        throw new CannotMatchException(new ScriptExecutionFailure(
-            "Script evaluated to false"));
+        throw new CannotMatchException(
+            new ScriptExecutionFailure("Script evaluated to false"));
     }
     catch (CannotMatchException cme)
     {
@@ -126,29 +122,26 @@ public class JavascriptCondition implements IConditionScript
 
     try
     {
-      Context cx = Context.enter();
-      Scriptable scope = ScopeManager.newScope(ScopeManager
-          .getScopeForModel(model));
+      // enter the context for the thread and get the shared scope for
+      // the model..
+
+      ScriptContext scope = ScopeManager
+          .newScope(ScopeManager.getScopeForModel(model));
       ScopeManager.defineVariable(scope, "jactr", scriptSupport);
 
-      ScriptingManager
-          .configureScripting(_factory, model, scriptSupport, scope);
+      ScriptingManager.configureScripting(_factory, model, scriptSupport,
+          scope);
 
-      _compiledScript.exec(cx, scope);
-
-      // let's get the function fire(model, prod, bindings)
-      Object matches = ScriptableObject.getProperty(scope, "matches");
-      if (!(matches instanceof Function))
-        throw new CannotMatchException(new ScriptExecutionFailure(
-            "Could not find function matches()"));
+      _compiledScript.eval(scope);
 
       // and fire that beatch
       boolean matched = false;
       Object[] args = {};
-      Object result = ((Function) matches).call(cx, scope, scope, args);
+      Boolean result = (Boolean) ((Invocable) ScopeManager.getEngine())
+          .invokeFunction("matches", args);
       try
       {
-        matched = Context.toBoolean(result);
+        matched = result.booleanValue();
         _hasFiredCleanly = true;
         _cleanResult = matched;
       }
@@ -160,29 +153,18 @@ public class JavascriptCondition implements IConditionScript
       return matched;
 
     }
-    catch (WrappedException we)
+    catch (NoSuchMethodException nse)
     {
-      Throwable cause = we.getWrappedException();
-
-      // if CME is thrown from inside the script
-      if (cause instanceof CannotMatchException)
-        throw (CannotMatchException) cause;
-
-      throw new CannotMatchException(new ExceptionMatchFailure(null,
-          String.format("%s.script", variableBindings.get("=production")),
-          cause));
+      throw new CannotMatchException(
+          new ScriptExecutionFailure("Could not find function matches()"));
     }
-    catch (JavaScriptException jse)
+    catch (ScriptException jse)
     {
       LOGGER.error("Error in scriptable condition", jse);
 
       throw new CannotMatchException(
           new ExceptionMatchFailure(null, String.format("%s.script syntax",
               variableBindings.get("=production")), jse));
-    }
-    finally
-    {
-      Context.exit();
     }
 
   }

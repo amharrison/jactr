@@ -17,10 +17,12 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.SimpleScriptContext;
+
 import org.jactr.core.model.IModel;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.ScriptableObject;
 
 /**
  * Maps javascript contexts to a model
@@ -31,28 +33,36 @@ import org.mozilla.javascript.ScriptableObject;
 public class ScopeManager
 {
 
-  private static Scriptable              _publicScope;
+  private static ScriptContext              _publicScope;
 
-  private static Map<IModel, Scriptable> _scopeMap = Collections
-                                                       .synchronizedMap(new WeakHashMap<IModel, Scriptable>());
+  private static Map<IModel, ScriptContext> _scopeMap = Collections
+      .synchronizedMap(new WeakHashMap<IModel, ScriptContext>());
+
+  private static ScriptEngine               _engine;
 
   /**
    * Gets the publicScope attribute of the ScopeManager class
    * 
    * @return The publicScope value
    */
-  public static Scriptable getPublicScope()
+  public static ScriptContext getPublicScope()
   {
-    if (_publicScope == null)
-    {
-      Context cx = Context.enter();
-      cx.setLanguageVersion(Context.VERSION_1_6);
-      _publicScope = cx.initStandardObjects(null, false);
-      defineVariable(_publicScope, "out", System.out);
-      defineVariable(_publicScope, "err", System.err);
-      Context.exit();
-    }
+    if (_engine == null || _publicScope == null) create();
     return _publicScope;
+  }
+
+  public static ScriptEngine getEngine()
+  {
+    if (_engine == null || _publicScope == null) create();
+    return _engine;
+  }
+
+  private static void create()
+  {
+    _engine = new ScriptEngineManager().getEngineByName("javascript");
+    _publicScope = _engine.getContext();
+    defineVariable(_publicScope, "out", System.out);
+    defineVariable(_publicScope, "err", System.err);
   }
 
   /**
@@ -62,59 +72,43 @@ public class ScopeManager
    *          Description of the Parameter
    * @return The scopeForModel value
    */
-  public static Scriptable getScopeForModel(IModel m)
+  public static ScriptContext getScopeForModel(IModel m)
   {
     synchronized (_scopeMap)
     {
-      Scriptable sc = _scopeMap.get(m);
+      ScriptContext sc = _scopeMap.get(m);
       if (sc == null)
       {
-        Context cx = Context.enter();
-        Scriptable publicScope = getPublicScope();
-        try
-        {
-          sc = cx.newObject(publicScope);
-          sc.setPrototype(publicScope);
-          sc.setParentScope(null);
-        }
-        catch (Exception e)
-        {
-          // NoOp
-        }
-        Context.exit();
+        sc = newScope(getPublicScope());
         _scopeMap.put(m, sc);
       }
       return sc;
     }
   }
 
-  static public Scriptable newScope(Scriptable scriptable)
+  static public ScriptContext newScope(ScriptContext scriptable)
   {
-    Context cx = Context.enter();
-    Scriptable rtn = cx.newObject(scriptable);
-    rtn.setPrototype(scriptable);
-    rtn.setParentScope(null);
-    Context.exit();
-    return rtn;
-  }
+    ScriptContext newContext = new SimpleScriptContext();
+    newContext.setBindings(scriptable.getBindings(ScriptContext.ENGINE_SCOPE),
+        ScriptContext.ENGINE_SCOPE);
 
+    return newContext;
+  }
 
   /**
    * @param scope
    * @param variableName
    * @param object
    */
-  static public void defineVariable(Scriptable scope, String variableName,
+  static public void defineVariable(ScriptContext scope, String variableName,
       Object object)
   {
-    Object variable = Context.javaToJS(object, scope);
-    ScriptableObject.putProperty(scope, variableName, variable);
+    scope.setAttribute(variableName, object, ScriptContext.ENGINE_SCOPE);
   }
 
-
-  static public Object getVariable(Scriptable scope, String variableName)
+  static public Object getVariable(ScriptContext scope, String variableName)
   {
-    return ScriptableObject.getProperty(scope, variableName);
+    return scope.getAttribute(variableName);
   }
 
   /**

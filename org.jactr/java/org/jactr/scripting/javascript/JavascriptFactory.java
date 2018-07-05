@@ -1,5 +1,7 @@
 package org.jactr.scripting.javascript;
 
+import javax.script.ScriptContext;
+
 /*
  * default logging
  */
@@ -8,8 +10,6 @@ import org.apache.commons.logging.LogFactory;
 import org.jactr.scripting.IScriptableFactory;
 import org.jactr.scripting.action.IActionScript;
 import org.jactr.scripting.condition.IConditionScript;
-import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.ScriptableObject;
 
 public class JavascriptFactory implements IScriptableFactory
 {
@@ -31,7 +31,7 @@ public class JavascriptFactory implements IScriptableFactory
 
   public String getDescription()
   {
-    return "Mozilla Rhino Javascript";
+    return "Nashorn Javascript";
   }
 
   public String getLanguageName()
@@ -46,12 +46,12 @@ public class JavascriptFactory implements IScriptableFactory
 
   public Object getVariable(String label, Object variableContext)
   {
-    return ScriptableObject.getProperty((Scriptable) variableContext, label);
+    return ScopeManager.getVariable((ScriptContext) variableContext, label);
   }
 
   public void setVariable(String label, Object value, Object variableContext)
   {
-    ScopeManager.defineVariable((Scriptable) variableContext, label, value);
+    ScopeManager.defineVariable((ScriptContext) variableContext, label, value);
   }
 
   public boolean supports(String scriptName)
