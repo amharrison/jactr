@@ -47,22 +47,28 @@ public class ScopeManager
    */
   public static ScriptContext getPublicScope()
   {
-    if (_engine == null || _publicScope == null) create();
+    createIfNecessary();
     return _publicScope;
   }
 
   public static ScriptEngine getEngine()
   {
-    if (_engine == null || _publicScope == null) create();
+    createIfNecessary();
     return _engine;
   }
 
-  private static void create()
+  private static void createIfNecessary()
   {
-    _engine = new ScriptEngineManager().getEngineByName("javascript");
-    _publicScope = _engine.getContext();
-    defineVariable(_publicScope, "out", System.out);
-    defineVariable(_publicScope, "err", System.err);
+    synchronized (ScopeManager.class)
+    {
+      if (_engine != null && _publicScope != null) return;
+
+      _engine = new ScriptEngineManager().getEngineByName("JavaScript");
+      _publicScope = _engine.getContext();
+
+      defineVariable(_publicScope, "out", System.out);
+      defineVariable(_publicScope, "err", System.err);
+    }
   }
 
   /**

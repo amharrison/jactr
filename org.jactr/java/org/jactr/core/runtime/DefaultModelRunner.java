@@ -195,7 +195,8 @@ public class DefaultModelRunner implements Runnable
       LOGGER
           .warn(String
               .format(
-                  "WARNING: Time discrepancy detected. Clock regression requested : %.10f(desired) < %.10f(current). Should be >=. Incrementing request by 0.05",
+                  "WARNING: Time discrepancy detected. Clock regression requested"
+                      + ": %.10f(desired) < %.10f(current). Should be >=. Incrementing request by 0.05",
                   waitForTime, now));
 
       waitForTime = now + 0.05;
@@ -222,11 +223,14 @@ public class DefaultModelRunner implements Runnable
     // .waitForTime(waitForTime).get();
 
     if (rtn < waitForTime)
+    {
       LOGGER
           .error(String
               .format(
                   "WARNING: Time discrepancy detected. Clock regression : %.10f(returned) < %.10f(desired). Should be >=",
                   rtn, waitForTime));
+      rtn = Math.nextAfter(rtn, 1);
+    }
 
     return rtn;
   }
