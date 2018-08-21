@@ -22,7 +22,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Supplier;
 
+import org.antlr.runtime.tree.CommonTree;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.concurrent.ExecutorServices;
@@ -34,8 +36,11 @@ import org.jactr.core.module.procedural.event.ProceduralModuleEvent;
 import org.jactr.core.module.procedural.event.ProceduralModuleListenerAdaptor;
 import org.jactr.core.production.IInstantiation;
 import org.jactr.core.runtime.ACTRRuntime;
+import org.jactr.core.runtime.controller.DefaultController;
 import org.jactr.core.runtime.controller.IController;
 import org.jactr.io.environment.EnvironmentParser;
+import org.jactr.io.generator.CodeGeneratorFactory;
+import org.jactr.io.resolver.ASTResolver;
 
 /**
  * Utility class for ensuring that model's fire correctly
@@ -48,7 +53,7 @@ public class ExecutionTester
    * logger definition
    */
   static private final Log              LOGGER = LogFactory
-                                                   .getLog(ExecutionTester.class);
+      .getLog(ExecutionTester.class);
 
   private Map<IModel, Iterator<String>> _productionSequenceMap;
 
@@ -89,20 +94,18 @@ public class ExecutionTester
     String productionName = instantiation.getProduction()
         .getSymbolicProduction().getName();
 
-    if (failedProductions.contains(productionName))
-      throw new RuntimeException("(" + model + ") " + productionName +
-          " is never supposed to fire");
+    if (failedProductions.contains(productionName)) throw new RuntimeException(
+        "(" + model + ") " + productionName + " is never supposed to fire");
 
-    if (!productionSequence.hasNext())
-      throw new RuntimeException("(" + model +
-          ") No more productions should be firing, got " + productionName);
+    if (!productionSequence.hasNext()) throw new RuntimeException("(" + model
+        + ") No more productions should be firing, got " + productionName);
 
     String expectedName = productionSequence.next();
 
     if (!productionName.equalsIgnoreCase(expectedName))
-      throw new RuntimeException("(" + model +
-          ") Wrong production fired. Expecting " + expectedName + " got " +
-          productionName);
+      throw new RuntimeException(
+          "(" + model + ") Wrong production fired. Expecting " + expectedName
+              + " got " + productionName);
 
     verifyModelState(model, instantiation);
   }
@@ -118,28 +121,25 @@ public class ExecutionTester
 
   }
 
-  /**
-   * test run.
-   * 
-   * @param url
-   *            of the environment file
-   * @param productionSequenceMap
-   *            keyed on model name, a sequence of productions that should fire
-   * @param failedProductionMap
-   *            keyed on model name, a set of productions that should never fire
-   */
-  public Collection<Throwable> test(URL url,
+  protected void dump(IModel model)
+  {
+    CommonTree modelDesc = ASTResolver.toAST(model, true);
+    for (StringBuilder line : CodeGeneratorFactory.getCodeGenerator("jactr")
+        .generate(modelDesc, true))
+      LOGGER.debug(line.toString());
+  }
+
+  public Collection<Throwable> test(IModel modelToTest,
       Map<String, Collection<String>> productionSequenceMap,
       Map<String, Collection<String>> failedProductionMap)
   {
-    try
+    if (modelToTest != null)
     {
-      EnvironmentParser envP = new EnvironmentParser();
-      envP.parse(url);
-    }
-    catch (Exception e)
-    {
-      throw new RuntimeException("Could not load environment ", e);
+//      DefaultModelLogger dml = new DefaultModelLogger();
+//      dml.setParameter("all", "err");
+//      modelToTest.install(dml);
+      ACTRRuntime.getRuntime().addModel(modelToTest);
+      ACTRRuntime.getRuntime().setController(new DefaultController());
     }
 
     IProceduralModuleListener listener = new ProceduralModuleListenerAdaptor() {
@@ -157,16 +157,16 @@ public class ExecutionTester
       String modelName = model.getName();
       if (productionSequenceMap.containsKey(modelName))
       {
-        _productionSequenceMap.put(model, new ArrayList<String>(
-            productionSequenceMap.get(modelName)).iterator());
-        _failedProductionMap.put(model, new TreeSet<String>(failedProductionMap
-            .get(modelName)));
+        _productionSequenceMap.put(model,
+            new ArrayList<String>(productionSequenceMap.get(modelName))
+                .iterator());
+        _failedProductionMap.put(model,
+            new TreeSet<String>(failedProductionMap.get(modelName)));
         model.getProceduralModule().addListener(listener,
             ExecutorServices.INLINE_EXECUTOR);
       }
-      else if (LOGGER.isWarnEnabled())
-        LOGGER.warn("Have no production information for " + modelName +
-            " will not test");
+      else if (LOGGER.isWarnEnabled()) LOGGER.warn(
+          "Have no production information for " + modelName + " will not test");
       model.addListener(new ModelListenerAdaptor() {
 
         @Override
@@ -178,12 +178,12 @@ public class ExecutionTester
         @Override
         public void modelStopped(ModelEvent me)
         {
-          Iterator<String> productionSequence = _productionSequenceMap.get(me
-              .getSource());
+          Iterator<String> productionSequence = _productionSequenceMap
+              .get(me.getSource());
           if (productionSequence != null && productionSequence.hasNext())
             _exceptions.add(new RuntimeException(
-                "Not all productions have fired, expecting " +
-                    productionSequence.next()));
+                "Not all productions have fired, expecting "
+                    + productionSequence.next()));
         }
       }, ExecutorServices.INLINE_EXECUTOR);
     }
@@ -197,6 +197,12 @@ public class ExecutionTester
       controller.start().get();
       controller.complete().get();
 
+      if (_exceptions.size() > 0)
+      {
+        LOGGER.debug("Completed with exceptions : " + _exceptions);
+        dump(modelToTest);
+      }
+
       return _exceptions;
     }
     catch (Exception e)
@@ -205,8 +211,8 @@ public class ExecutionTester
     }
     finally
     {
-      for (IModel model : new ArrayList<IModel>(ACTRRuntime.getRuntime()
-          .getModels()))
+      for (IModel model : new ArrayList<IModel>(
+          ACTRRuntime.getRuntime().getModels()))
         try
         {
           ACTRRuntime.getRuntime().removeModel(model);
@@ -220,13 +226,55 @@ public class ExecutionTester
   }
 
   /**
+   * test run.
+   * 
+   * @param url
+   *          of the environment file
+   * @param productionSequenceMap
+   *          keyed on model name, a sequence of productions that should fire
+   * @param failedProductionMap
+   *          keyed on model name, a set of productions that should never fire
+   */
+  public Collection<Throwable> test(URL url,
+      Map<String, Collection<String>> productionSequenceMap,
+      Map<String, Collection<String>> failedProductionMap)
+  {
+    try
+    {
+      EnvironmentParser envP = new EnvironmentParser();
+      envP.parse(url);
+    }
+    catch (Exception e)
+    {
+      throw new RuntimeException("Could not load environment ", e);
+    }
+
+    return test((IModel) null, productionSequenceMap, failedProductionMap);
+  }
+
+  public Collection<Throwable> test(Supplier<IModel> supplier,
+      Collection<String> productionSequence,
+      Collection<String> failedProductions)
+  {
+    IModel model = supplier.get();
+    String modelName = model.getName();
+
+    Map<String, Collection<String>> sequence = new TreeMap<String, Collection<String>>();
+    sequence.put(modelName, productionSequence);
+    Map<String, Collection<String>> failed = new TreeMap<String, Collection<String>>();
+    failed.put(modelName, failedProductions);
+
+    return test(model, sequence, failed);
+  }
+
+  /**
    * @param url
    * @param modelName
-   *            not null
+   *          not null
    * @param productionSequence
-   *            not null or empty
+   *          not null or empty
    * @param failedProductions
-   *            not null
+   *          not null
    */
   public Collection<Throwable> test(URL url, String modelName,
       Collection<String> productionSequence,

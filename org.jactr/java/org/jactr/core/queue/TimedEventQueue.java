@@ -109,6 +109,12 @@ public class TimedEventQueue
     _intermediateEvents = new ArrayList<ITimedEvent>();
   }
 
+  public void clear()
+  {
+    _priorityQueue.clear();
+    _intermediateEvents.clear();
+  }
+
   public void dispose()
   {
     _eventDispatcher.clear();

@@ -17,8 +17,6 @@ import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import javolution.util.FastList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.time.impl.BasicClock;
@@ -31,6 +29,8 @@ import org.jactr.core.module.procedural.IProceduralModule;
 import org.jactr.core.production.IInstantiation;
 import org.jactr.core.queue.TimedEventQueue;
 import org.jactr.core.runtime.ACTRRuntime;
+
+import javolution.util.FastList;
 
 /**
  * default cycle control for the model
@@ -81,6 +81,14 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
       }
 
     FastList.recycle(container);
+  }
+
+  @Override
+  public void initialize(IModel model)
+  {
+    _nextPossibleProductionFiringTime = ACTRRuntime.getRuntime().getClock(model)
+        .getTime();
+    _isExecuting = false;
   }
 
   /**
@@ -375,4 +383,5 @@ else if (model.isCycleSkippingEnabled())
   {
     return _isExecuting;
   }
+
 }

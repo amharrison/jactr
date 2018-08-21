@@ -18,8 +18,7 @@ public class FluentAddition implements Supplier<IModel>
   @Override
   public IModel get()
   {
-    IModel model = FluentModel.named("addition").withCoreModules()
-        .build();
+    IModel model = FluentModel.named("addition").withCoreModules().build();
 
     IChunkType add = FluentChunkType.from(model).named("add")
         .slots("arg1", "arg2", "count", "sum").encode();
@@ -32,7 +31,7 @@ public class FluentAddition implements Supplier<IModel>
     for (char count = 'a'; count < 'k'; count++)
     {
       int first = count - 'a';
-      int second = first++;
+      int second = first + 1;
       FluentChunk.from(countOrder).slot("first", first).slot("second", second)
           .encode();
     }
@@ -63,8 +62,9 @@ public class FluentAddition implements Supplier<IModel>
         .condition(FluentCondition.match("goal", add).slot("sum", "=sum")
             .slot("count", "=count").build())
         .condition(FluentCondition.match("retrieval", countOrder)
-            .slot("first", "=count").slot("second", "=newCount")
-            .slot(":state", free).build())
+            .slot("first", "=count").slot("second", "=newCount").build())
+        .condition(
+            FluentCondition.query("retrieval").slot("state", free).build())
         .action(FluentAction.modify("goal").slot("count", "=newCount").build())
         .action(FluentAction.add("retrieval", countOrder).slot("first", "=sum")
             .build())
@@ -73,9 +73,10 @@ public class FluentAddition implements Supplier<IModel>
     FluentProduction.from(model).named("increment-sum")
         .condition(FluentCondition.match("goal", add).slot("sum", "=sum")
             .slot("count", "=count").slot("arg2").not("=count").build())
+        .condition(FluentCondition.match("retrieval", countOrder)
+            .slot("first", "=sum").slot("second", "=newSum").build())
         .condition(
-            FluentCondition.match("retrieval", countOrder).slot("first", "=sum")
-                .slot("second", "=newSum").slot(":state", free).build())
+            FluentCondition.query("retrieval").slot("state", free).build())
         .action(FluentAction.modify("goal").slot("sum", "=newSum").build())
         .action(FluentAction.add("retrieval", countOrder)
             .slot("first", "=count").build())

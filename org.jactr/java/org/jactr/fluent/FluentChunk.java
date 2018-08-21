@@ -2,6 +2,8 @@ package org.jactr.fluent;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.Future;
 
 /*
@@ -50,6 +52,14 @@ public class FluentChunk
     return this;
   }
 
+  public Map<String, IChunk> chunks(String... chunkNames)
+  {
+    Map<String, IChunk> rtn = new TreeMap<>();
+    for (String chunkName : chunkNames)
+      rtn.put(chunkName, named(chunkName).encodeIfAbsent());
+    return rtn;
+  }
+
   public FluentChunk slot(String slotName, Object slotValue)
   {
     _slots.add(new BasicSlot(slotName, slotValue));
@@ -77,7 +87,8 @@ public class FluentChunk
         chunk.getSymbolicChunk().addSlot(s);
       });
       _name = null;
-      _slots.clear();
+      // leave the slots in case we want multiple copies with the same values
+//      _slots.clear();
       return chunk;
     }
     catch (Exception e)

@@ -180,7 +180,6 @@ public class BasicModel extends DefaultAdaptable implements IModel
        * no more events
        */
       _eventDispatcher.clear();
-      _eventDispatcher = null;
 
       _extensions.clear();
       _extensions = null;

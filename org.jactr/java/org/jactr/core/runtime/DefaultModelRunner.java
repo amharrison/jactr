@@ -108,6 +108,8 @@ public class DefaultModelRunner implements Runnable
      */
     _model.dispatch(new ModelEvent(_model, ModelEvent.Type.CONNECTED));
 
+    _cycleRunner.initialize(_model);
+
     if (runtime.hasListeners())
       runtime.dispatch(new ACTRRuntimeEvent(_model,
           ACTRRuntimeEvent.Type.MODEL_STARTED, null));

@@ -42,6 +42,13 @@ public class FluentCondition
 
   private AbstractSlotCondition      _slotBasedCondition;
 
+  /**
+   * entry point for queries. ":slotName" short cuts are not permitted in
+   * matches, requiring explicit queries to be constructed.
+   * 
+   * @param bufferName
+   * @return
+   */
   static public SlotBuilder query(String bufferName)
   {
     FluentCondition cb = new FluentCondition();

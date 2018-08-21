@@ -24,6 +24,13 @@ public interface ICycleProcessor
   public double cycle(IModel model, boolean eventsHaveFired);
 
   /**
+   * called at start up
+   * 
+   * @param model
+   */
+  public void initialize(IModel model);
+
+  /**
    * execute this before the next cycle starts
    * 
    * @param runner

@@ -33,6 +33,7 @@ public class FluentCount implements Supplier<IModel>
       IChunk start = FluentChunk.from(chunk).named("start").encodeIfAbsent();
       IChunk counting = FluentChunk.from(chunk).named("counting")
           .encodeIfAbsent();
+      IChunk stop = FluentChunk.from(chunk).named("stop").encodeIfAbsent();
       IChunk error = model.getDeclarativeModule().getErrorChunk();
 
       FluentChunk.from(chunk).named("stop").encodeIfAbsent();
@@ -59,6 +60,23 @@ public class FluentCount implements Supplier<IModel>
               FluentCondition.query("retrieval").slot("state", error).build())
           .action(FluentAction.remove("goal").build()).encode();
 
+      FluentProduction.from(model).named("increment")
+          .condition(
+              FluentCondition.match("goal", countFrom).slot("start", "=num1")
+                  .slot("end").not("=num1").slot("step", counting).build())
+          .condition(FluentCondition.match("retrieval", countOrder)
+              .slot("first", "=num1").slot("second", "=num2").build())
+          .action(FluentAction.modify("goal").slot("start", "=num2").build())
+          .action(FluentAction.add("retrieval", countOrder)
+              .slot("first", "=num2").build())
+          .encode();
+
+      FluentProduction.from(model).named("stop")
+          .condition(
+              FluentCondition.match("goal", countFrom).slot("start", "=num")
+                  .slot("end", "=num").slot("step", counting).build())
+          .action(FluentAction.modify("goal").slot("step", stop).build())
+          .action(FluentAction.output("Answer =num").build()).encode();
       /*
        * goal
        */
