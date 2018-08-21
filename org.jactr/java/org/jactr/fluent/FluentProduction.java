@@ -1,5 +1,7 @@
 package org.jactr.fluent;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
 /*
@@ -9,6 +11,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.model.IModel;
 import org.jactr.core.production.IProduction;
+import org.jactr.core.production.ISymbolicProduction;
 import org.jactr.core.production.action.IAction;
 import org.jactr.core.production.condition.ICondition;
 
@@ -29,6 +32,10 @@ public class FluentProduction
 
   private String                     _productionName;
 
+  private Collection<ICondition>     _conditions = new ArrayList<>();
+
+  private Collection<IAction>        _actions    = new ArrayList<>();
+
   private IProduction                _currentProduction;
 
   private FluentProduction(IModel model)
@@ -44,27 +51,22 @@ public class FluentProduction
   public FluentProduction named(String name)
   {
     _productionName = name;
-    try
-    {
-      _currentProduction = _model.getProceduralModule()
-          .createProduction(_productionName).get();
-    }
-    catch (InterruptedException | ExecutionException e)
-    {
-      throw new RuntimeException(e);
-    }
+    _currentProduction = null;
+
     return this;
   }
 
   public FluentProduction condition(ICondition condition)
   {
-    _currentProduction.getSymbolicProduction().addCondition(condition);
+    _conditions.add(condition);
+    _currentProduction = null;
     return this;
   }
 
   public FluentProduction action(IAction action)
   {
-    _currentProduction.getSymbolicProduction().addAction(action);
+    _actions.add(action);
+    _currentProduction = null;
     return this;
   }
 
@@ -77,6 +79,13 @@ public class FluentProduction
   {
     try
     {
+      _currentProduction = _model.getProceduralModule()
+          .createProduction(_productionName).get();
+
+      ISymbolicProduction sp = _currentProduction.getSymbolicProduction();
+      _conditions.forEach(sp::addCondition);
+      _actions.forEach(sp::addAction);
+
       return _model.getProceduralModule().addProduction(_currentProduction)
           .get();
     }

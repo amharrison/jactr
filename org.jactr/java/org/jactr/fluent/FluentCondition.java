@@ -21,6 +21,9 @@ import org.jactr.core.production.condition.VariableCondition;
 import org.jactr.core.slot.DefaultLogicalSlot;
 import org.jactr.core.slot.ILogicalSlot;
 import org.jactr.core.slot.ISlot;
+import org.jactr.scripting.IScriptableFactory;
+import org.jactr.scripting.ScriptingManager;
+import org.jactr.scripting.condition.IConditionScript;
 
 /**
  * builder.match("visual",
@@ -75,6 +78,13 @@ public class FluentCondition
     FluentCondition cb = new FluentCondition();
     cb._slotBasedCondition = new VariableCondition(bufferName, variableName);
     return new SlotBuilder(cb, cb::addSlot);
+  }
+
+  static public IConditionScript script(String language, String script)
+      throws Exception
+  {
+    IScriptableFactory factory = ScriptingManager.getFactory(language);
+    return factory.createConditionScript(script);
   }
 
   private void notComplete()

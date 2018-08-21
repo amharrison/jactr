@@ -16,6 +16,9 @@ import org.jactr.core.production.action.OutputAction;
 import org.jactr.core.production.action.RemoveAction;
 import org.jactr.core.slot.ISlot;
 import org.jactr.core.slot.ISlotContainer;
+import org.jactr.scripting.IScriptableFactory;
+import org.jactr.scripting.ScriptingManager;
+import org.jactr.scripting.action.IActionScript;
 
 /**
  * builder.match("visual",
@@ -81,6 +84,12 @@ public class FluentAction
     ab._action = new OutputAction(message);
     ab._slotContainer = null;
     return ab;
+  }
+
+  static IActionScript script(String language, String script) throws Exception
+  {
+    IScriptableFactory factory = ScriptingManager.getFactory(language);
+    return factory.createActionScript(script);
   }
 
   public FluentAction slot(String slotName, Object slotValue)
