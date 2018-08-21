@@ -52,6 +52,12 @@ public class FluentChunk
     return this;
   }
 
+  /**
+   * implicit {@link #encodeIfAbsent()}
+   * 
+   * @param chunkNames
+   * @return
+   */
   public Map<String, IChunk> chunks(String... chunkNames)
   {
     Map<String, IChunk> rtn = new TreeMap<>();

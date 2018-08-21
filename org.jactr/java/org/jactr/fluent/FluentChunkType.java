@@ -2,6 +2,8 @@ package org.jactr.fluent;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 
 import org.jactr.core.chunktype.IChunkType;
@@ -42,6 +44,14 @@ public class FluentChunkType
     FluentChunkType builder = new FluentChunkType(parent.getModel());
     builder.childOf(parent);
     return builder;
+  }
+
+  public Map<String, IChunkType> types(String... typeNames)
+  {
+    Map<String, IChunkType> rtn = new TreeMap<>();
+    for (String typeName : typeNames)
+      rtn.put(typeName, named(typeName).encode());
+    return rtn;
   }
 
   public FluentChunkType named(String name)
@@ -85,7 +95,8 @@ public class FluentChunkType
         ct.getSymbolicChunkType().addSlot(s);
       });
       _name = null;
-      _slots.clear();
+      // retain slots for possible repeated structure
+      // _slots.clear();
       return ct;
     }
     catch (Exception e)

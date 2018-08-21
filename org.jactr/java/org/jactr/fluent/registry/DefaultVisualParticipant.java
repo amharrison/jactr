@@ -41,8 +41,7 @@ public class DefaultVisualParticipant implements Consumer<IModel>
             "status", "color")
         .encode();
 
-    FluentChunkType.from(visObj).named("gui").slots("text", "enabled")
-        .encode();
+    FluentChunkType.from(visObj).named("gui").slots("text", "enabled").encode();
     FluentChunkType.from(visObj).named("text").encode();
     FluentChunkType.from(visObj).named("empty-space").encode();
     FluentChunkType.from(visObj).named("cursor").encode();
@@ -75,11 +74,8 @@ public class DefaultVisualParticipant implements Consumer<IModel>
     IChunkType visConstant = FluentChunkType.from(model)
         .named("visual-constant").encode();
 
-    FluentChunk.from(visConstant).named("greater-than-current").encode();
-    FluentChunk.from(visConstant).named("less-than-current").encode();
-    FluentChunk.from(visConstant).named("current").encodeIfAbsent();
-    FluentChunk.from(visConstant).named("internal").encodeIfAbsent();
-    FluentChunk.from(visConstant).named("external").encodeIfAbsent();
+    FluentChunk.from(visConstant).chunks("greater-than-current",
+        "less-than-current", "current", "internal", "external");
 
   }
 

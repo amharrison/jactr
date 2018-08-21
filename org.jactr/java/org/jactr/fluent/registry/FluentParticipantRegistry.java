@@ -35,6 +35,8 @@ public class FluentParticipantRegistry
         new DefaultDeclarativeParticipant());
     _instance.register(DefaultVisualModule6.class,
         new DefaultVisualParticipant());
+    _instance.register(DefaultAuralParticipant.class,
+        new DefaultAuralParticipant());
   }
 
   static public FluentParticipantRegistry get()
