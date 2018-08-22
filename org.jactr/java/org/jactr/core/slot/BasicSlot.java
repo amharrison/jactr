@@ -186,8 +186,8 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
     {
       if (_toString == null)
         _toString = new WeakReference<String>(createToString());
+      return _toString.get();
     }
-    return _toString.get();
   }
 
   protected void clearToString()
