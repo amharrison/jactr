@@ -12,6 +12,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.model.IModel;
 import org.jactr.core.module.declarative.six.DefaultDeclarativeModule6;
+import org.jactr.modules.pm.aural.six.DefaultAuralModule6;
 import org.jactr.modules.pm.visual.six.DefaultVisualModule6;
 
 /**
@@ -35,7 +36,7 @@ public class FluentParticipantRegistry
         new DefaultDeclarativeParticipant());
     _instance.register(DefaultVisualModule6.class,
         new DefaultVisualParticipant());
-    _instance.register(DefaultAuralParticipant.class,
+    _instance.register(DefaultAuralModule6.class,
         new DefaultAuralParticipant());
   }
 

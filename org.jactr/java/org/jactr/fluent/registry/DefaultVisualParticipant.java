@@ -24,8 +24,8 @@ public class DefaultVisualParticipant implements Consumer<IModel>
   @Override
   public void accept(IModel model)
   {
-    IChunkType color = FluentChunkType.from(model).slot("red").slot("green")
-        .slot("blue").slot("alpha").encode();
+    IChunkType color = FluentChunkType.from(model).named("color").slot("red")
+        .slot("green").slot("blue").slot("alpha").encode();
 
     createColorChunks(color);
 
@@ -81,14 +81,20 @@ public class DefaultVisualParticipant implements Consumer<IModel>
 
   private void createColorChunks(IChunkType colorType)
   {
+    String[] colorNames = { "black", "darkGray", "gray", "lightGray", "white",
+        "red", "blue", "green", "yellow", "orange", "magenta", "cyan" };
+
     Color[] colors = { Color.BLACK, Color.DARK_GRAY, Color.GRAY,
         Color.LIGHT_GRAY, Color.WHITE, Color.RED, Color.BLUE, Color.green,
         Color.YELLOW, Color.orange, Color.MAGENTA, Color.CYAN };
 
-    for (Color color : colors)
-      FluentChunk.from(colorType).slot("red", color.getRed())
-          .slot("green", color.getGreen()).slot("blue", color.getBlue())
-          .encode();
+    for (int i = 0; i < colorNames.length; i++)
+    {
+      Color color = colors[i];
+      FluentChunk.from(colorType).named(colorNames[i])
+          .slot("red", color.getRed()).slot("green", color.getGreen())
+          .slot("blue", color.getBlue()).slot("alpha", 255).encode();
+    }
   }
 
 }

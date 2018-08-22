@@ -31,7 +31,10 @@
 
 
 	<!-- modules -->
-
+    <logger name="org.jactr.modules.pm.visual.VisualTest">
+		<level value="debug" />
+	</logger>
+	
 	<!--<logger name="org.jactr.core.logging.impl.DefaultModelLogger">
 		<level value="debug" />
 	</logger>
@@ -268,11 +271,14 @@
 	<logger name="org.jactr.core.module.declarative.four.learning.DefaultBaseLevelActivationEquation">
 		<level value="debug" />
 	</logger>
-	-->
 	<logger name="org.commonreality.net">
 		<level value="debug" />
 	</logger>
 	<logger name="org.commonreality.netty">
+		<level value="debug" />
+	</logger>
+	-->
+	<logger name="org.jactr.core.module.declarative.search.filter">
 		<level value="debug" />
 	</logger>
 	<root>
