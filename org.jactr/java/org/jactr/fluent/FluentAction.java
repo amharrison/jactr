@@ -18,7 +18,7 @@ import org.jactr.core.slot.ISlot;
 import org.jactr.core.slot.ISlotContainer;
 import org.jactr.scripting.IScriptableFactory;
 import org.jactr.scripting.ScriptingManager;
-import org.jactr.scripting.action.IActionScript;
+import org.jactr.scripting.action.ScriptableAction;
 
 /**
  * builder.match("visual",
@@ -86,10 +86,10 @@ public class FluentAction
     return ab;
   }
 
-  static IActionScript script(String language, String script) throws Exception
+  static IAction script(String language, String script) throws Exception
   {
     IScriptableFactory factory = ScriptingManager.getFactory(language);
-    return factory.createActionScript(script);
+    return new ScriptableAction(factory.createActionScript(script));
   }
 
   public FluentAction slot(String slotName, Object slotValue)
@@ -108,7 +108,6 @@ public class FluentAction
     return sb;
   }
 
-
   /**
    * needs to be called by terminal action
    * 
@@ -119,7 +118,6 @@ public class FluentAction
     return _action;
   }
 
-
   static public class SlotBuilder
       extends org.jactr.fluent.ConditionalSlotBuilder<FluentAction>
   {
@@ -127,7 +125,6 @@ public class FluentAction
     {
       super(returnBack, slotConsumer);
     }
-
 
   }
 }

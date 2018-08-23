@@ -23,7 +23,7 @@ import org.jactr.core.slot.ILogicalSlot;
 import org.jactr.core.slot.ISlot;
 import org.jactr.scripting.IScriptableFactory;
 import org.jactr.scripting.ScriptingManager;
-import org.jactr.scripting.condition.IConditionScript;
+import org.jactr.scripting.condition.ScriptableCondition;
 
 /**
  * builder.match("visual",
@@ -80,11 +80,11 @@ public class FluentCondition
     return new SlotBuilder(cb, cb::addSlot);
   }
 
-  static public IConditionScript script(String language, String script)
+  static public ICondition script(String language, String script)
       throws Exception
   {
     IScriptableFactory factory = ScriptingManager.getFactory(language);
-    return factory.createConditionScript(script);
+    return new ScriptableCondition(factory.createConditionScript(script));
   }
 
   private void notComplete()
