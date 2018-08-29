@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.function.Supplier;
 
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.tree.CommonTree;
@@ -47,7 +48,34 @@ public class IOUtilities
    */
 
   static private final transient Log LOGGER = LogFactory
-                                                .getLog(IOUtilities.class);
+      .getLog(IOUtilities.class);
+
+  static public Supplier<IModel> loadModel(URL modelLocation,
+      Collection<Exception> warnings, Collection<Exception> errors)
+  {
+    Supplier<IModel> rtn = new Supplier<IModel>() {
+
+      @Override
+      public IModel get()
+      {
+        try
+        {
+          CommonTree ast = loadModelFile(modelLocation, warnings, errors);
+          if (compileModelDescriptor(ast, warnings, errors))
+            return constructModel(ast, warnings, errors);
+          else
+            throw new RuntimeException(
+                "Compilation errors for " + modelLocation);
+        }
+        catch (Exception e)
+        {
+          throw new RuntimeException(e);
+        }
+      }
+    };
+
+    return rtn;
+  }
 
   static public CommonTree createModelDescriptor(String modelName)
   {
@@ -61,33 +89,32 @@ public class IOUtilities
     CommonTree modelDesc = support.createModelTree(modelName);
 
     // add default modules
-    if (installModules)
-      try
-      {
-        IParserImportDelegate delegate = ParserImportDelegateFactory
-            .createDelegate((Object[]) null);
-        CommonTree modulesRoot = ASTSupport.getFirstDescendantWithType(
-            modelDesc, JACTRBuilder.MODULES);
-        modulesRoot
-            .addChild(delegate
-                .importModuleInto(
-                    modelDesc,
-                    org.jactr.core.module.declarative.six.DefaultDeclarativeModule6.class
-                        .getName(), true));
-        modulesRoot.addChild(delegate.importModuleInto(modelDesc,
-            org.jactr.core.module.procedural.six.DefaultProceduralModule6.class
-                .getName(), true));
-        modulesRoot.addChild(delegate.importModuleInto(modelDesc,
-            org.jactr.core.module.goal.six.DefaultGoalModule6.class.getName(),
-            true));
-        modulesRoot.addChild(delegate.importModuleInto(modelDesc,
-            org.jactr.core.module.retrieval.six.DefaultRetrievalModule6.class
-                .getName(), true));
-      }
-      catch (Exception e)
-      {
+    if (installModules) try
+    {
+      IParserImportDelegate delegate = ParserImportDelegateFactory
+          .createDelegate((Object[]) null);
+      CommonTree modulesRoot = ASTSupport.getFirstDescendantWithType(modelDesc,
+          JACTRBuilder.MODULES);
+      modulesRoot.addChild(delegate.importModuleInto(modelDesc,
+          org.jactr.core.module.declarative.six.DefaultDeclarativeModule6.class
+              .getName(),
+          true));
+      modulesRoot.addChild(delegate.importModuleInto(modelDesc,
+          org.jactr.core.module.procedural.six.DefaultProceduralModule6.class
+              .getName(),
+          true));
+      modulesRoot.addChild(delegate.importModuleInto(modelDesc,
+          org.jactr.core.module.goal.six.DefaultGoalModule6.class.getName(),
+          true));
+      modulesRoot.addChild(delegate.importModuleInto(modelDesc,
+          org.jactr.core.module.retrieval.six.DefaultRetrievalModule6.class
+              .getName(),
+          true));
+    }
+    catch (Exception e)
+    {
 
-      }
+    }
     return modelDesc;
   }
 
@@ -115,9 +142,8 @@ public class IOUtilities
    * @return null if a critical error occured
    */
   static public CommonTree loadModelFile(URL modelFileLocation,
-      IParserImportDelegate delegate,
-      Collection<Exception> warnings, Collection<Exception> errors)
-      throws IOException
+      IParserImportDelegate delegate, Collection<Exception> warnings,
+      Collection<Exception> errors) throws IOException
   {
     CommonTree modelDescriptor = null;
     IModelParser parser = null;
@@ -132,8 +158,8 @@ public class IOUtilities
         modelDescriptor = parser.getDocumentTree();
       }
       else
-        errors.add(new RuntimeException("Could not find installed parser for "
-            + modelFileLocation));
+        errors.add(new RuntimeException(
+            "Could not find installed parser for " + modelFileLocation));
     }
     catch (CommonTreeException cte)
     {
