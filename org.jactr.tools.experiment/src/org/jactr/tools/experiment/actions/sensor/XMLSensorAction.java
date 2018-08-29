@@ -8,8 +8,6 @@ import java.net.URL;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import javolution.util.FastList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.reality.CommonReality;
@@ -23,6 +21,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import javolution.util.FastList;
 
 public class XMLSensorAction implements IAction
 {
@@ -94,9 +94,8 @@ public class XMLSensorAction implements IAction
           + _location + " [" + location + "]");
 
     org.commonreality.sensors.xml2.XMLSensor newSensor = getSensor2();
-    org.commonreality.sensors.xml.XMLSensor oldSensor = getSensor();
 
-    if (newSensor == null && oldSensor == null)
+    if (newSensor == null)
       throw new IllegalStateException("Could not find XMLSensor");
 
     try
@@ -106,7 +105,6 @@ public class XMLSensorAction implements IAction
         // sensor.configure(Collections.singletonMap(XMLSensor.DATA_URL,
         // loc.toString()));
         if (newSensor != null) newSensor.load(loc);
-        if (oldSensor != null) oldSensor.load(loc);
       }
       else
       {
@@ -120,14 +118,8 @@ public class XMLSensorAction implements IAction
         for (int i = 0; i < nl.getLength(); i++)
         {
           Node node = nl.item(i);
-          if (node instanceof Element)
-          {
-            if (oldSensor != null)
-              oldSensor.executeFrameNow(transform((Element) node, context));
-
-            if (newSensor != null)
-              elements.add(transform((Element) node, context));
-          }
+          if (node instanceof Element) if (newSensor != null)
+            elements.add(transform((Element) node, context));
         }
 
         if (newSensor != null) newSensor.flush(elements);
@@ -141,13 +133,7 @@ public class XMLSensorAction implements IAction
     }
   }
 
-  private org.commonreality.sensors.xml.XMLSensor getSensor()
-  {
-    for (ISensor sensor : CommonReality.getSensors())
-      if (sensor instanceof org.commonreality.sensors.xml.XMLSensor)
-        return (org.commonreality.sensors.xml.XMLSensor) sensor;
-    return null;
-  }
+
 
   private org.commonreality.sensors.xml2.XMLSensor getSensor2()
   {
