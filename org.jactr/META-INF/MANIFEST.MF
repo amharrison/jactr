@@ -170,7 +170,7 @@ Export-Package: org.jactr.core.buffer,
  org.jactr.scripting.javascript,
  org.jactr.test
 Eclipse-BuddyPolicy: registered
-Eclipse-RegisterBuddy: org.commonreality, org.apache.log4j
+Eclipse-RegisterBuddy: org.commonreality, org.apache.log4j, org.commonreality.sensors.xml
 Require-Bundle: org.jactr.support;visibility:=reexport,
  org.commonreality.core,
  org.commonreality.api;bundle-version="1.0.0",
@@ -178,5 +178,6 @@ Require-Bundle: org.jactr.support;visibility:=reexport,
  org.commonreality.net;bundle-version="1.0.0",
  org.commonreality.modalities;bundle-version="1.0.0",
  org.commonreality.sensors,
- org.commonreality.sensors.xml;bundle-version="2.0.0";resolution:=optional
+ org.commonreality.sensors.xml;bundle-version="2.0.0";resolution:=optional,
+ org.commonreality.netty;bundle-version="1.0.0";resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
