@@ -9,8 +9,6 @@ import java.util.TreeMap;
 
 import javax.naming.OperationNotSupportedException;
 
-import javolution.util.FastList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.efferent.IEfferentCommand;
@@ -39,6 +37,8 @@ import org.jactr.modules.pm.motor.buffer.processor.MotorRequestDelegate;
 import org.jactr.modules.pm.motor.command.IMovement;
 import org.jactr.modules.pm.motor.command.IMovement.State;
 import org.jactr.modules.pm.motor.event.MotorModuleEvent;
+
+import javolution.util.FastList;
 
 public class MotorCommandManager extends
     EfferentCommandManager<MovementCommand>
