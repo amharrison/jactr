@@ -48,6 +48,12 @@ public class FluentProduction
     return new FluentProduction(model);
   }
 
+  /**
+   * name of the production
+   * 
+   * @param name
+   * @return
+   */
   public FluentProduction named(String name)
   {
     _productionName = name;
@@ -56,6 +62,12 @@ public class FluentProduction
     return this;
   }
 
+  /**
+   * add a new condition, probably built from {@link FluentCondition}
+   * 
+   * @param condition
+   * @return
+   */
   public FluentProduction condition(ICondition condition)
   {
     _conditions.add(condition);
@@ -63,6 +75,12 @@ public class FluentProduction
     return this;
   }
 
+  /**
+   * add a new action, probably built from {@link FluentAction}
+   * 
+   * @param action
+   * @return
+   */
   public FluentProduction action(IAction action)
   {
     _actions.add(action);
@@ -70,11 +88,11 @@ public class FluentProduction
     return this;
   }
 
-  public IProduction get()
-  {
-    return _currentProduction;
-  }
-
+  /**
+   * build and encode the production
+   * 
+   * @return
+   */
   public IProduction encode()
   {
     try

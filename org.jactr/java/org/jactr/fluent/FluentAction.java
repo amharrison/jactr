@@ -21,8 +21,7 @@ import org.jactr.scripting.ScriptingManager;
 import org.jactr.scripting.action.ScriptableAction;
 
 /**
- * builder.match("visual",
- * visual-location).slot("screen-x").lt(100).and().slot("screen-y").gt(100)
+ * Fluent builder for common actions.
  * 
  * @author harrison
  */

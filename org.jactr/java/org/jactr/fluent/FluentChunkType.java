@@ -34,11 +34,23 @@ public class FluentChunkType
     _model = model;
   }
 
+  /**
+   * Entry point, all chunktypes are tied to a model
+   * 
+   * @param model
+   * @return
+   */
   static public FluentChunkType from(IModel model)
   {
     return new FluentChunkType(model);
   }
 
+  /**
+   * entry point for a chunktype derived from another
+   * 
+   * @param parent
+   * @return
+   */
   static public FluentChunkType from(IChunkType parent)
   {
     FluentChunkType builder = new FluentChunkType(parent.getModel());
@@ -46,6 +58,13 @@ public class FluentChunkType
     return builder;
   }
 
+  /**
+   * builk creation of chunktypes. Bulk calling of
+   * {@link #named(String)}.{@link #encode()}
+   * 
+   * @param typeNames
+   * @return
+   */
   public Map<String, IChunkType> types(String... typeNames)
   {
     Map<String, IChunkType> rtn = new TreeMap<>();
@@ -54,30 +73,61 @@ public class FluentChunkType
     return rtn;
   }
 
+  /**
+   * Specify the symbolic name of the chunktype
+   * 
+   * @param name
+   * @return
+   */
   public FluentChunkType named(String name)
   {
     _name = name;
     return this;
   }
 
+  /**
+   * add a parent to this chunktype. Can have multiple parents
+   * 
+   * @param chunkType
+   * @return
+   */
   public FluentChunkType childOf(IChunkType chunkType)
   {
     _parents.add(chunkType);
     return this;
   }
 
+  /**
+   * add a default slot to the chunktype
+   * 
+   * @param slotName
+   * @param slotValue
+   * @return
+   */
   public FluentChunkType slot(String slotName, Object slotValue)
   {
     _slots.add(new BasicSlot(slotName, slotValue));
     return this;
   }
 
+  /**
+   * add empty slot
+   * 
+   * @param slotName
+   * @return
+   */
   public FluentChunkType slot(String slotName)
   {
     _slots.add(new BasicSlot(slotName, null));
     return this;
   }
 
+  /**
+   * bulk creation of empty slots
+   * 
+   * @param slotNames
+   * @return
+   */
   public FluentChunkType slots(String... slotNames)
   {
     for (String slotName : slotNames)
@@ -85,6 +135,11 @@ public class FluentChunkType
     return this;
   }
 
+  /**
+   * build but do not encode the chunktype
+   * 
+   * @return
+   */
   public IChunkType build()
   {
     try
@@ -105,6 +160,11 @@ public class FluentChunkType
     }
   }
 
+  /**
+   * build and encode
+   * 
+   * @return
+   */
   public IChunkType encode()
   {
     try

@@ -19,6 +19,7 @@ import org.jactr.core.slot.ISlot;
 /**
  * fluent chunk builder. Entry point {@link #from(IChunkType)}, with terminal
  * operations {@link #build()}, {@link #encode()}, {@link #encodeIfAbsent()}.
+ * Bulk creation of chunks is possible with {@link #chunks(String...)}
  * 
  * @author harrison
  */
@@ -36,6 +37,12 @@ public class FluentChunk
 
   private Collection<ISlot>          _slots = new ArrayList<>();
 
+  /**
+   * Entry point, all chunks must be derived from a chunktype
+   * 
+   * @param chunkType
+   * @return builder
+   */
   static public FluentChunk from(IChunkType chunkType)
   {
     return new FluentChunk(chunkType);
@@ -46,6 +53,12 @@ public class FluentChunk
     _parent = chunkType;
   }
 
+  /**
+   * specify the symbolic name of the chunk
+   * 
+   * @param name
+   * @return
+   */
   public FluentChunk named(String name)
   {
     _name = name;
@@ -53,10 +66,11 @@ public class FluentChunk
   }
 
   /**
-   * implicit {@link #encodeIfAbsent()}
+   * Bulk encoding of chunks {@link #from(IChunkType)}. implicit
+   * {@link #encodeIfAbsent()}
    * 
    * @param chunkNames
-   * @return
+   * @return map of chunks keyed on name
    */
   public Map<String, IChunk> chunks(String... chunkNames)
   {
@@ -66,12 +80,25 @@ public class FluentChunk
     return rtn;
   }
 
+  /**
+   * add a slot to the chunk
+   * 
+   * @param slotName
+   * @param slotValue
+   * @return
+   */
   public FluentChunk slot(String slotName, Object slotValue)
   {
     _slots.add(new BasicSlot(slotName, slotValue));
     return this;
   }
 
+  /**
+   * add an empty slot to the chunk
+   * 
+   * @param slotName
+   * @return
+   */
   public FluentChunk slot(String slotName)
   {
     _slots.add(new BasicSlot(slotName, null));

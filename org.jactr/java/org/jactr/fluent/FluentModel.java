@@ -23,7 +23,9 @@ import org.jactr.modules.pm.visual.six.DefaultVisualModule6;
 import org.jactr.modules.pm.vocal.six.DefaultVocalModule6;
 
 /**
- * fluent model builder for API construction
+ * fluent model builder for API construction. After {@link #build()}ing, chunks,
+ * types, productions can be added. Finally, the model must be
+ * {@link IModel#initialize()} before execution.
  * 
  * @author harrison
  */
@@ -77,6 +79,12 @@ public class FluentModel
     return this;
   }
 
+  /**
+   * install the core modules required for running, including: goal, retrieval,
+   * imaginal procedural.
+   * 
+   * @return
+   */
   public FluentModel withCoreModules()
   {
     with(DefaultDeclarativeModule6.class);
@@ -88,6 +96,11 @@ public class FluentModel
     return this;
   }
 
+  /**
+   * install the perceptual motor modules: visual, motor, aural, and vocal
+   * 
+   * @return
+   */
   public FluentModel withPMModules()
   {
     with(DefaultVisualModule6.class);

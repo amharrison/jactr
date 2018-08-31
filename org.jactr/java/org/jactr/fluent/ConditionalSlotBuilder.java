@@ -12,7 +12,10 @@ import org.jactr.core.slot.IConditionalSlot;
 import org.jactr.core.slot.ISlot;
 
 /**
- * slot(test).eq(1).and().slot(test2).not(1).build()
+ * Conditional slot builder with a generic return on terminal operation.
+ * Terminal operations are {@link #eq(Object)}, {@link #not(Object)},
+ * {@link #lt(Object)}, {@link #lte(Object)}, {@link #gt(Object)},
+ * {@link #gte(Object)}. slot(test).eq(1)
  * 
  * @author harrison
  */
@@ -56,12 +59,25 @@ public class ConditionalSlotBuilder<R>
     return _returnBack;
   }
 
+  /**
+   * specify the name of the slot, a terminal action is required.
+   * 
+   * @param name
+   * @return
+   */
   public ConditionalSlotBuilder<R> slot(String name)
   {
     _currentSlotName = name;
     return this;
   }
 
+  /**
+   * short cut for slot(name).eq(object)
+   * 
+   * @param slotName
+   * @param slotValue
+   * @return nested parent builder
+   */
   public R slot(String slotName, Object slotValue)
   {
     _currentSlotName = slotName;
@@ -70,6 +86,12 @@ public class ConditionalSlotBuilder<R>
     return returnBuilder();
   }
 
+  /**
+   * equals slotValue terminal operation
+   * 
+   * @param slotValue
+   * @return nested parent builder
+   */
   public R eq(Object slotValue)
   {
     _currentCondition = IConditionalSlot.EQUALS;
@@ -77,6 +99,12 @@ public class ConditionalSlotBuilder<R>
     return returnBuilder();
   }
 
+  /**
+   * not slotValue terminal operation
+   * 
+   * @param slotValue
+   * @return nested parent builder
+   */
   public R not(Object slotValue)
   {
     _currentCondition = IConditionalSlot.NOT_EQUALS;
@@ -84,6 +112,12 @@ public class ConditionalSlotBuilder<R>
     return returnBuilder();
   }
 
+  /**
+   * less than
+   * 
+   * @param slotValue
+   * @return
+   */
   public R lt(Object slotValue)
   {
     _currentCondition = IConditionalSlot.LESS_THAN;
@@ -91,6 +125,12 @@ public class ConditionalSlotBuilder<R>
     return returnBuilder();
   }
 
+  /**
+   * less than equals
+   * 
+   * @param slotValue
+   * @return
+   */
   public R lte(Object slotValue)
   {
     _currentCondition = IConditionalSlot.LESS_THAN_EQUALS;
@@ -98,6 +138,12 @@ public class ConditionalSlotBuilder<R>
     return returnBuilder();
   }
 
+  /**
+   * greater than
+   * 
+   * @param slotValue
+   * @return
+   */
   public R gt(Object slotValue)
   {
     _currentCondition = IConditionalSlot.GREATER_THAN;
@@ -105,6 +151,12 @@ public class ConditionalSlotBuilder<R>
     return returnBuilder();
   }
 
+  /**
+   * reater than or equals
+   * 
+   * @param slotValue
+   * @return
+   */
   public R gte(Object slotValue)
   {
     _currentCondition = IConditionalSlot.GREATER_THAN_EQUALS;

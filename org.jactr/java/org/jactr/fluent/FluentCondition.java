@@ -26,8 +26,10 @@ import org.jactr.scripting.ScriptingManager;
 import org.jactr.scripting.condition.ScriptableCondition;
 
 /**
- * builder.match("visual",
- * visual-location).slot("screen-x").lt(100).and().slot("screen-y").gt(100)
+ * Fluent builder for common conditions: match, query, and scriptable. Supports
+ * chaining addition conditional slots via {@link #slot(String)} and
+ * {@link #slot(String, Object)}. Boolean logical operators are also permitted
+ * on slots.
  * 
  * @author harrison
  */
@@ -59,6 +61,13 @@ public class FluentCondition
     return new SlotBuilder(cb, cb::addSlot);
   }
 
+  /**
+   * is the content of bufferName a chunkType
+   * 
+   * @param bufferName
+   * @param chunkType
+   * @return
+   */
   static public SlotBuilder match(String bufferName, IChunkType chunkType)
   {
     FluentCondition cb = new FluentCondition();
@@ -66,6 +75,13 @@ public class FluentCondition
     return new SlotBuilder(cb, cb::addSlot);
   }
 
+  /**
+   * is chunk in bufferName
+   * 
+   * @param bufferName
+   * @param chunk
+   * @return
+   */
   static public SlotBuilder match(String bufferName, IChunk chunk)
   {
     FluentCondition cb = new FluentCondition();
@@ -73,6 +89,13 @@ public class FluentCondition
     return new SlotBuilder(cb, cb::addSlot);
   }
 
+  /**
+   * is variableName in bufferName
+   * 
+   * @param bufferName
+   * @param variableName
+   * @return
+   */
   static public SlotBuilder match(String bufferName, String variableName)
   {
     FluentCondition cb = new FluentCondition();
@@ -80,6 +103,14 @@ public class FluentCondition
     return new SlotBuilder(cb, cb::addSlot);
   }
 
+  /**
+   * create a scriptable condition
+   * 
+   * @param language
+   * @param script
+   * @return
+   * @throws Exception
+   */
   static public ICondition script(String language, String script)
       throws Exception
   {
@@ -152,6 +183,12 @@ public class FluentCondition
       _slotBasedCondition.addSlot(slot);
   }
 
+  /**
+   * logical AND of the prior and next slot defined via {@link #slot(String)} or
+   * {@link #slot(String, Object)}
+   * 
+   * @return
+   */
   public SlotBuilder and()
   {
     _logicalOperators.push(ILogicalSlot.AND);
@@ -159,6 +196,10 @@ public class FluentCondition
     return new SlotBuilder(this, this::addSlot);
   }
 
+  /**
+   * logical OR of the prior and next slot defined via {@link #slot(String)} or
+   * {@link #slot(String, Object)}
+   */
   public SlotBuilder or()
   {
     _logicalOperators.push(ILogicalSlot.OR);
@@ -166,6 +207,12 @@ public class FluentCondition
     return new SlotBuilder(this, this::addSlot);
   }
 
+  /**
+   * logical NOT of the next slot defined via {@link #slot(String)} or
+   * {@link #slot(String, Object)}
+   * 
+   * @return
+   */
   public SlotBuilder not()
   {
     _logicalOperators.push(ILogicalSlot.NOT);
@@ -173,6 +220,13 @@ public class FluentCondition
     return new SlotBuilder(this, this::addSlot);
   }
 
+  /**
+   * add an equality slot
+   * 
+   * @param slotName
+   * @param slotValue
+   * @return
+   */
   public FluentCondition slot(String slotName, Object slotValue)
   {
     SlotBuilder sb = new SlotBuilder(this, this::addSlot);
@@ -181,6 +235,13 @@ public class FluentCondition
     return this;
   }
 
+  /**
+   * add a conditional slot that will be further refined by the returned
+   * {@link SlotBuilder}
+   * 
+   * @param slotName
+   * @return
+   */
   public SlotBuilder slot(String slotName)
   {
     SlotBuilder sb = new SlotBuilder(this, this::addSlot);
@@ -189,6 +250,11 @@ public class FluentCondition
     return sb;
   }
 
+  /**
+   * terminal operation to build the slot
+   * 
+   * @return
+   */
   public ICondition build()
   {
     return _slotBasedCondition;
