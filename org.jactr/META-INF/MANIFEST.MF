@@ -176,9 +176,9 @@ Require-Bundle: org.jactr.support;visibility:=reexport,
  org.commonreality.time;bundle-version="1.0.0",
  org.commonreality.net;bundle-version="1.0.0",
  org.commonreality.modalities;bundle-version="1.0.0",
- org.commonreality.sensors,
  org.commonreality.sensors.xml;bundle-version="2.0.0";resolution:=optional,
  org.commonreality.netty;bundle-version="1.0.0";resolution:=optional,
  org.junit;bundle-version="4.12.0";resolution:=optional,
- org.commonreality.core;bundle-version="2.0.0";resolution:=optional
+ org.commonreality.core;bundle-version="2.0.0";resolution:=optional,
+ org.commonreality.sensors;bundle-version="2.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
