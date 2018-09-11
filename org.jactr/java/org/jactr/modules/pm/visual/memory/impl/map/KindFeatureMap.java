@@ -10,9 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javolution.util.FastList;
-import javolution.util.FastSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.identifier.IIdentifier;
@@ -24,6 +21,8 @@ import org.jactr.core.chunktype.IChunkType;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.BasicSlot;
 import org.jactr.core.slot.IConditionalSlot;
+import org.jactr.core.utils.collections.FastCollectionFactory;
+import org.jactr.core.utils.collections.FastSetFactory;
 import org.jactr.modules.pm.visual.IVisualModule;
 
 public class KindFeatureMap extends AbstractVisualFeatureMap<String[]>
@@ -57,14 +56,14 @@ public class KindFeatureMap extends AbstractVisualFeatureMap<String[]>
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("Adding " + identifier + " has " + Arrays.toString(data));
 
-    Set<IChunkType> ctKinds = FastSet.newInstance();
+    Set<IChunkType> ctKinds = FastSetFactory.newInstance();
 
     for (String kind : data)
     {
       Collection<IIdentifier> identifiers = _kindMap.get(kind);
       if (identifiers == null)
       {
-        identifiers = FastList.newInstance();
+        identifiers = FastCollectionFactory.newInstance();
         _kindMap.put(kind, identifiers);
       }
       identifiers.add(identifier);
@@ -76,7 +75,7 @@ public class KindFeatureMap extends AbstractVisualFeatureMap<String[]>
         identifiers = _ctKindMap.get(ct);
         if (identifiers == null)
         {
-          identifiers = FastList.newInstance();
+          identifiers = FastCollectionFactory.newInstance();
           _ctKindMap.put(ct, identifiers);
         }
         identifiers.add(identifier);
@@ -112,7 +111,7 @@ public class KindFeatureMap extends AbstractVisualFeatureMap<String[]>
       Set<IIdentifier> results)
   {
     boolean firstInsertion = true;
-    FastSet<IIdentifier> tmp = FastSet.newInstance();
+    Set<IIdentifier> tmp = FastSetFactory.newInstance();
 
     for (IConditionalSlot slot : request.getConditionalSlots())
       if (slot.getName().equals(IVisualModule.KIND_SLOT))
@@ -138,7 +137,7 @@ public class KindFeatureMap extends AbstractVisualFeatureMap<String[]>
           results.retainAll(tmp);
       }
 
-    FastSet.recycle(tmp);
+    FastSetFactory.recycle(tmp);
   }
 
   private void not(String kind, Set<IIdentifier> container)
@@ -210,7 +209,7 @@ public class KindFeatureMap extends AbstractVisualFeatureMap<String[]>
         if (identifiers.size() == 0)
         {
           _kindMap.remove(kind);
-          FastList.recycle((FastList) identifiers);
+          FastCollectionFactory.recycle(identifiers);
         }
       }
     }
@@ -225,7 +224,7 @@ public class KindFeatureMap extends AbstractVisualFeatureMap<String[]>
         if (identifiers.size() == 0)
         {
           _ctKindMap.remove(kind);
-          FastList.recycle((FastList) identifiers);
+          FastCollectionFactory.recycle(identifiers);
         }
       }
     }

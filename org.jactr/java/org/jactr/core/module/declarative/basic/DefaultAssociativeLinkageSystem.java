@@ -6,8 +6,6 @@ package org.jactr.core.module.declarative.basic;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import javolution.util.FastList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
@@ -21,6 +19,7 @@ import org.jactr.core.model.IModel;
 import org.jactr.core.module.declarative.associative.IAssociativeLinkContainer;
 import org.jactr.core.module.declarative.associative.IAssociativeLinkageSystem;
 import org.jactr.core.module.declarative.four.learning.DeclarativeModuleListener;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 import org.jactr.core.utils.parameter.ACTRParameterProcessor;
 import org.jactr.core.utils.parameter.LinkParameterHandler;
 import org.jactr.core.utils.parameter.LinkParameterProcessor;
@@ -125,7 +124,7 @@ public class DefaultAssociativeLinkageSystem implements
         .getAdapter(IAssociativeLinkContainer.class);
 
     // remove the associative links.
-    FastList<IAssociativeLink> links = FastList.newInstance();
+    Collection<IAssociativeLink> links = FastCollectionFactory.newInstance();
     // where chunk is J
     container.getOutboundLinks(links);
 
@@ -139,7 +138,7 @@ public class DefaultAssociativeLinkageSystem implements
     for (IAssociativeLink link : links)
       detachLink(link);
 
-    FastList.recycle(links);
+    FastCollectionFactory.recycle(links);
 
   }
 
@@ -183,7 +182,7 @@ public class DefaultAssociativeLinkageSystem implements
     if (srcCont != null && destCont != null)
     {
       // remove the associative links.
-      FastList<IAssociativeLink> links = FastList.newInstance();
+      Collection<IAssociativeLink> links = FastCollectionFactory.newInstance();
       // j links, that is these links spread activation from source
       if (copyOutboundLinks)
       {
@@ -218,7 +217,7 @@ public class DefaultAssociativeLinkageSystem implements
           remapAndInstall(source, destination, link);
       }
 
-      FastList.recycle(links);
+      FastCollectionFactory.recycle(links);
     }
     else if (LOGGER.isWarnEnabled())
       LOGGER.warn(String
@@ -260,7 +259,8 @@ public class DefaultAssociativeLinkageSystem implements
     // may need to be ISubsymbolicChunk4 for older code
     IAssociativeLinkContainer destContainer = destinationChunk
         .getAdapter(IAssociativeLinkContainer.class);
-    FastList<IAssociativeLink> container = FastList.newInstance();
+    Collection<IAssociativeLink> container = FastCollectionFactory
+        .newInstance();
     IChunk other = null;
 
     try
@@ -327,7 +327,7 @@ public class DefaultAssociativeLinkageSystem implements
     }
     finally
     {
-      FastList.recycle(container);
+      FastCollectionFactory.recycle(container);
     }
   }
 

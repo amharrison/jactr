@@ -1,11 +1,10 @@
 package org.jactr.modules.pm.visual.buffer.processor;
 
+import java.util.List;
 /*
  * default logging
  */
 import java.util.concurrent.Future;
-
-import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,6 +21,7 @@ import org.jactr.core.queue.ITimedEvent;
 import org.jactr.core.queue.timedevents.DelayedBufferInsertionTimedEvent;
 import org.jactr.core.slot.IConditionalSlot;
 import org.jactr.core.slot.ISlot;
+import org.jactr.core.utils.collections.FastListFactory;
 import org.jactr.modules.pm.common.buffer.AbstractRequestDelegate;
 import org.jactr.modules.pm.common.event.IPerceptualMemoryModuleEvent;
 import org.jactr.modules.pm.common.memory.PerceptualSearchResult;
@@ -132,7 +132,7 @@ public class AttendToRequestDelegate extends AbstractRequestDelegate
     /*
      * figure out if this is a stuff request
      */
-    FastList<ISlot> slots = FastList.newInstance();
+    List<ISlot> slots = FastListFactory.newInstance();
     try
     {
       ctr.getSlots(slots);
@@ -149,7 +149,7 @@ public class AttendToRequestDelegate extends AbstractRequestDelegate
     }
     finally
     {
-      FastList.recycle(slots);
+      FastListFactory.recycle(slots);
     }
   }
 

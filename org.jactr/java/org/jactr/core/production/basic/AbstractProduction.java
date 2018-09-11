@@ -16,10 +16,9 @@ package org.jactr.core.production.basic;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
-
-import javolution.util.FastList;
-import javolution.util.FastSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,6 +39,8 @@ import org.jactr.core.production.condition.ICondition;
 import org.jactr.core.production.event.IProductionListener;
 import org.jactr.core.production.event.ProductionEvent;
 import org.jactr.core.utils.DefaultAdaptable;
+import org.jactr.core.utils.collections.FastListFactory;
+import org.jactr.core.utils.collections.FastSetFactory;
 
 public abstract class AbstractProduction extends DefaultAdaptable implements
     IProduction
@@ -168,9 +169,9 @@ public abstract class AbstractProduction extends DefaultAdaptable implements
     IModel m = getModel();
 
     Collection<IInstantiation> instantiations = Collections.EMPTY_LIST;
-    FastList<CannotMatchException> exceptions = FastList.newInstance();
-    FastSet<String> missingBuffers = FastSet.newInstance();
-    FastList<ICondition> cloned = FastList.newInstance();
+    List<CannotMatchException> exceptions = FastListFactory.newInstance();
+    Set<String> missingBuffers = FastSetFactory.newInstance();
+    List<ICondition> cloned = FastListFactory.newInstance();
 
     int totalIterations = 0;
 
@@ -306,9 +307,9 @@ public abstract class AbstractProduction extends DefaultAdaptable implements
     }
     finally
     {
-      FastList.recycle(cloned);
-      FastSet.recycle(missingBuffers);
-      FastList.recycle(exceptions);
+      FastListFactory.recycle(cloned);
+      FastSetFactory.recycle(missingBuffers);
+      FastListFactory.recycle(exceptions);
     }
   }
 

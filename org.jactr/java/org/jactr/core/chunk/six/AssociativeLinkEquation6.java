@@ -1,9 +1,6 @@
 package org.jactr.core.chunk.six;
 
-/*
- * default logging
- */
-import javolution.util.FastList;
+import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -14,6 +11,7 @@ import org.jactr.core.chunk.link.IAssociativeLinkEquation;
 import org.jactr.core.model.IModel;
 import org.jactr.core.module.declarative.associative.IAssociativeLinkContainer;
 import org.jactr.core.module.declarative.six.learning.IDeclarativeLearningModule6;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 
 public class AssociativeLinkEquation6 implements IAssociativeLinkEquation
 {
@@ -21,7 +19,7 @@ public class AssociativeLinkEquation6 implements IAssociativeLinkEquation
    * Logger definition
    */
   static private final transient Log  LOGGER = LogFactory
-                                                 .getLog(AssociativeLinkEquation6.class);
+      .getLog(AssociativeLinkEquation6.class);
 
   private IDeclarativeLearningModule6 _declarativeLearningModule;
 
@@ -37,8 +35,7 @@ public class AssociativeLinkEquation6 implements IAssociativeLinkEquation
 
   public double computeDefaultStrength(IAssociativeLink link)
   {
-    if (Double.isNaN(_declarativeLearningModule.getMaximumStrength()))
-      return 0;
+    if (Double.isNaN(_declarativeLearningModule.getMaximumStrength())) return 0;
 
     double max = _declarativeLearningModule.getMaximumStrength();
 
@@ -55,19 +52,18 @@ public class AssociativeLinkEquation6 implements IAssociativeLinkEquation
     double ln = Math.log(fanj);
     double strength = max - ln;
 
-    if (LOGGER.isDebugEnabled())
-      LOGGER.debug(String.format(
-                  "Sji j:%s i:%s fanj = %.2f, ln(fanj) = %.2f, max = %.2f yields Sji %.2f",
-                  link.getJChunk(), link.getIChunk(), fanj, ln, max, strength));
+    if (LOGGER.isDebugEnabled()) LOGGER.debug(String.format(
+        "Sji j:%s i:%s fanj = %.2f, ln(fanj) = %.2f, max = %.2f yields Sji %.2f",
+        link.getJChunk(), link.getIChunk(), fanj, ln, max, strength));
 
     return strength;
   }
 
   public void resetStrengths(IModel model)
   {
+    Collection<IAssociativeLink> links = FastCollectionFactory.newInstance();
     try
     {
-      FastList<IAssociativeLink> links = FastList.newInstance();
       for (IChunk chunk : model.getDeclarativeModule().getChunks().get())
       {
         IAssociativeLinkContainer alc = chunk
@@ -85,6 +81,10 @@ public class AssociativeLinkEquation6 implements IAssociativeLinkEquation
     catch (Exception e)
     {
       LOGGER.error("Could not reset links because of an exception ", e);
+    }
+    finally
+    {
+      FastCollectionFactory.recycle(links);
     }
   }
 

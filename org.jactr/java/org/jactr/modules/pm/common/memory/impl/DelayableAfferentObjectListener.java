@@ -4,9 +4,8 @@ package org.jactr.modules.pm.common.memory.impl;
  * default logging
  */
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Executor;
-
-import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -14,6 +13,7 @@ import org.commonreality.agents.IAgent;
 import org.commonreality.object.IAfferentObject;
 import org.jactr.core.model.IModel;
 import org.jactr.core.queue.timedevents.RunnableTimedEvent;
+import org.jactr.core.utils.collections.FastListFactory;
 import org.jactr.modules.pm.common.afferent.DefaultAfferentObjectListener;
 
 /**
@@ -63,6 +63,7 @@ public class DelayableAfferentObjectListener extends
    * @param toBeRemoved
    * @see org.jactr.modules.pm.common.afferent.DefaultAfferentObjectListener#objectsRemoved(java.util.Collection)
    */
+  @Override
   protected void objectsRemoved(Collection<IAfferentObject> toBeRemoved)
   {
     if (_perceptualDelay <= 0)
@@ -74,7 +75,7 @@ public class DelayableAfferentObjectListener extends
   protected void delayRemoval(Collection<IAfferentObject> toBeRemoved)
   {
     // copy of the collection as it will be recycled
-    final FastList<IAfferentObject> internalToBeRemoved = FastList
+    final List<IAfferentObject> internalToBeRemoved = FastListFactory
         .newInstance();
     internalToBeRemoved.addAll(toBeRemoved);
 
@@ -89,7 +90,7 @@ public class DelayableAfferentObjectListener extends
       {
         for (IAfferentObject object : internalToBeRemoved)
           objectRemoved(object);
-        FastList.recycle(internalToBeRemoved);
+        FastListFactory.recycle(internalToBeRemoved);
       }
 
     };

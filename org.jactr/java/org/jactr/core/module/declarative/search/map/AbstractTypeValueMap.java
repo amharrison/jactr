@@ -15,25 +15,9 @@ package org.jactr.core.module.declarative.search.map;
 
 import java.util.Collection;
 
-import javolution.util.FastList;
-import javolution.util.FastSet;
-import javolution.util.FastTable;
-
 public abstract class AbstractTypeValueMap<V, I> implements ITypeValueMap<V, I>
 {
-
   abstract public V asKeyType(Object value);
-
-  @SuppressWarnings("rawtypes")
-  protected void recycleCollection(Collection<I> container)
-  {
-    if (container instanceof FastList)
-      FastList.recycle((FastList) container);
-    else if (container instanceof FastSet)
-      FastSet.recycle((FastSet) container);
-    else if (container instanceof FastTable)
-      FastTable.recycle((FastTable) container);
-  }
 
   public void add(Object value, I indexable)
   {

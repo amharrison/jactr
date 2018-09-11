@@ -10,9 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import javolution.util.FastCollection;
-import javolution.util.FastList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.IActivationBuffer;
@@ -31,6 +28,7 @@ import org.jactr.core.production.condition.ICondition;
 import org.jactr.core.production.condition.QueryCondition;
 import org.jactr.core.production.six.ISubsymbolicProduction6;
 import org.jactr.core.utils.collections.FastCollectionFactory;
+import org.jactr.core.utils.collections.FastListFactory;
 
 /**
  * delegate task to actually do the instantiation and evaluation of the
@@ -47,7 +45,7 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
   static private final transient Log    LOGGER = LogFactory
                                                    .getLog(InstantiationTask.class);
 
-  private final FastList<IProduction>   _productionsToInstantiate;
+  private final List<IProduction>       _productionsToInstantiate;
 
   private final IProductionInstantiator _instantiator;
 
@@ -61,7 +59,7 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
       IProductionInstantiator instantiator, IModel model, IRandomModule random,
       double utilityNoise)
   {
-    _productionsToInstantiate = FastList.newInstance();
+    _productionsToInstantiate = FastListFactory.newInstance();
     _productionsToInstantiate.addAll(productions);
     _instantiator = instantiator;
     _randomModule = random;
@@ -77,7 +75,7 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
                                                     // costly to repeat
 
     @SuppressWarnings("unchecked")
-    FastCollection<VariableBindings> provisionalBindings = FastCollectionFactory
+    List<VariableBindings> provisionalBindings = FastListFactory
         .newInstance();
 
     StringBuilder message = new StringBuilder();
@@ -150,8 +148,8 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
     for (VariableBindings bindings : provisionalBindings)
       VariableBindingsFactory.recycle(bindings);
 
-    FastCollectionFactory.recycle(provisionalBindings);
-    FastList.recycle(_productionsToInstantiate);
+    FastListFactory.recycle(provisionalBindings);
+    FastListFactory.recycle(_productionsToInstantiate);
 
     return keepers;
   }
@@ -166,7 +164,7 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
   {
 
     @SuppressWarnings("unchecked")
-    FastCollection<VariableBindings> provisionalBindings = FastCollectionFactory
+    Collection<VariableBindings> provisionalBindings = FastCollectionFactory
         .newInstance();
 
     VariableBindings initialBinding = VariableBindingsFactory.newInstance();
@@ -177,14 +175,14 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
         /*
      * reusbale map collection.
      */
-    Map<IChunk, FastCollection<VariableBindings>> keyedProvisionalBindings = new HashMap<IChunk, FastCollection<VariableBindings>>();
+    Map<IChunk, Collection<VariableBindings>> keyedProvisionalBindings = new HashMap<IChunk, Collection<VariableBindings>>();
     /*
      * with all the buffers this production should match against, we snag their
      * source chunks, these will be the values bound to =bufferName. for each
      * source chunk in a given buffer, we have to create an additional set of
      * provisional bindings
      */
-    FastCollection<IChunk> sourceChunks = FastCollectionFactory.newInstance();
+    Collection<IChunk> sourceChunks = FastCollectionFactory.newInstance();
     for (ICondition condition : production.getSymbolicProduction()
         .getConditions())
       if (condition instanceof IBufferCondition
@@ -208,7 +206,7 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
          */
         for (IChunk source : sourceChunks)
         {
-          FastCollection<VariableBindings> bindings = provisionalBindings;
+          Collection<VariableBindings> bindings = provisionalBindings;
           // we've already processed at least 1 source chunk
           // we need to copy ALL the existing bindings, since we are doing
           // full permutations. As we do so, we bind =bufferName to source
@@ -228,7 +226,7 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
          * one source chunk, it was already added to the provisional binding, so
          * we ignore it. If multi, we add all
          */
-        for (FastCollection<VariableBindings> bindings : keyedProvisionalBindings
+        for (Collection<VariableBindings> bindings : keyedProvisionalBindings
             .values())
           if (bindings != provisionalBindings)
           {
@@ -257,11 +255,11 @@ public class InstantiationTask implements Callable<Collection<IInstantiation>>
    * @param src
    * @return
    */
-  private FastCollection<VariableBindings> copyAndBinding(
+  private Collection<VariableBindings> copyAndBinding(
       Collection<VariableBindings> src, IActivationBuffer buffer, IChunk source)
   {
     @SuppressWarnings("unchecked")
-    FastCollection<VariableBindings> rtn = FastCollectionFactory.newInstance();
+    Collection<VariableBindings> rtn = FastCollectionFactory.newInstance();
 
     for (VariableBindings map : src)
     {

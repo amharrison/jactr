@@ -8,8 +8,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javolution.util.FastSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.agents.IAgent;
@@ -20,6 +18,7 @@ import org.commonreality.object.manager.event.IObjectEvent;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.IConditionalSlot;
+import org.jactr.core.utils.collections.FastSetFactory;
 import org.jactr.modules.pm.IPerceptualModule;
 import org.jactr.modules.pm.aural.IAuralModule;
 import org.jactr.modules.pm.common.memory.impl.INeedsAgent;
@@ -153,7 +152,7 @@ public class OffsetFeatureMap extends AbstractAuralFeatureMap<Double> implements
   {
     boolean firstInsertion = true;
     String slotName = getRelevantSlotName();
-    FastSet<IIdentifier> tmp = FastSet.newInstance();
+    Set<IIdentifier> tmp = FastSetFactory.newInstance();
     for (IConditionalSlot slot : request.getConditionalSlots())
       if (slot.getName().equalsIgnoreCase(slotName))
         if (slot.getValue() instanceof Number)
@@ -199,7 +198,7 @@ public class OffsetFeatureMap extends AbstractAuralFeatureMap<Double> implements
         else
           LOGGER.warn(this + " " + slot + " value is not a number");
 
-    FastSet.recycle(tmp);
+    FastSetFactory.recycle(tmp);
   }
 
   protected void not(double time, Set<IIdentifier> results)

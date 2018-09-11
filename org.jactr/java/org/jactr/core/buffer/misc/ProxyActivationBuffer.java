@@ -5,8 +5,6 @@ package org.jactr.core.buffer.misc;
  */
 import java.util.Collection;
 
-import javolution.util.FastList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.AbstractActivationBuffer;
@@ -14,6 +12,7 @@ import org.jactr.core.buffer.IActivationBuffer;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.model.IModel;
 import org.jactr.core.module.IModule;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 
 /**
  * a proxy buffer that merely wraps an existing buffer with a new name, and
@@ -74,7 +73,7 @@ public class ProxyActivationBuffer extends AbstractActivationBuffer
   @Override
   protected boolean removeSourceChunkInternal(IChunk chunkToRemove)
   {
-    FastList<IChunk> sources = FastList.newInstance();
+    Collection<IChunk> sources = FastCollectionFactory.newInstance();
     try
     {
       if (_buffer.getSourceChunks(sources).contains(chunkToRemove))
@@ -86,7 +85,7 @@ public class ProxyActivationBuffer extends AbstractActivationBuffer
     }
     finally
     {
-      FastList.recycle(sources);
+      FastCollectionFactory.recycle(sources);
     }
   }
 

@@ -9,8 +9,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javolution.util.FastSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.IActivationBuffer;
@@ -31,6 +29,7 @@ import org.jactr.core.production.IProduction;
 import org.jactr.core.production.condition.ChunkTypeCondition;
 import org.jactr.core.production.condition.IBufferCondition;
 import org.jactr.core.production.condition.ICondition;
+import org.jactr.core.utils.collections.FastSetFactory;
 
 /**
  * monitors the procedural module for new productions. All productions are
@@ -87,7 +86,7 @@ public class DefaultConflictSetAssembler implements IConflictSetAssembler
                                                                                           /*
                                                                                            * reindex
                                                                                            */
-                                                                                          FastSet<IProduction> candidates = FastSet
+                                                                                          Set<IProduction> candidates = FastSetFactory
                                                                                               .newInstance();
                                                                                           for (IActivationBuffer buffer : getProceduralModule()
                                                                                               .getModel()
@@ -109,7 +108,7 @@ public class DefaultConflictSetAssembler implements IConflictSetAssembler
                                                                                                   production);
                                                                                           }
 
-                                                                                          FastSet
+                                                                                          FastSetFactory
                                                                                               .recycle(candidates);
                                                                                         }
                                                                                       };
@@ -166,14 +165,13 @@ public class DefaultConflictSetAssembler implements IConflictSetAssembler
 
   protected Set<IProduction> createSet()
   {
-    return FastSet.newInstance();
+    return FastSetFactory.newInstance();
   }
 
   @SuppressWarnings("rawtypes")
   protected void reclaimSet(Set<IProduction> productions)
   {
-    productions.clear();
-    FastSet.recycle((FastSet) productions);
+    FastSetFactory.recycle(productions);
   }
 
   protected void clear()
@@ -207,7 +205,7 @@ public class DefaultConflictSetAssembler implements IConflictSetAssembler
     {
       _lock.readLock().lock();
 
-      FastSet<IProduction> candidates = FastSet.newInstance();
+      Set<IProduction> candidates = FastSetFactory.newInstance();
       for (IActivationBuffer buffer : getProceduralModule().getModel()
           .getActivationBuffers())
       {
@@ -263,7 +261,7 @@ public class DefaultConflictSetAssembler implements IConflictSetAssembler
 
       container.addAll(candidates);
 
-      FastSet.recycle(candidates);
+      FastSetFactory.recycle(candidates);
 
       return container;
     }
@@ -319,8 +317,8 @@ public class DefaultConflictSetAssembler implements IConflictSetAssembler
 
   protected void indexInternal(IProduction production)
   {
-    Map<String, FastSet<IChunkType>> map = new TreeMap<String, FastSet<IChunkType>>();
-    FastSet<String> ambiguous = FastSet.newInstance();
+    Map<String, Set<IChunkType>> map = new TreeMap<String, Set<IChunkType>>();
+    Set<String> ambiguous = FastSetFactory.newInstance();
     int minimumSize = Integer.MAX_VALUE;
 
     for (ICondition condition : production.getSymbolicProduction()
@@ -335,10 +333,10 @@ public class DefaultConflictSetAssembler implements IConflictSetAssembler
 
           if (ct != null)
           {
-            FastSet<IChunkType> chunkTypes = map.get(bufferName);
+            Set<IChunkType> chunkTypes = map.get(bufferName);
             if (chunkTypes == null)
             {
-              chunkTypes = FastSet.newInstance();
+              chunkTypes = FastSetFactory.newInstance();
               map.put(bufferName, chunkTypes);
             }
 
@@ -374,12 +372,12 @@ public class DefaultConflictSetAssembler implements IConflictSetAssembler
       for (String buffer : ambiguous)
         add(buffer, null, production);
 
-      for (Map.Entry<String, FastSet<IChunkType>> entry : map.entrySet())
+      for (Map.Entry<String, Set<IChunkType>> entry : map.entrySet())
       {
         for (IChunkType chunkType : entry.getValue())
           add(entry.getKey(), chunkType, production);
 
-        FastSet.recycle(entry.getValue());
+        FastSetFactory.recycle(entry.getValue());
       }
     }
     else // no chunktype info? damn, have to use the ambiguous
@@ -390,16 +388,16 @@ public class DefaultConflictSetAssembler implements IConflictSetAssembler
       /*
        * if we have chunktype info, use it.
        */
-      for (Map.Entry<String, FastSet<IChunkType>> entry : map.entrySet())
+      for (Map.Entry<String, Set<IChunkType>> entry : map.entrySet())
       {
         if (entry.getValue().size() == minimumSize)
           for (IChunkType chunkType : entry.getValue())
             add(entry.getKey(), chunkType, production);
 
-        FastSet.recycle(entry.getValue());
+        FastSetFactory.recycle(entry.getValue());
       }
 
-    FastSet.recycle(ambiguous);
+    FastSetFactory.recycle(ambiguous);
   }
 
   /**

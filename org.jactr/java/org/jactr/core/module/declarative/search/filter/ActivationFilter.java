@@ -1,14 +1,11 @@
 package org.jactr.core.module.declarative.search.filter;
 
-/*
- * default logging
- */
-import javolution.text.TextBuilder;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISubsymbolicChunk;
+import org.jactr.core.logging.IMessageBuilder;
+import org.jactr.core.logging.impl.MessageBuilderFactory;
 
 /**
  * Basic filter that removes candidates based on their activation values, and
@@ -33,7 +30,7 @@ public class ActivationFilter implements IChunkFilter, ILoggedChunkFilter
 
   private IChunk                     _bestChunkYet         = null;
 
-  private TextBuilder                _message;
+  private IMessageBuilder            _message;
 
   private ActivationPolicy           _activationPolicy;
 
@@ -43,7 +40,7 @@ public class ActivationFilter implements IChunkFilter, ILoggedChunkFilter
     _activationThreshold = threshold;
     _log = logEvaluations;
     _activationPolicy = policy;
-    if (_log) _message = new TextBuilder();
+    if (_log) _message = MessageBuilderFactory.newInstance();
   }
 
   public ActivationFilter(double threshold)
@@ -93,7 +90,7 @@ public class ActivationFilter implements IChunkFilter, ILoggedChunkFilter
     return acceptChunk;
   }
 
-  public TextBuilder getMessageBuilder()
+  public IMessageBuilder getMessageBuilder()
   {
     return _message;
   }

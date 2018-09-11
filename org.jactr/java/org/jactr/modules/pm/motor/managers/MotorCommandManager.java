@@ -4,6 +4,7 @@ package org.jactr.modules.pm.motor.managers;
  * default logging
  */
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -29,6 +30,7 @@ import org.jactr.core.slot.BasicSlot;
 import org.jactr.core.slot.IMutableSlot;
 import org.jactr.core.slot.ISlot;
 import org.jactr.core.slot.IUniqueSlotContainer;
+import org.jactr.core.utils.collections.FastListFactory;
 import org.jactr.modules.pm.buffer.IPerceptualBuffer;
 import org.jactr.modules.pm.common.efferent.EfferentCommandManager;
 import org.jactr.modules.pm.motor.AbstractMotorModule;
@@ -38,16 +40,13 @@ import org.jactr.modules.pm.motor.command.IMovement;
 import org.jactr.modules.pm.motor.command.IMovement.State;
 import org.jactr.modules.pm.motor.event.MotorModuleEvent;
 
-import javolution.util.FastList;
-
-public class MotorCommandManager extends
-    EfferentCommandManager<MovementCommand>
+public class MotorCommandManager extends EfferentCommandManager<MovementCommand>
 {
   /**
    * Logger definition
    */
   static private final transient Log        LOGGER       = LogFactory
-                                                             .getLog(MotorCommandManager.class);
+      .getLog(MotorCommandManager.class);
 
   static private final String               PREPARE_ONLY = ":prepare-only";
 
@@ -113,7 +112,8 @@ public class MotorCommandManager extends
       {
         if (movement.getState() != State.COMPLETED
             && movement.getState() != State.FAILED
-            && movement.getState() != State.ABORTING) abort(movement, 0);
+            && movement.getState() != State.ABORTING)
+          abort(movement, 0);
 
         if (movement.getCommandIdentifier() != null)
         {
@@ -155,7 +155,7 @@ public class MotorCommandManager extends
       _preparedMovements.clear();
       double now = ACTRRuntime.getRuntime().getClock(_module.getModel())
           .getTime();
-      FastList<IMovement> movements = FastList.newInstance();
+      List<IMovement> movements = FastListFactory.newInstance();
       movements.addAll(_commandMovementMap.values());
       for (IMovement movement : movements)
         try
@@ -177,7 +177,7 @@ public class MotorCommandManager extends
           }
         }
 
-      FastList.recycle(movements);
+      FastListFactory.recycle(movements);
     }
     finally
     {
@@ -207,20 +207,34 @@ public class MotorCommandManager extends
 
   private boolean isPrepareOnly(IMovement movement)
   {
-    FastList<ISlot> container = FastList.newInstance();
+    List<ISlot> container = FastListFactory.newInstance();
     movement.getChunkTypeRequest().getSlots(container);
-    for (ISlot slot : container)
-      if (slot.getName().equals(PREPARE_ONLY)) return true;
-    return false;
+    try
+    {
+      for (ISlot slot : container)
+        if (slot.getName().equals(PREPARE_ONLY)) return true;
+      return false;
+    }
+    finally
+    {
+      FastListFactory.recycle(container);
+    }
   }
 
   private boolean isAdjustment(IMovement movement)
   {
-    FastList<ISlot> container = FastList.newInstance();
+    List<ISlot> container = FastListFactory.newInstance();
     movement.getChunkTypeRequest().getSlots(container);
-    for (ISlot slot : container)
-      if (slot.getName().equals(ADJUSTMENT)) return true;
-    return false;
+    try
+    {
+      for (ISlot slot : container)
+        if (slot.getName().equals(ADJUSTMENT)) return true;
+      return false;
+    }
+    finally
+    {
+      FastListFactory.recycle(container);
+    }
   }
 
   @Override
@@ -236,9 +250,8 @@ public class MotorCommandManager extends
       getLock().writeLock().lock();
       // _muscleMovementMap.remove(movement.getMuscleIdentifier());
       _commandMovementMap.remove(cId);
-      if (LOGGER.isDebugEnabled())
-        LOGGER.debug("Removed " + cId + ", leaving "
-            + _commandMovementMap.size());
+      if (LOGGER.isDebugEnabled()) LOGGER
+          .debug("Removed " + cId + ", leaving " + _commandMovementMap.size());
     }
     finally
     {
@@ -264,8 +277,8 @@ public class MotorCommandManager extends
     Movement movement = (Movement) parameters[0];
     IIdentifier muscleIdentifier = movement.getMuscleIdentifier();
     ChunkTypeRequest request = movement.getChunkTypeRequest();
-    IEfferentObject muscle = getAgent().getEfferentObjectManager().get(
-        muscleIdentifier);
+    IEfferentObject muscle = getAgent().getEfferentObjectManager()
+        .get(muscleIdentifier);
 
     MovementCommand command = (MovementCommand) _module.getCommandTranslator()
         .translate(request, muscle, model);
@@ -351,9 +364,8 @@ public class MotorCommandManager extends
     IIdentifier commandIdentifier = movement.getCommandIdentifier();
     MovementCommand actualCommand = getCommand(commandIdentifier);
 
-    if (!actualCommand.isAdjustable())
-      throw new IllegalArgumentException(String.format("%s is not adjustable",
-          actualCommand));
+    if (!actualCommand.isAdjustable()) throw new IllegalArgumentException(
+        String.format("%s is not adjustable", actualCommand));
 
     Movement actualMovement = (Movement) movement;
 
@@ -377,15 +389,14 @@ public class MotorCommandManager extends
       {
         send(tracker);
 
-        if (Logger.hasLoggers(model))
-          Logger.log(model, Logger.Stream.MOTOR,
-              String.format("Adjusting %s with %s", actualMovement, request));
+        if (Logger.hasLoggers(model)) Logger.log(model, Logger.Stream.MOTOR,
+            String.format("Adjusting %s with %s", actualMovement, request));
       }
     }
     catch (OperationNotSupportedException onse)
     {
-      throw new IllegalStateException(String.format("Cannot adjust %s",
-          actualCommand));
+      throw new IllegalStateException(
+          String.format("Cannot adjust %s", actualCommand));
     }
 
     return movement;
@@ -411,8 +422,8 @@ public class MotorCommandManager extends
    * @return
    */
   public IMovement prepare(ChunkTypeRequest request, double requestTime,
-      boolean prepareOnly) throws IllegalArgumentException,
-      IllegalStateException
+      boolean prepareOnly)
+      throws IllegalArgumentException, IllegalStateException
   {
     /*
      * can we prepare?
@@ -423,9 +434,8 @@ public class MotorCommandManager extends
     IEfferentObject muscle = _module.getCommandTranslator().getMuscle(request,
         model);
 
-    if (muscle == null)
-      throw new IllegalStateException(String.format(
-          "Coud not find appropriate muscle for %s", request));
+    if (muscle == null) throw new IllegalStateException(
+        String.format("Coud not find appropriate muscle for %s", request));
 
     IIdentifier mId = muscle.getIdentifier();
     MovementCommand actualCommand = null;
@@ -433,15 +443,11 @@ public class MotorCommandManager extends
     if (prepareOnly) request.addSlot(new BasicSlot(PREPARE_ONLY, true));
     Movement actualMovement = new Movement(request, mId, _module);
 
-    actualMovement
-        .setTimingInfo(new double[] {
-            requestTime,
-            _module.getPreparationTimeEquation().compute(actualMovement,
-                _module) });
+    actualMovement.setTimingInfo(new double[] { requestTime, _module
+        .getPreparationTimeEquation().compute(actualMovement, _module) });
 
-    if (Logger.hasLoggers(model))
-      Logger.log(model, Logger.Stream.MOTOR,
-          String.format("Preparing %s.", actualMovement));
+    if (Logger.hasLoggers(model)) Logger.log(model, Logger.Stream.MOTOR,
+        String.format("Preparing %s.", actualMovement));
 
     try
     {
@@ -480,41 +486,35 @@ public class MotorCommandManager extends
   {
     IIdentifier cId = command.getIdentifier();
     final Movement movement = (Movement) getMovementFromCommand(cId);
-    if (movement != null)
-      try
-      {
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format("%s was accepted as %s.", movement,
-              command));
-        /*
-         * pull up the timing info so we can reset the states correctly..
-         */
-        Runnable resetState = new Runnable() {
-          public void run()
-          {
-            modelMovementPrepared(movement, command);
-          }
-        };
+    if (movement != null) try
+    {
+      if (LOGGER.isDebugEnabled()) LOGGER
+          .debug(String.format("%s was accepted as %s.", movement, command));
+      /*
+       * pull up the timing info so we can reset the states correctly..
+       */
+      Runnable resetState = new Runnable() {
+        public void run()
+        {
+          modelMovementPrepared(movement, command);
+        }
+      };
 
-        getLock().writeLock().lock();
+      getLock().writeLock().lock();
 
-        double[] timingInfo = movement.getTimingInfo();
-        movement.setTimingInfo(null);
+      double[] timingInfo = movement.getTimingInfo();
+      movement.setTimingInfo(null);
 
-        _preparedMovements.put(movement.getMuscleIdentifier(), movement);
-        _lastPreparedMovement = movement;
+      _preparedMovements.put(movement.getMuscleIdentifier(), movement);
+      _lastPreparedMovement = movement;
 
-        _module
-            .getModel()
-            .getTimedEventQueue()
-            .enqueue(
-                new RunnableTimedEvent(timingInfo[0] + timingInfo[1],
-                    resetState));
-      }
-      finally
-      {
-        getLock().writeLock().unlock();
-      }
+      _module.getModel().getTimedEventQueue().enqueue(
+          new RunnableTimedEvent(timingInfo[0] + timingInfo[1], resetState));
+    }
+    finally
+    {
+      getLock().writeLock().unlock();
+    }
   }
 
   /**
@@ -541,9 +541,8 @@ public class MotorCommandManager extends
     if (movement.getState() == IMovement.State.ABORTING)
     {
 
-      if (LOGGER.isDebugEnabled())
-        LOGGER.debug(String.format("%s was aborted, ignoring prep completion",
-            movement));
+      if (LOGGER.isDebugEnabled()) LOGGER.debug(
+          String.format("%s was aborted, ignoring prep completion", movement));
 
       getIndividualManager(cId);
 
@@ -565,15 +564,13 @@ public class MotorCommandManager extends
 
     movement.setState(IMovement.State.PREPARED, true);
 
-    if (Logger.hasLoggers(model))
-      Logger.log(model, Logger.Stream.MOTOR,
-          String.format("Prepared %s.", movement));
+    if (Logger.hasLoggers(model)) Logger.log(model, Logger.Stream.MOTOR,
+        String.format("Prepared %s.", movement));
 
     updateBuffer();
 
-    if (_module.hasListeners())
-      _module.dispatch(new MotorModuleEvent(_module, movement,
-          MotorModuleEvent.Type.PREPARED));
+    if (_module.hasListeners()) _module.dispatch(new MotorModuleEvent(_module,
+        movement, MotorModuleEvent.Type.PREPARED));
 
     if (shouldExecute)
       execute(movement, ACTRRuntime.getRuntime().getClock(model).getTime());
@@ -599,12 +596,10 @@ public class MotorCommandManager extends
       };
 
       // run asap
-      _module
-          .getModel()
-          .getTimedEventQueue()
-          .enqueue(
-              new RunnableTimedEvent(ACTRRuntime.getRuntime()
-                  .getClock(_module.getModel()).getTime(), reset, reset));
+      _module.getModel().getTimedEventQueue()
+          .enqueue(new RunnableTimedEvent(
+              ACTRRuntime.getRuntime().getClock(_module.getModel()).getTime(),
+              reset, reset));
 
       remove(command);
     }
@@ -625,19 +620,15 @@ public class MotorCommandManager extends
           IPerceptualBuffer.PROCESSOR_SLOT, IPerceptualBuffer.EXECUTION_SLOT);
       IModel model = _module.getModel();
       if (Logger.hasLoggers(model))
-        Logger.log(
-            model,
-            Logger.Stream.MOTOR,
-            String.format("Rejected %s because %s.", movement,
-                command.getResult()));
+        Logger.log(model, Logger.Stream.MOTOR, String
+            .format("Rejected %s because %s.", movement, command.getResult()));
     }
     finally
     {
       updateBuffer();
 
-      if (_module.hasListeners())
-        _module.dispatch(new MotorModuleEvent(_module, movement,
-            MotorModuleEvent.Type.REJECTED));
+      if (_module.hasListeners()) _module.dispatch(new MotorModuleEvent(_module,
+          movement, MotorModuleEvent.Type.REJECTED));
     }
   }
 
@@ -688,11 +679,8 @@ public class MotorCommandManager extends
       /*
       * 
       */
-      actualMovement
-          .setTimingInfo(new double[] {
-              requestTime,
-              _module.getProcessingTimeEquation().compute(actualMovement,
-                  _module) });
+      actualMovement.setTimingInfo(new double[] { requestTime, _module
+          .getProcessingTimeEquation().compute(actualMovement, _module) });
       actualMovement.setState(IMovement.State.PROCESSING, true);
 
       execute(tracker);
@@ -719,31 +707,29 @@ public class MotorCommandManager extends
   {
     IIdentifier cId = command.getIdentifier();
     final Movement movement = (Movement) getMovementFromCommand(cId);
-    if (movement != null)
-      try
-      {
-        if (LOGGER.isDebugEnabled())
-          LOGGER
-              .debug(String.format("%s (%s) has started.", movement, command));
+    if (movement != null) try
+    {
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug(String.format("%s (%s) has started.", movement, command));
 
-        Runnable resetState = new Runnable() {
-          public void run()
-          {
-            modelMovementProcessed(movement, command);
-          }
-        };
+      Runnable resetState = new Runnable() {
+        public void run()
+        {
+          modelMovementProcessed(movement, command);
+        }
+      };
 
-        getLock().writeLock().lock();
-        double[] timing = movement.getTimingInfo();
-        _lastExecutedMovement = movement;
+      getLock().writeLock().lock();
+      double[] timing = movement.getTimingInfo();
+      _lastExecutedMovement = movement;
 
-        _module.getModel().getTimedEventQueue()
-            .enqueue(new RunnableTimedEvent(timing[0] + timing[1], resetState));
-      }
-      finally
-      {
-        getLock().writeLock().unlock();
-      }
+      _module.getModel().getTimedEventQueue()
+          .enqueue(new RunnableTimedEvent(timing[0] + timing[1], resetState));
+    }
+    finally
+    {
+      getLock().writeLock().unlock();
+    }
   }
 
   protected void modelMovementProcessed(Movement movement,
@@ -760,18 +746,14 @@ public class MotorCommandManager extends
     {
       if (mState != IMovement.State.PROCESSING)
       {
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format("%s state is not processing (%s)",
-              movement, mState));
+        if (LOGGER.isDebugEnabled()) LOGGER.debug(
+            String.format("%s state is not processing (%s)", movement, mState));
 
         if (mState == IMovement.State.COMPLETED)
         {
-          if (LOGGER.isDebugEnabled())
-            LOGGER
-                .debug(String
-                    .format(
-                        "%s completed before processing was done. No need to do anything",
-                        movement));
+          if (LOGGER.isDebugEnabled()) LOGGER.debug(String.format(
+              "%s completed before processing was done. No need to do anything",
+              movement));
         }
         else if (mState == IMovement.State.FAILED)
         {
@@ -780,11 +762,11 @@ public class MotorCommandManager extends
         }
         else if (mState == IMovement.State.ABORTING)
         {
-          if (LOGGER.isDebugEnabled())
-            LOGGER.debug(String.format(
-                "%s was aborted, ignoring proc completion", movement));
+          if (LOGGER.isDebugEnabled()) LOGGER.debug(String
+              .format("%s was aborted, ignoring proc completion", movement));
 
-          if (command.getRequestedState() != IEfferentCommand.RequestedState.ABORT)
+          if (command
+              .getRequestedState() != IEfferentCommand.RequestedState.ABORT)
           {
             if (LOGGER.isDebugEnabled())
               LOGGER.debug("Actual abort was not requested. doing so now.");
@@ -808,9 +790,8 @@ public class MotorCommandManager extends
         fireEvent = true;
 
         IModel model = _module.getModel();
-        if (Logger.hasLoggers(model))
-          Logger.log(model, Logger.Stream.MOTOR,
-              String.format("Running %s.", movement));
+        if (Logger.hasLoggers(model)) Logger.log(model, Logger.Stream.MOTOR,
+            String.format("Running %s.", movement));
       }
     }
     finally
@@ -828,35 +809,32 @@ public class MotorCommandManager extends
   {
     IIdentifier cId = command.getIdentifier();
     final Movement movement = (Movement) getMovementFromCommand(cId);
-    if (movement != null)
-      try
-      {
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format("Completed %s (%s).", movement, command));
+    if (movement != null) try
+    {
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug(String.format("Completed %s (%s).", movement, command));
 
-        Runnable reset = new Runnable() {
-          public void run()
-          {
-            modelMovementCompleted(movement, command);
-          }
-        };
+      Runnable reset = new Runnable() {
+        public void run()
+        {
+          modelMovementCompleted(movement, command);
+        }
+      };
 
-        // run asap
-        _module
-            .getModel()
-            .getTimedEventQueue()
-            .enqueue(
-                new RunnableTimedEvent(ACTRRuntime.getRuntime()
-                    .getClock(_module.getModel()).getTime(), reset));
+      // run asap
+      _module.getModel().getTimedEventQueue()
+          .enqueue(new RunnableTimedEvent(
+              ACTRRuntime.getRuntime().getClock(_module.getModel()).getTime(),
+              reset));
 
-        getLock().writeLock().lock();
-        // _muscleMovementMap.remove(movement.getMuscleIdentifier());
-        _commandMovementMap.remove(cId);
-      }
-      finally
-      {
-        getLock().writeLock().unlock();
-      }
+      getLock().writeLock().lock();
+      // _muscleMovementMap.remove(movement.getMuscleIdentifier());
+      _commandMovementMap.remove(cId);
+    }
+    finally
+    {
+      getLock().writeLock().unlock();
+    }
   }
 
   protected void modelMovementCompleted(Movement movement,
@@ -866,9 +844,8 @@ public class MotorCommandManager extends
       LOGGER.debug(String.format("%s completed.", movement));
 
     if (movement.getState() == IMovement.State.ABORTING)
-      if (LOGGER.isDebugEnabled())
-        LOGGER
-            .debug("Movement had been aborted, but completed in time. Ignoring abort");
+      if (LOGGER.isDebugEnabled()) LOGGER.debug(
+          "Movement had been aborted, but completed in time. Ignoring abort");
 
     try
     {
@@ -876,17 +853,15 @@ public class MotorCommandManager extends
 
       IModel model = _module.getModel();
 
-      if (Logger.hasLoggers(model))
-        Logger.log(model, Logger.Stream.MOTOR,
-            String.format("Completed %s.", movement));
+      if (Logger.hasLoggers(model)) Logger.log(model, Logger.Stream.MOTOR,
+          String.format("Completed %s.", movement));
     }
     finally
     {
       updateBuffer();
 
-      if (_module.hasListeners())
-        _module.dispatch(new MotorModuleEvent(_module, movement,
-            MotorModuleEvent.Type.COMPLETED));
+      if (_module.hasListeners()) _module.dispatch(new MotorModuleEvent(_module,
+          movement, MotorModuleEvent.Type.COMPLETED));
     }
   }
 
@@ -894,9 +869,10 @@ public class MotorCommandManager extends
   {
     try
     {
-      testStatesForBusy(request, new String[] {
-          IPerceptualBuffer.PREPARATION_SLOT, IPerceptualBuffer.PROCESSOR_SLOT,
-          IPerceptualBuffer.EXECUTION_SLOT });
+      testStatesForBusy(request,
+          new String[] { IPerceptualBuffer.PREPARATION_SLOT,
+              IPerceptualBuffer.PROCESSOR_SLOT,
+              IPerceptualBuffer.EXECUTION_SLOT });
 
       return true;
     }
@@ -914,9 +890,10 @@ public class MotorCommandManager extends
     try
     {
       IEfferentObject muscle = getMuscle(movement.getMuscleIdentifier());
-      testStatesForBusy(muscle, MotorUtilities.getName(muscle), new String[] {
-          IPerceptualBuffer.PREPARATION_SLOT, IPerceptualBuffer.PROCESSOR_SLOT,
-          IPerceptualBuffer.EXECUTION_SLOT });
+      testStatesForBusy(muscle, MotorUtilities.getName(muscle),
+          new String[] { IPerceptualBuffer.PREPARATION_SLOT,
+              IPerceptualBuffer.PROCESSOR_SLOT,
+              IPerceptualBuffer.EXECUTION_SLOT });
       return true;
     }
     catch (Exception e)
@@ -932,8 +909,7 @@ public class MotorCommandManager extends
 
     if (actualMovement.getState() == IMovement.State.ABORTING)
     {
-      if (LOGGER.isDebugEnabled())
-        LOGGER.debug("Already aborting " + movement);
+      if (LOGGER.isDebugEnabled()) LOGGER.debug("Already aborting " + movement);
       return movement;
     }
 
@@ -941,9 +917,10 @@ public class MotorCommandManager extends
      * we use a special test, something must be busy..
      */
     IEfferentObject muscle = getMuscle(movement.getMuscleIdentifier());
-    testStatesForBusy(muscle, MotorUtilities.getName(muscle), new String[] {
-        IPerceptualBuffer.PREPARATION_SLOT, IPerceptualBuffer.PROCESSOR_SLOT,
-        IPerceptualBuffer.EXECUTION_SLOT });
+    testStatesForBusy(muscle, MotorUtilities.getName(muscle),
+        new String[] { IPerceptualBuffer.PREPARATION_SLOT,
+            IPerceptualBuffer.PROCESSOR_SLOT,
+            IPerceptualBuffer.EXECUTION_SLOT });
 
     /*
      * now we do our thing. set as aborting, and issue the request
@@ -964,26 +941,21 @@ public class MotorCommandManager extends
       if (actualMovement.getState() == IMovement.State.PROCESSING
           || actualMovement.getState() == IMovement.State.EXECUTING)
       {
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format(
-              "%s is actually running, requesting abort of %s", actualMovement,
-              actualCommand));
+        if (LOGGER.isDebugEnabled()) LOGGER.debug(
+            String.format("%s is actually running, requesting abort of %s",
+                actualMovement, actualCommand));
 
         if (actualCommand == null)
         {
-          if (LOGGER.isWarnEnabled())
-            LOGGER
-                .warn(String
-                    .format(
-                        "Somehow the movement is processing/executing and yet there is no actual command available for %s. Handling internally.",
-                        commandIdentifier));
+          if (LOGGER.isWarnEnabled()) LOGGER.warn(String.format(
+              "Somehow the movement is processing/executing and yet there is no actual command available for %s. Handling internally.",
+              commandIdentifier));
 
         }
         else
         {
-          if (LOGGER.isDebugEnabled())
-            LOGGER
-                .debug(String.format("requesting abort of %s", actualCommand));
+          if (LOGGER.isDebugEnabled()) LOGGER
+              .debug(String.format("requesting abort of %s", actualCommand));
 
           DeltaTracker<MovementCommand> tracker = new DeltaTracker<MovementCommand>(
               actualCommand);
@@ -995,17 +967,16 @@ public class MotorCommandManager extends
             * but before the service could actually accept the command. In this
             * case, modelMovementPrepared() will take care of the clean up
             */
-      if (LOGGER.isDebugEnabled())
-        LOGGER.debug(String.format(
-            "%s is not actually running, handling abort internally",
-            actualMovement));
+      if (LOGGER.isDebugEnabled()) LOGGER.debug(
+          String.format("%s is not actually running, handling abort internally",
+              actualMovement));
 
       actualMovement.setState(IMovement.State.ABORTING, true);
     }
     catch (Exception e)
     {
-      LOGGER.error(
-          String.format("Failed to issue abort on %s", actualMovement), e);
+      LOGGER.error(String.format("Failed to issue abort on %s", actualMovement),
+          e);
       actualMovement.setState(IMovement.State.FAILED, true);
     }
     finally
@@ -1023,41 +994,37 @@ public class MotorCommandManager extends
   {
     IIdentifier cId = command.getIdentifier();
     final Movement movement = (Movement) getMovementFromCommand(cId);
-    if (movement != null)
-      try
-      {
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format("%s (%s) was aborted because %s.",
-              movement, command,
-              wasRequested ? "model requested" : command.getResult()));
+    if (movement != null) try
+    {
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug(String.format("%s (%s) was aborted because %s.", movement,
+            command, wasRequested ? "model requested" : command.getResult()));
 
-        Runnable reset = new Runnable() {
-          public void run()
-          {
-            modelMovementAborted(movement, command, wasRequested);
-          }
-        };
+      Runnable reset = new Runnable() {
+        public void run()
+        {
+          modelMovementAborted(movement, command, wasRequested);
+        }
+      };
 
-        /*
-         * run immediately unlike the rest of the events. this allows it to
-         * supercede running and completed, which will both check to see if it
-         * has been aborted first
-         */
-        _module
-            .getModel()
-            .getTimedEventQueue()
-            .enqueue(
-                new RunnableTimedEvent(ACTRRuntime.getRuntime()
-                    .getClock(_module.getModel()).getTime(), reset));
+      /*
+       * run immediately unlike the rest of the events. this allows it to
+       * supercede running and completed, which will both check to see if it has
+       * been aborted first
+       */
+      _module.getModel().getTimedEventQueue()
+          .enqueue(new RunnableTimedEvent(
+              ACTRRuntime.getRuntime().getClock(_module.getModel()).getTime(),
+              reset));
 
-        getLock().writeLock().lock();
-        // _muscleMovementMap.remove(movement.getMuscleIdentifier());
-        _commandMovementMap.remove(cId);
-      }
-      finally
-      {
-        getLock().writeLock().unlock();
-      }
+      getLock().writeLock().lock();
+      // _muscleMovementMap.remove(movement.getMuscleIdentifier());
+      _commandMovementMap.remove(cId);
+    }
+    finally
+    {
+      getLock().writeLock().unlock();
+    }
   }
 
   protected void modelMovementAborted(Movement movement,
@@ -1108,9 +1075,8 @@ public class MotorCommandManager extends
     {
       updateBuffer();
 
-      if (_module.hasListeners())
-        _module.dispatch(new MotorModuleEvent(_module, movement,
-            MotorModuleEvent.Type.ABORTED));
+      if (_module.hasListeners()) _module.dispatch(new MotorModuleEvent(_module,
+          movement, MotorModuleEvent.Type.ABORTED));
     }
 
   }
@@ -1157,21 +1123,19 @@ public class MotorCommandManager extends
             status.put(slotName, aborting);
             globalState = aborting;
           }
-          else if (!aborting.equals(prior))
-            if (error.equals(value))
-            {
-              status.put(slotName, error);
-              if (!aborting.equals(globalState)) globalState = error;
-            }
-            else if (!error.equals(prior))
-              if (busy.equals(value))
-              {
-                status.put(slotName, busy);
-                if (!aborting.equals(globalState) && !error.equals(globalState))
-                  globalState = busy;
-              }
-              else
-                status.put(slotName, free);
+          else if (!aborting.equals(prior)) if (error.equals(value))
+          {
+            status.put(slotName, error);
+            if (!aborting.equals(globalState)) globalState = error;
+          }
+          else if (!error.equals(prior)) if (busy.equals(value))
+          {
+            status.put(slotName, busy);
+            if (!aborting.equals(globalState) && !error.equals(globalState))
+              globalState = busy;
+          }
+          else
+            status.put(slotName, free);
         }
       }
     }
@@ -1187,9 +1151,8 @@ public class MotorCommandManager extends
     buffer.setStateChunk(globalState);
     buffer.setModalityChunk(globalState);
 
-    if (LOGGER.isDebugEnabled())
-      LOGGER.debug(String.format("%s %s=%s %s", buffer,
-          IStatusBuffer.STATE_SLOT, globalState, status));
+    if (LOGGER.isDebugEnabled()) LOGGER.debug(String.format("%s %s=%s %s",
+        buffer, IStatusBuffer.STATE_SLOT, globalState, status));
   }
 
   private void testStatesForNotBusyOrAborting(IEfferentObject muscle,
@@ -1199,22 +1162,19 @@ public class MotorCommandManager extends
     IChunk abortingChunk = _module.getAbortingChunk();
     IUniqueSlotContainer container = _module.getBuffer();
 
-    if (_module.isMuscleParallelismEnabled())
-      container = _module.getMuscleManager().getMuscleState(
-          muscle.getIdentifier());
+    if (_module.isMuscleParallelismEnabled()) container = _module
+        .getMuscleManager().getMuscleState(muscle.getIdentifier());
 
     for (String slotNameToTest : slotNamesToTest)
     {
       Object slotValue = container.getSlot(slotNameToTest).getValue();
-      if (busyChunk.equals(slotValue))
-        throw new IllegalStateException(String.format(
-            "%s.%s is currently busy, cannot execute %s", container,
-            slotNameToTest, details));
+      if (busyChunk.equals(slotValue)) throw new IllegalStateException(
+          String.format("%s.%s is currently busy, cannot execute %s", container,
+              slotNameToTest, details));
 
-      if (abortingChunk.equals(slotValue))
-        throw new IllegalStateException(String.format(
-            "%s.%s is currently aborting, cannot execute %s", container,
-            slotNameToTest, details));
+      if (abortingChunk.equals(slotValue)) throw new IllegalStateException(
+          String.format("%s.%s is currently aborting, cannot execute %s",
+              container, slotNameToTest, details));
     }
   }
 
@@ -1230,12 +1190,11 @@ public class MotorCommandManager extends
      * what muscle are we talking about?
      */
     IModel model = _module.getModel();
-    IEfferentObject muscle = _module.getCommandTranslator().getMuscle(
-        ctRequest, model);
+    IEfferentObject muscle = _module.getCommandTranslator().getMuscle(ctRequest,
+        model);
 
-    if (muscle == null)
-      throw new IllegalArgumentException("Could not get muscle for request "
-          + ctRequest);
+    if (muscle == null) throw new IllegalArgumentException(
+        "Could not get muscle for request " + ctRequest);
 
     testStatesForNotBusyOrAborting(muscle, request.toString(), slotNamesToTest);
   }
@@ -1251,12 +1210,11 @@ public class MotorCommandManager extends
      * what muscle are we talking about?
      */
     IModel model = _module.getModel();
-    IEfferentObject muscle = _module.getCommandTranslator().getMuscle(
-        ctRequest, model);
+    IEfferentObject muscle = _module.getCommandTranslator().getMuscle(ctRequest,
+        model);
 
-    if (muscle == null)
-      throw new IllegalArgumentException("Could not get muscle for request "
-          + ctRequest);
+    if (muscle == null) throw new IllegalArgumentException(
+        "Could not get muscle for request " + ctRequest);
 
     testStatesForBusy(muscle, request.toString(), slotNamesToTest);
   }
@@ -1268,9 +1226,8 @@ public class MotorCommandManager extends
     IUniqueSlotContainer container = _module.getBuffer();
     boolean isAnyBusy = false;
 
-    if (_module.isMuscleParallelismEnabled())
-      container = _module.getMuscleManager().getMuscleState(
-          muscle.getIdentifier());
+    if (_module.isMuscleParallelismEnabled()) container = _module
+        .getMuscleManager().getMuscleState(muscle.getIdentifier());
 
     for (String slotNameToTest : slotNamesToTest)
       if (busyChunk.equals(container.getSlot(slotNameToTest).getValue()))

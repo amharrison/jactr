@@ -19,8 +19,6 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.locks.Lock;
 
-import javolution.util.FastList;
-
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISubsymbolicChunk;
 import org.jactr.core.chunk.ISymbolicChunk;
@@ -33,6 +31,7 @@ import org.jactr.core.event.ParameterEvent;
 import org.jactr.core.model.IModel;
 import org.jactr.core.slot.ISlot;
 import org.jactr.core.utils.DefaultAdaptable;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 
 /**
  * abstract chunk that handles most common logic for the developer.
@@ -478,7 +477,7 @@ public class DefaultChunk extends DefaultAdaptable implements IChunk
     /*
      * same slots?
      */
-    FastList<ISlot> slots = FastList.newInstance();
+    Collection<ISlot> slots = FastCollectionFactory.newInstance();
     try
     {
       for (ISlot slot : mySC.getSlots(slots))
@@ -495,7 +494,7 @@ public class DefaultChunk extends DefaultAdaptable implements IChunk
     }
     finally
     {
-      FastList.recycle(slots);
+      FastCollectionFactory.recycle(slots);
     }
   }
 

@@ -4,9 +4,8 @@ package org.jactr.core.module.retrieval.buffer;
  * default logging
  */
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Future;
-
-import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,6 +27,7 @@ import org.jactr.core.production.request.IRequest;
 import org.jactr.core.queue.ITimedEvent;
 import org.jactr.core.queue.timedevents.DelayedBufferInsertionTimedEvent;
 import org.jactr.core.slot.ISlot;
+import org.jactr.core.utils.collections.FastListFactory;
 
 public class RetrievalRequestDelegate extends AsynchronousRequestDelegate
 {
@@ -156,10 +156,10 @@ public class RetrievalRequestDelegate extends AsynchronousRequestDelegate
         .getAdapter(DefaultRetrievalModule6.class);
     if (rm != null)
     {
-      FastList<ISlot> slots = FastList.newInstance();
+      List<ISlot> slots = FastListFactory.newInstance();
       ((ChunkTypeRequest) request).getSlots(slots);
       boolean rtn = RetrievalRequestDelegate.isIndexRetrievalEnabled(rm, slots);
-      FastList.recycle(slots);
+      FastListFactory.recycle(slots);
       return rtn;
     }
     return false;

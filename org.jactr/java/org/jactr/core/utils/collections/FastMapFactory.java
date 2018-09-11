@@ -1,12 +1,10 @@
 package org.jactr.core.utils.collections;
 
-/*
- * default logging
- */
-import javolution.util.FastMap;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.collections.impl.factory.Maps;
 import org.jactr.core.utils.recyclable.AbstractThreadLocalRecyclableFactory;
 import org.jactr.core.utils.recyclable.RecyclableFactory;
 
@@ -18,40 +16,41 @@ public class FastMapFactory
   static private final transient Log        LOGGER   = LogFactory
                                                          .getLog(FastMapFactory.class);
 
-  static private RecyclableFactory<FastMap> _factory = new AbstractThreadLocalRecyclableFactory<FastMap>() {
+  static private RecyclableFactory<Map<?, ?>> _factory = new AbstractThreadLocalRecyclableFactory<Map<?, ?>>() {
 
                                                        @SuppressWarnings({
       "unchecked", "rawtypes"                         })
                                                        @Override
                                                        protected void cleanUp(
-                                                           FastMap obj)
+                                                             Map<?, ?> obj)
                                                        {
                                                          obj.clear();
                                                        }
 
                                                        @Override
-                                                       protected FastMap instantiate(
+                                                         protected Map<?, ?> instantiate(
                                                            Object... params)
                                                        {
-                                                         return FastMap
-                                                             .newInstance();
+                                                           return Maps.mutable
+                                                               .empty();
                                                        }
 
                                                        @Override
                                                        protected void release(
-                                                           FastMap map)
+                                                             Map<?, ?> map)
                                                        {
-                                                         FastMap.recycle(map);
+
                                                        }
 
                                                      };
 
-  static public FastMap newInstance()
+  @SuppressWarnings("unchecked")
+  static public <K, V> Map<K, V> newInstance()
   {
-    return _factory.newInstance();
+    return (Map<K, V>) _factory.newInstance();
   }
 
-  static public void recycle(FastMap set)
+  static public <K, V> void recycle(Map<K, V> set)
   {
     _factory.recycle(set);
   }

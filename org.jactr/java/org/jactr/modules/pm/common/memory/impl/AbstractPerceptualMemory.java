@@ -11,21 +11,19 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
-import javolution.util.FastCollection;
-import javolution.util.FastList;
-import javolution.util.FastSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.agents.IAgent;
 import org.commonreality.identifier.IIdentifier;
 import org.commonreality.object.manager.IAfferentObjectManager;
+import org.eclipse.collections.impl.list.mutable.FastList;
 import org.jactr.core.buffer.six.IStatusBuffer;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.concurrent.ExecutorServices;
@@ -36,6 +34,8 @@ import org.jactr.core.slot.BasicSlot;
 import org.jactr.core.slot.ISlot;
 import org.jactr.core.utils.ChainedComparator;
 import org.jactr.core.utils.collections.FastCollectionFactory;
+import org.jactr.core.utils.collections.FastListFactory;
+import org.jactr.core.utils.collections.FastSetFactory;
 import org.jactr.core.utils.parameter.NumericParameterHandler;
 import org.jactr.core.utils.parameter.ParameterHandler;
 import org.jactr.modules.pm.IPerceptualModule;
@@ -396,7 +396,7 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
   private void buildSort(ChunkTypeRequest request,
       Collection<IIndexFilter> container)
   {
-    FastList<IIndexFilter> filters = FastList.newInstance();
+    List<IIndexFilter> filters = FastListFactory.newInstance();
     TreeMap<Integer, IIndexFilter> sorted = new TreeMap<Integer, IIndexFilter>();
 
     getFilters(filters);
@@ -416,7 +416,7 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
       sorted.put(weight, actualFilter);
     }
 
-    FastList.recycle(filters);
+    FastListFactory.recycle(filters);
 
     container.addAll(sorted.values());
   }
@@ -425,7 +425,7 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
   private void getCandidateIdentifiers(ChunkTypeRequest request,
       Collection<IFeatureMap> featureMaps, Collection<IIdentifier> container)
   {
-    FastSet<IIdentifier> candidates = FastSet.newInstance();
+    Set<IIdentifier> candidates = FastSetFactory.newInstance();
 
     boolean firstRun = true;
     for (IFeatureMap featureMap : featureMaps)
@@ -460,7 +460,7 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
             featureMap.getClass().getSimpleName()), e);
       }
 
-    FastSet.recycle(candidates);
+    FastSetFactory.recycle(candidates);
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("Returning candidates : " + container);
@@ -485,7 +485,7 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
 
       private double getPrecodeTime(ChunkTypeRequest request)
       {
-        FastCollection<ISlot> container = FastCollectionFactory.newInstance();
+        Collection<ISlot> container = FastCollectionFactory.newInstance();
         try
         {
           for (ISlot slot : request.getSlots(container))
@@ -552,7 +552,7 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
      */
     boolean earlyExit = request.getSlots().size() == 0;
 
-    FastList<IIndexFilter> filters = FastList.newInstance();
+    List<IIndexFilter> filters = FastListFactory.newInstance();
 
     /*
      * build the temproary list of index filters
@@ -589,10 +589,10 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
     /*
      * now lets get the initial set based on feature maps
      */
-    FastList<IFeatureMap> featureMaps = FastList.newInstance();
+    List<IFeatureMap> featureMaps = FastListFactory.newInstance();
     getFeatureMaps(featureMaps);
 
-    FastList<IIdentifier> candidateIdentifiers = FastList.newInstance();
+    List<IIdentifier> candidateIdentifiers = FastListFactory.newInstance();
     getCandidateIdentifiers(request, featureMaps, candidateIdentifiers);
 
     IAgent agent = ACTRRuntime.getRuntime().getConnector()
@@ -725,7 +725,7 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
             .get(template);
         if (equivalentResults == null)
         {
-          equivalentResults = FastList.newInstance();
+          equivalentResults = FastListFactory.newInstance();
           prioritizedResults.put(template, equivalentResults);
         }
         equivalentResults.add(result);
@@ -782,9 +782,9 @@ public abstract class AbstractPerceptualMemory implements IPerceptualMemory
       return psr;
     }
 
-    FastList.recycle(candidateIdentifiers);
-    FastList.recycle(featureMaps);
-    FastList.recycle(filters);
+    FastListFactory.recycle(candidateIdentifiers);
+    FastListFactory.recycle(featureMaps);
+    FastListFactory.recycle(filters);
 
     return rtn;
   }

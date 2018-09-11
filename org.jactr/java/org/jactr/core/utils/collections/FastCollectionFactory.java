@@ -1,13 +1,10 @@
 package org.jactr.core.utils.collections;
 
-/*
- * default logging
- */
-import javolution.util.FastCollection;
-import javolution.util.FastList;
+import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.collections.impl.factory.Lists;
 import org.jactr.core.utils.recyclable.AbstractThreadLocalRecyclableFactory;
 import org.jactr.core.utils.recyclable.RecyclableFactory;
 
@@ -19,42 +16,41 @@ public class FastCollectionFactory
   static private final transient Log             LOGGER   = LogFactory
                                                               .getLog(FastCollectionFactory.class);
 
-  static private RecyclableFactory<FastCollection> _factory = new AbstractThreadLocalRecyclableFactory<FastCollection>() {
+  static private RecyclableFactory<Collection<?>> _factory = new AbstractThreadLocalRecyclableFactory<Collection<?>>() {
 
                                                             @SuppressWarnings({
       "unchecked", "rawtypes"                              })
                                                             @Override
                                                             protected void cleanUp(
-                                                                  FastCollection obj)
+                                                                 Collection<?> obj)
                                                             {
                                                                 obj.clear();
                                                             }
 
                                                             @Override
-                                                              protected FastCollection instantiate(
+                                                             protected Collection<?> instantiate(
                                                                 Object... params)
                                                             {
-                                                                return FastList
-                                                                    .newInstance();
+                                                               return Lists.mutable
+                                                                   .empty();
                                                             }
 
                                                               @Override
                                                               protected void release(
-                                                                  FastCollection obj)
+                                                                 Collection<?> obj)
                                                               {
-                                                                if (obj instanceof FastList)
-                                                                  FastList
-                                                                      .recycle((FastList) obj);
+
                                                               }
 
                                                           };
 
-  static public FastCollection newInstance()
+  @SuppressWarnings("unchecked")
+  static public <T> Collection<T> newInstance()
   {
-    return _factory.newInstance();
+    return (Collection<T>) _factory.newInstance();
   }
 
-  static public void recycle(FastCollection set)
+  static public <T> void recycle(Collection<T> set)
   {
     _factory.recycle(set);
   }

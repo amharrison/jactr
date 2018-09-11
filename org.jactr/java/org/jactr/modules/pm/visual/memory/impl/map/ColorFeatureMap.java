@@ -7,8 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javolution.util.FastSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.identifier.IIdentifier;
@@ -21,6 +19,7 @@ import org.jactr.core.model.IModel;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.BasicSlot;
 import org.jactr.core.slot.IConditionalSlot;
+import org.jactr.core.utils.collections.FastSetFactory;
 import org.jactr.modules.pm.visual.IVisualModule;
 
 public class ColorFeatureMap extends AbstractVisualFeatureMap<Color[]>
@@ -60,7 +59,7 @@ public class ColorFeatureMap extends AbstractVisualFeatureMap<Color[]>
       Set<IIdentifier> identifiers = _valueMap.get(color);
       if (identifiers == null)
       {
-        identifiers = FastSet.newInstance();
+        identifiers = FastSetFactory.newInstance();
         _valueMap.put(color, identifiers);
       }
       identifiers.add(identifier);
@@ -104,7 +103,7 @@ public class ColorFeatureMap extends AbstractVisualFeatureMap<Color[]>
   {
     boolean firstInsertion = true;
     String slotName = getRelevantSlotName();
-    FastSet<IIdentifier> tmp = FastSet.newInstance();
+    Set<IIdentifier> tmp = FastSetFactory.newInstance();
     for (IConditionalSlot slot : request.getConditionalSlots())
       if (slot.getName().equalsIgnoreCase(slotName))
       {
@@ -141,7 +140,7 @@ public class ColorFeatureMap extends AbstractVisualFeatureMap<Color[]>
             results.retainAll(tmp);
         }
 
-    FastSet.recycle(tmp);
+    FastSetFactory.recycle(tmp);
   }
 
   protected void not(Color color, Set<IIdentifier> container)
@@ -171,7 +170,7 @@ public class ColorFeatureMap extends AbstractVisualFeatureMap<Color[]>
         if (identifiers.size() == 0)
         {
           _valueMap.remove(color);
-          FastSet.recycle((FastSet) identifiers);
+          FastSetFactory.recycle(identifiers);
         }
       }
     }

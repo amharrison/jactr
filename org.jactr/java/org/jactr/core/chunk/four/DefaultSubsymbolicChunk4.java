@@ -18,8 +18,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javolution.util.FastList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
@@ -34,6 +32,7 @@ import org.jactr.core.module.declarative.four.IDeclarativeModule4;
 import org.jactr.core.module.declarative.four.IRandomActivationEquation;
 import org.jactr.core.module.declarative.four.ISpreadingActivationEquation;
 import org.jactr.core.runtime.ACTRRuntime;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 import org.jactr.core.utils.parameter.ACTRParameterHandler;
 import org.jactr.core.utils.parameter.CollectionParameterHandler;
 import org.jactr.core.utils.parameter.LinkParameterHandler;
@@ -365,7 +364,8 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
        * this adaptable, but the chunk's. Should probably remove adaptable from
        * content classes.
        */
-      FastList<IAssociativeLink> associations = FastList.newInstance();
+      Collection<IAssociativeLink> associations = FastCollectionFactory
+          .newInstance();
       try
       {
         IAssociativeLinkContainer aslc = getParentChunk().getAdapter(
@@ -387,7 +387,7 @@ public class DefaultSubsymbolicChunk4 extends AbstractSubsymbolicChunk
       }
       finally
       {
-        FastList.recycle(associations);
+        FastCollectionFactory.recycle(associations);
       }
 
     }

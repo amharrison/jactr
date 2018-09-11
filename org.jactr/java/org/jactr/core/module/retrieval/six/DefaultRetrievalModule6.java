@@ -16,14 +16,13 @@ package org.jactr.core.module.retrieval.six;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
-
-import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,6 +52,7 @@ import org.jactr.core.production.request.ChunkRequest;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.IConditionalSlot;
 import org.jactr.core.slot.ISlot;
+import org.jactr.core.utils.collections.FastListFactory;
 import org.jactr.core.utils.collections.SkipListSetFactory;
 import org.jactr.core.utils.parameter.IParameterized;
 import org.jactr.core.utils.parameter.ParameterHandler;
@@ -189,7 +189,7 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
 
     fireInitiated(pattern);
 
-    FastList<ISlot> slots = FastList.newInstance();
+    List<ISlot> slots = FastListFactory.newInstance();
     pattern.getSlots(slots);
 
     // this must be vestigial code, but from when?
@@ -225,7 +225,7 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
       fromDM = dm.findExactMatches(cleanedPattern, _activationSorter, filter);
     }
 
-    FastList.recycle(slots);
+    FastListFactory.recycle(slots);
 
     Collection<IChunk> results = fromDM.get();
 
@@ -263,9 +263,9 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
    */
   private ChunkTypeRequest cleanPattern(ChunkTypeRequest pattern)
   {
-    FastList<ISlot> slots = FastList.newInstance();
+    List<ISlot> slots = FastListFactory.newInstance();
     pattern.getSlots(slots);
-    FastList<ISlot> cleanSlots = FastList.newInstance();
+    List<ISlot> cleanSlots = FastListFactory.newInstance();
 
     for (ISlot cSlot : slots)
       if (!cSlot.getName().startsWith(":")) cleanSlots.add(cSlot);
@@ -276,6 +276,9 @@ public class DefaultRetrievalModule6 extends AbstractModule implements
       else if (pattern instanceof ChunkRequest)
         pattern = new ChunkRequest(((ChunkRequest) pattern).getChunk(),
             cleanSlots);
+
+    FastListFactory.recycle(slots);
+    FastListFactory.recycle(cleanSlots);
 
     return pattern;
   }

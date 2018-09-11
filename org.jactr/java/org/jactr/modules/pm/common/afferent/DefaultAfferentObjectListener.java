@@ -16,14 +16,11 @@ package org.jactr.modules.pm.common.afferent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
-import javolution.util.FastSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,7 +33,11 @@ import org.commonreality.object.manager.event.IAfferentListener;
 import org.commonreality.object.manager.event.IObjectEvent;
 import org.commonreality.object.manager.event.ObjectEvent;
 import org.commonreality.time.IClock;
+import org.eclipse.collections.impl.factory.Maps;
+import org.eclipse.collections.impl.factory.Sets;
 import org.jactr.core.utils.collections.CachedCollection;
+import org.jactr.core.utils.collections.FastListFactory;
+import org.jactr.core.utils.collections.FastMapFactory;
 
 /**
  * default afferent listener that instead of routing events directly, queues
@@ -76,9 +77,9 @@ public class DefaultAfferentObjectListener implements IAfferentListener,
         new ArrayList<IAfferentObjectListener>());
     _agent = agent;
     _executor = executor;
-    _addedObjects = new FastSet<IAfferentObject>();
-    _removedObjects = new FastSet<IAfferentObject>();
-    _updatedDeltas = new FastMap<IAfferentObject, IObjectDelta>();
+    _addedObjects = Sets.mutable.empty();
+    _removedObjects = Sets.mutable.empty();
+    _updatedDeltas = Maps.mutable.empty();
   }
 
   protected Executor getExecutor()
@@ -132,9 +133,9 @@ public class DefaultAfferentObjectListener implements IAfferentListener,
    */
   final public void run()
   {
-    FastList<IAfferentObject> added = FastList.newInstance();
-    FastList<IAfferentObject> removed = FastList.newInstance();
-    FastMap<IAfferentObject, IObjectDelta> deltas = FastMap.newInstance();
+    List<IAfferentObject> added = FastListFactory.newInstance();
+    List<IAfferentObject> removed = FastListFactory.newInstance();
+    Map<IAfferentObject, IObjectDelta> deltas = FastMapFactory.newInstance();
 
     synchronized (_addedObjects)
     {
@@ -163,9 +164,9 @@ public class DefaultAfferentObjectListener implements IAfferentListener,
     objectsRemoved(removed);
     _pendingUpdates.addAndGet(-removed.size());
 
-    FastList.recycle(added);
-    FastList.recycle(removed);
-    FastMap.recycle(deltas);
+    FastListFactory.recycle(added);
+    FastListFactory.recycle(removed);
+    FastMapFactory.recycle(deltas);
 
     /*
      * if this is being run right after shutdown has staretd, getClock could be

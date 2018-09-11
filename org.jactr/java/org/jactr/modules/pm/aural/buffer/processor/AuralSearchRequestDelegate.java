@@ -1,11 +1,10 @@
 package org.jactr.modules.pm.aural.buffer.processor;
 
+import java.util.List;
 /*
  * default logging
  */
 import java.util.concurrent.Future;
-
-import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -20,6 +19,7 @@ import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.production.request.IRequest;
 import org.jactr.core.queue.ITimedEvent;
 import org.jactr.core.slot.ISlot;
+import org.jactr.core.utils.collections.FastListFactory;
 import org.jactr.modules.pm.aural.IAuralModule;
 import org.jactr.modules.pm.aural.buffer.IAuralLocationBuffer;
 import org.jactr.modules.pm.aural.event.IAuralModuleListener;
@@ -139,7 +139,7 @@ public class AuralSearchRequestDelegate extends AbstractRequestDelegate
     /*
      * figure out if this is a stuff request
      */
-    FastList<ISlot> slots = FastList.newInstance();
+    List<ISlot> slots = FastListFactory.newInstance();
     ctr.getSlots(slots);
 
     boolean isStuffRequest = false;
@@ -168,7 +168,7 @@ public class AuralSearchRequestDelegate extends AbstractRequestDelegate
 
     _isStuffRequest = isStuffRequest;
 
-    FastList.recycle(slots);
+    FastListFactory.recycle(slots);
 
     return _module.search(ctr, requestTime, isStuffRequest);
   }

@@ -1,6 +1,6 @@
 package org.jactr.core.module.declarative.search.filter;
 
-import javolution.text.TextBuilder;
+import org.jactr.core.logging.IMessageBuilder;
 
 /*
  * default logging
@@ -9,5 +9,5 @@ import javolution.text.TextBuilder;
 public interface ILoggedChunkFilter extends IChunkFilter
 {
 
-  public TextBuilder getMessageBuilder();
+  public IMessageBuilder getMessageBuilder();
 }

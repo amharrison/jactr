@@ -6,13 +6,13 @@ package org.jactr.modules.pm.visual.memory.impl.filter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-
-import javolution.util.FastList;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.IConditionalSlot;
+import org.jactr.core.utils.collections.FastListFactory;
 import org.jactr.modules.pm.common.memory.filter.AbstractIndexFilter;
 import org.jactr.modules.pm.common.memory.filter.IIndexFilter;
 import org.jactr.modules.pm.visual.IVisualModule;
@@ -66,7 +66,7 @@ public class ValueVisualLocationFilter extends
 
   public IIndexFilter instantiate(ChunkTypeRequest request)
   {
-    FastList<IConditionalSlot> conditionals = FastList.newInstance();
+    List<IConditionalSlot> conditionals = FastListFactory.newInstance();
 
     int index = 0;
     for (IConditionalSlot cSlot : request.getConditionalSlots())
@@ -79,7 +79,7 @@ public class ValueVisualLocationFilter extends
 
     if (conditionals.size() == 0)
     {
-      FastList.recycle(conditionals);
+      FastListFactory.recycle(conditionals);
       return null;
     }
 
@@ -90,6 +90,7 @@ public class ValueVisualLocationFilter extends
     return rtn;
   }
 
+  @Override
   public void normalizeRequest(ChunkTypeRequest request)
   {
     // TODO Auto-generated method stub

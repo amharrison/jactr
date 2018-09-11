@@ -1,12 +1,10 @@
 package org.jactr.core.utils.collections;
 
-/*
- * default logging
- */
-import javolution.util.FastSet;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.collections.impl.factory.Sets;
 import org.jactr.core.utils.recyclable.AbstractThreadLocalRecyclableFactory;
 import org.jactr.core.utils.recyclable.RecyclableFactory;
 
@@ -18,40 +16,41 @@ public class FastSetFactory
   static private final transient Log        LOGGER   = LogFactory
                                                          .getLog(FastSetFactory.class);
 
-  static private RecyclableFactory<FastSet> _factory = new AbstractThreadLocalRecyclableFactory<FastSet>() {
+  static private RecyclableFactory<Set<?>> _factory = new AbstractThreadLocalRecyclableFactory<Set<?>>() {
 
                                                        @SuppressWarnings({
       "unchecked", "rawtypes"                         })
                                                        @Override
                                                        protected void cleanUp(
-                                                           FastSet obj)
+                                                          Set<?> obj)
                                                        {
                                                          obj.clear();
                                                        }
 
                                                        @Override
-                                                       protected FastSet instantiate(
+                                                      protected Set<?> instantiate(
                                                            Object... params)
                                                        {
-                                                         return FastSet
-                                                             .newInstance();
+                                                        return Sets.mutable
+                                                            .empty();
                                                        }
 
                                                        @Override
                                                        protected void release(
-                                                           FastSet obj)
+                                                          Set<?> obj)
                                                        {
-                                                         FastSet.recycle(obj);
+
                                                        }
 
                                                      };
 
-  static public FastSet newInstance()
+  @SuppressWarnings("unchecked")
+  static public <T> Set<T> newInstance()
   {
-    return _factory.newInstance();
+    return (Set<T>) _factory.newInstance();
   }
 
-  static public void recycle(FastSet set)
+  static public <T> void recycle(Set<T> set)
   {
     _factory.recycle(set);
   }

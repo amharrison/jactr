@@ -13,7 +13,7 @@
 
 package org.jactr.core.module.retrieval.time;
 
-import javolution.util.FastList;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,6 +28,7 @@ import org.jactr.core.module.retrieval.four.IRetrievalModule4;
 import org.jactr.core.module.retrieval.six.DefaultRetrievalModule6;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.ISlot;
+import org.jactr.core.utils.collections.FastListFactory;
 
 /**
  * 4.0 retrieval time equation. Added an override system parameter to deal with
@@ -94,7 +95,7 @@ public class DefaultRetrievalTimeEquation implements IRetrievalTimeEquation
   public double computeRetrievalTime(IChunk retrievedChunk,
       ChunkTypeRequest retrievalRequest)
   {
-    FastList<ISlot> slots = FastList.newInstance();
+    List<ISlot> slots = FastListFactory.newInstance();
     if(retrievalRequest != null)
     	retrievalRequest.getSlots(slots);
     double latencyFactor = _retrievalModule.getLatencyFactor();
@@ -171,7 +172,7 @@ public class DefaultRetrievalTimeEquation implements IRetrievalTimeEquation
        * getActivation(ChunkTypeRequest), then use the pattern to determine the
        * relative activation
        */
-      IDeclarativeModule4 decM4 = (IDeclarativeModule4) decM
+      IDeclarativeModule4 decM4 = decM
           .getAdapter(IDeclarativeModule4.class);
       boolean partialEnabled = false;
       if (decM4 != null)
@@ -180,7 +181,7 @@ public class DefaultRetrievalTimeEquation implements IRetrievalTimeEquation
 
       if (partialEnabled && retrievalRequest != null)
       {
-        ISubsymbolicChunk5 ssc = (ISubsymbolicChunk5) retrievedChunk
+        ISubsymbolicChunk5 ssc = retrievedChunk
             .getSubsymbolicChunk().getAdapter(ISubsymbolicChunk5.class);
         if (ssc != null)
         {
@@ -193,7 +194,7 @@ public class DefaultRetrievalTimeEquation implements IRetrievalTimeEquation
       retrievalTime = latencyFactor * Math.exp(-latencyExponent * activation);
     }
 
-    FastList.recycle(slots);
+    FastListFactory.recycle(slots);
 
     return retrievalTime;
   }

@@ -13,19 +13,16 @@
  */
 package org.jactr.core.module.declarative.search.map;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javolution.util.FastList;
-import javolution.util.FastMap;
-import javolution.util.FastSet;
-import javolution.util.FastTable;
-
 import org.apache.commons.collections.collection.CompositeCollection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.collections.impl.factory.Maps;
 import org.jactr.core.utils.collections.CompositeCollectionFactory;
 
 public class DefaultValueMap<V, I> implements IValueMap<V, I>
@@ -73,9 +70,9 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
    */
   protected Map<V, Collection<I>> instantiateCoreMap()
   {
-    FastMap<V, Collection<I>> rtn = FastMap.newInstance();
+//    Map<V, Collection<I>> rtn = new HashMap<>();
     // rtn.setKeyComparator(FastComparator.DIRECT);
-    return rtn;
+    return Maps.mutable.empty();
     // return new HashMap<V, Collection<I>>();
   }
 
@@ -87,7 +84,7 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
     /*
      * cant be a set since a chunk can point to this value multiple times
      */
-    return FastList.newInstance();
+    return new ArrayList<>();
     // return new HashSet<I>();
   }
 
@@ -149,16 +146,7 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
     }
   }
 
-  @SuppressWarnings("rawtypes")
-  protected void recycleCollection(Collection<I> container)
-  {
-    if (container instanceof FastList)
-      FastList.recycle((FastList) container);
-    else if (container instanceof FastSet)
-      FastSet.recycle((FastSet) container);
-    else if (container instanceof FastTable)
-      FastTable.recycle((FastTable) container);
-  }
+
 
   public Collection<I> equalTo(V value)
   {
@@ -299,11 +287,7 @@ public class DefaultValueMap<V, I> implements IValueMap<V, I>
       if (indexables != null)
       {
         indexables.remove(indexable);
-        if (indexables.size() == 0)
-        {
-          getCoreMap().remove(value);
-          recycleCollection(indexables);
-        }
+        if (indexables.size() == 0) getCoreMap().remove(value);
       }
     }
     finally

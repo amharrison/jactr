@@ -19,8 +19,6 @@ import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javolution.util.FastList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.event.ActivationBufferEvent;
@@ -37,6 +35,7 @@ import org.jactr.core.model.event.ModelEvent;
 import org.jactr.core.model.event.ModelListenerAdaptor;
 import org.jactr.core.module.IModule;
 import org.jactr.core.utils.DefaultAdaptable;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 import org.jactr.core.utils.parameter.IParameterized;
 import org.jactr.core.utils.parameter.ParameterHandler;
 
@@ -531,7 +530,7 @@ public abstract class AbstractActivationBuffer extends DefaultAdaptable
 
   public IChunk contains(IChunk c)
   {
-    FastList<IChunk> sources = FastList.newInstance();
+    Collection<IChunk> sources = FastCollectionFactory.newInstance();
     try
     {
       for (IChunk chunk : getSourceChunks(sources))
@@ -540,13 +539,13 @@ public abstract class AbstractActivationBuffer extends DefaultAdaptable
     }
     finally
     {
-      FastList.recycle(sources);
+      FastCollectionFactory.recycle(sources);
     }
   }
 
   public IChunk containsExact(IChunk c)
   {
-    FastList<IChunk> sources = FastList.newInstance();
+    Collection<IChunk> sources = FastCollectionFactory.newInstance();
     try
     {
       for (IChunk chunk : getSourceChunks(sources))
@@ -555,7 +554,7 @@ public abstract class AbstractActivationBuffer extends DefaultAdaptable
     }
     finally
     {
-      FastList.recycle(sources);
+      FastCollectionFactory.recycle(sources);
     }
   }
 

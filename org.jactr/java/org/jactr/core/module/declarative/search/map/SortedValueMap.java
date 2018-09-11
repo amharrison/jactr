@@ -19,9 +19,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javolution.util.FastComparator;
-import javolution.util.FastMap;
-
 import org.apache.commons.collections.collection.CompositeCollection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -59,12 +56,12 @@ public class SortedValueMap<V extends Comparable<V>, I> extends
   {
     _sortedValues = new TreeSet<V>();
     // return new TreeMap<V, Collection<I>>();
-    // return super.instantiateCoreMap();
-    FastMap<V, Collection<I>> rtn = new FastMap<V, Collection<I>>();
-    // since the values will be sorted, we can assume that the hashes are not
-    // evenly distributed
-    rtn.setKeyComparator(FastComparator.REHASH);
-    return rtn;
+    return super.instantiateCoreMap();
+//    FastMap<V, Collection<I>> rtn = new FastMap<V, Collection<I>>();
+//    // since the values will be sorted, we can assume that the hashes are not
+//    // evenly distributed
+//    rtn.setKeyComparator(FastComparator.REHASH);
+//    return rtn;
   }
 
   @Override

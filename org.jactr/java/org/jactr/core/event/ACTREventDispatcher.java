@@ -13,17 +13,18 @@
  */
 package org.jactr.core.event;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 
-import javolution.util.FastList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.concurrent.ExecutorServices;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 
 /**
  * class that handles the nitty gritty of tracking listeners, executors, and
@@ -37,9 +38,9 @@ public class ACTREventDispatcher<S, L>
    * logger definition
    */
   static public final Log LOGGER              = LogFactory
-                                                  .getLog(ACTREventDispatcher.class);
+      .getLog(ACTREventDispatcher.class);
 
-  private FastList<Pair>  _actualListeners;
+  private List<Pair>      _actualListeners;
 
   private boolean         _haveEncounteredREE = false;
 
@@ -52,7 +53,7 @@ public class ACTREventDispatcher<S, L>
   {
     if (_actualListeners != null)
     {
-      FastList.recycle(_actualListeners);
+      _actualListeners.clear();
       _actualListeners = null;
     }
   }
@@ -66,7 +67,7 @@ public class ACTREventDispatcher<S, L>
 
     Pair p = new Pair(listener, executor);
 
-    if (_actualListeners == null) _actualListeners = FastList.newInstance();
+    if (_actualListeners == null) _actualListeners = new ArrayList<>();
 
     _actualListeners.add(p);
   }
@@ -82,11 +83,7 @@ public class ACTREventDispatcher<S, L>
       if (pair.hasListener(listener)) itr.remove();
     }
 
-    if (_actualListeners.size() == 0)
-    {
-      FastList.recycle(_actualListeners);
-      _actualListeners = null;
-    }
+    if (_actualListeners.size() == 0) _actualListeners = null;
   }
 
   synchronized public boolean hasListeners()
@@ -96,19 +93,19 @@ public class ACTREventDispatcher<S, L>
 
   public void fire(IACTREvent<S, L> event)
   {
-    FastList<Pair> container = null;
+    Collection<Pair> container = null;
 
     synchronized (this)
     {
       if (_actualListeners == null) return;
-      container = FastList.newInstance();
+      container = FastCollectionFactory.newInstance();
       container.addAll(_actualListeners);
     }
 
     for (Pair pair : container)
       pair.fire(event);
 
-    FastList.recycle(container);
+    FastCollectionFactory.recycle(container);
   }
 
   private class Pair
@@ -158,17 +155,15 @@ public class ACTREventDispatcher<S, L>
           {
             LOGGER.warn(String.format(
                 "%s rejected processing of actr event (%s) by listener (%s).",
-                _executor, event.getClass().getSimpleName(), _listener
-                    .getClass().getName()));
-            LOGGER
-                .warn("This is normal during end-of-run processing if your model produced data faster than it could be processed,");
-            LOGGER
-                .warn("by the IDE or background tools. If you see this warning mid-run, something may be wrong, please see the exception.");
-            LOGGER
-                .warn(String
-                    .format(
-                        "Suppressing further rejection warnings for this event source (%s).",
-                        event.getSource().getClass().getName()));
+                _executor, event.getClass().getSimpleName(),
+                _listener.getClass().getName()));
+            LOGGER.warn(
+                "This is normal during end-of-run processing if your model produced data faster than it could be processed,");
+            LOGGER.warn(
+                "by the IDE or background tools. If you see this warning mid-run, something may be wrong, please see the exception.");
+            LOGGER.warn(String.format(
+                "Suppressing further rejection warnings for this event source (%s).",
+                event.getSource().getClass().getName()));
             LOGGER.warn(ree);
           }
 
@@ -185,7 +180,7 @@ public class ACTREventDispatcher<S, L>
   {
     if (_actualListeners == null) return Collections.EMPTY_LIST;
 
-    FastList<L> listeners = FastList.newInstance();
+    List<L> listeners = new ArrayList<>(_actualListeners.size());
     for (Pair pair : _actualListeners)
       listeners.add(pair._listener);
 

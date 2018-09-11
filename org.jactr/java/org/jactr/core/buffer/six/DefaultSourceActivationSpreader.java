@@ -1,5 +1,6 @@
 package org.jactr.core.buffer.six;
 
+import java.util.Collection;
 /*
  * default logging
  */
@@ -7,8 +8,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -23,6 +22,7 @@ import org.jactr.core.logging.IMessageBuilder;
 import org.jactr.core.logging.Logger;
 import org.jactr.core.logging.Logger.Stream;
 import org.jactr.core.model.IModel;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 
 /**
  * default activation spreader. this is not thread safe and assumes that
@@ -80,8 +80,8 @@ public class DefaultSourceActivationSpreader implements
      * also have a link from X with a count of 2. X will receive twice the
      * source activation, and will propogate that through the doubled link.
      */
-    FastList<IAssociativeLink> jLinks = FastList.newInstance();
-    FastList<IChunk> sourceChunks = FastList.newInstance();
+    Collection<IAssociativeLink> jLinks = FastCollectionFactory.newInstance();
+    Collection<IChunk> sourceChunks = FastCollectionFactory.newInstance();
 
     try
     {
@@ -192,8 +192,8 @@ public class DefaultSourceActivationSpreader implements
     }
     finally
     {
-      FastList.recycle(jLinks);
-      FastList.recycle(sourceChunks);
+      FastCollectionFactory.recycle(jLinks);
+      FastCollectionFactory.recycle(sourceChunks);
     }
   }
 

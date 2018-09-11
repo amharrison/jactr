@@ -1,15 +1,12 @@
 package org.jactr.core.module.declarative.search.filter;
 
-/*
- * default logging
- */
-import javolution.text.TextBuilder;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISubsymbolicChunk;
 import org.jactr.core.chunk.five.ISubsymbolicChunk5;
+import org.jactr.core.logging.IMessageBuilder;
+import org.jactr.core.logging.impl.MessageBuilderFactory;
 import org.jactr.core.production.VariableBindings;
 import org.jactr.core.production.request.ChunkTypeRequest;
 
@@ -38,7 +35,7 @@ public class PartialMatchActivationFilter implements ILoggedChunkFilter
 
   private IChunk                     _bestChunkYet         = null;
 
-  private TextBuilder                _message;
+  private IMessageBuilder            _message;
 
   private ActivationPolicy           _activationPolicy;
 
@@ -49,7 +46,7 @@ public class PartialMatchActivationFilter implements ILoggedChunkFilter
     _request = request;
     _activationThreshold = threshold;
     _log = logEvaluations;
-    if (_log) _message = new TextBuilder();
+    if (_log) _message = MessageBuilderFactory.newInstance();
   }
 
   public PartialMatchActivationFilter(ChunkTypeRequest request, double threshold)
@@ -121,7 +118,7 @@ public class PartialMatchActivationFilter implements ILoggedChunkFilter
     return acceptChunk;
   }
 
-  public TextBuilder getMessageBuilder()
+  public IMessageBuilder getMessageBuilder()
   {
     return _message;
   }

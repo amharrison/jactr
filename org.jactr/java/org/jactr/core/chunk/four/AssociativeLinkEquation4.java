@@ -1,9 +1,6 @@
 package org.jactr.core.chunk.four;
 
-/*
- * default logging
- */
-import javolution.util.FastList;
+import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -13,6 +10,7 @@ import org.jactr.core.chunk.link.IAssociativeLinkEquation;
 import org.jactr.core.model.IModel;
 import org.jactr.core.module.declarative.associative.IAssociativeLinkContainer;
 import org.jactr.core.module.declarative.four.learning.IDeclarativeLearningModule4;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 
 /**
  * uses the ACT-R 4 equations for the learning and setting of associative link
@@ -26,7 +24,7 @@ public class AssociativeLinkEquation4 implements IAssociativeLinkEquation
    * Logger definition
    */
   static private final transient Log        LOGGER = LogFactory
-                                                       .getLog(AssociativeLinkEquation4.class);
+      .getLog(AssociativeLinkEquation4.class);
 
   final private IDeclarativeLearningModule4 _declarativeLearningModule;
 
@@ -62,9 +60,8 @@ public class AssociativeLinkEquation4 implements IAssociativeLinkEquation
           / i.getTimesNeeded();
     numerator += fcEji;
 
-    if (LOGGER.isDebugEnabled())
-      LOGGER.debug("numerator : " + numerator + " denom : " + denom
-          + " fcEji : " + fcEji);
+    if (LOGGER.isDebugEnabled()) LOGGER.debug(
+        "numerator : " + numerator + " denom : " + denom + " fcEji : " + fcEji);
 
     double rStrength = numerator / denom;
     link4.setRStrength(rStrength);
@@ -96,8 +93,8 @@ public class AssociativeLinkEquation4 implements IAssociativeLinkEquation
     IAssociativeLinkContainer alc = jChunk
         .getAdapter(IAssociativeLinkContainer.class);
 
-    ISubsymbolicChunk4 ssc4 = jChunk.getSubsymbolicChunk().getAdapter(
-        ISubsymbolicChunk4.class);
+    ISubsymbolicChunk4 ssc4 = jChunk.getSubsymbolicChunk()
+        .getAdapter(ISubsymbolicChunk4.class);
 
     if (ssc4 != null) fan = (int) alc.getNumberOfOutboundLinks();
 
@@ -111,10 +108,9 @@ public class AssociativeLinkEquation4 implements IAssociativeLinkEquation
      */
     if (link4.getCount() > 0) dRji *= link4.getCount();
 
-    if (LOGGER.isDebugEnabled())
-      LOGGER.debug(this + " defaultRji : " + dRji + "(" + Math.log(dRji)
-          + ") fan : " + fan + " count : " + link4.getCount()
-          + " totalFacts : " + totalChunksInMemory);
+    if (LOGGER.isDebugEnabled()) LOGGER.debug(this + " defaultRji : " + dRji
+        + "(" + Math.log(dRji) + ") fan : " + fan + " count : "
+        + link4.getCount() + " totalFacts : " + totalChunksInMemory);
 
     link4.setRStrength(dRji);
 
@@ -123,9 +119,9 @@ public class AssociativeLinkEquation4 implements IAssociativeLinkEquation
 
   public void resetStrengths(IModel model)
   {
+    Collection<IAssociativeLink> links = FastCollectionFactory.newInstance();
     try
     {
-      FastList<IAssociativeLink> links = FastList.newInstance();
       for (IChunk chunk : model.getDeclarativeModule().getChunks().get())
       {
         IAssociativeLinkContainer alc = chunk
@@ -143,6 +139,10 @@ public class AssociativeLinkEquation4 implements IAssociativeLinkEquation
     catch (Exception e)
     {
       LOGGER.error("Could not reset links because of an exception ", e);
+    }
+    finally
+    {
+      FastCollectionFactory.recycle(links);
     }
   }
 

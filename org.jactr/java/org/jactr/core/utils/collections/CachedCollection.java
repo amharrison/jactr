@@ -15,11 +15,10 @@ package org.jactr.core.utils.collections;
 
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-
-import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -137,7 +136,8 @@ public class CachedCollection<I> implements Collection<I>
     if (_cachedCollectionReference == null ||
         (rtn = _cachedCollectionReference.get()) == null)
     {
-      rtn = Collections.unmodifiableCollection(new FastList<I>(
+      rtn = Collections
+          .unmodifiableCollection(new ArrayList<I>(
           _backingCollection));
       _cachedCollectionReference = new SoftReference<Collection<I>>(rtn);
     }

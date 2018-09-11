@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-
-import javolution.util.FastList;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,6 +26,7 @@ import org.jactr.core.slot.ISlot;
 import org.jactr.core.slot.ISlotContainer;
 import org.jactr.core.slot.IUniqueSlotContainer;
 import org.jactr.core.slot.IVariableNameSlot;
+import org.jactr.core.utils.collections.FastListFactory;
 
 /*
  * default logging
@@ -79,7 +79,7 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
   {
     ISymbolicChunk sc = chunk.getSymbolicChunk();
     String name = sc.getName();
-    FastList<ISlot> slots = FastList.newInstance();
+    List<ISlot> slots = FastListFactory.newInstance();
     getSlots(slots);
     int count = 0;
 
@@ -93,6 +93,9 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
       {
 
       }
+
+    FastListFactory.recycle(slots);
+
     return count;
   }
 
@@ -131,7 +134,7 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
       VariableBindings bindings, String slotContainerName,
       IUniqueSlotContainer container) throws CannotMatchException
   {
-    FastList<ISlot> slots = FastList.newInstance();
+    List<ISlot> slots = FastListFactory.newInstance();
 
     int op = slotToResolve.getOperator();
     try
@@ -194,7 +197,7 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
     }
     finally
     {
-      FastList.recycle(slots);
+      FastListFactory.recycle(slots);
     }
   }
 
@@ -420,7 +423,7 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
   {
     if (_unresolved == null)
     {
-      _unresolved = FastList.newInstance();
+      _unresolved = FastListFactory.newInstance();
       _unresolved.addAll(getConditionalAndLogicalSlots());
     }
 
@@ -472,7 +475,7 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
   {
     if (_unresolved == null)
     {
-      _unresolved = FastList.newInstance();
+      _unresolved = FastListFactory.newInstance();
       _unresolved.addAll(getConditionalAndLogicalSlots());
     }
 
@@ -578,7 +581,7 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
   // except for logic slots
   public Collection<? extends IConditionalSlot> getConditionalSlots()
   {
-    Collection<IConditionalSlot> slots = FastList.newInstance();
+    Collection<IConditionalSlot> slots = FastListFactory.newInstance();
     for (ISlot slot : _slots)
       if (slot instanceof IConditionalSlot) slots.add((IConditionalSlot) slot);
 
@@ -588,7 +591,7 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
 
   public Collection<? extends ISlot> getConditionalAndLogicalSlots()
   {
-    Collection<ISlot> slots = FastList.newInstance();
+    Collection<ISlot> slots = FastListFactory.newInstance();
     for (ISlot slot : _slots)
       if (slot instanceof IConditionalSlot || slot instanceof ILogicalSlot)
         slots.add(slot);

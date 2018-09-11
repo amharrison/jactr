@@ -1,11 +1,10 @@
 package org.jactr.core.module.declarative.four;
 
+import java.util.ArrayList;
 /*
  * default logging
  */
 import java.util.Collection;
-
-import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -63,7 +62,7 @@ public class DefaultSpreadingActivationEquation implements
     Collection<IAssociativeLink> collection = _linkCollection.get();
     if (collection == null)
     {
-      collection = new FastList<IAssociativeLink>();
+      collection = new ArrayList<IAssociativeLink>();
       _linkCollection.set(collection);
     }
 

@@ -29,8 +29,6 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javolution.util.FastList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.IActivationBuffer;
@@ -66,6 +64,7 @@ import org.jactr.core.production.condition.IBufferCondition;
 import org.jactr.core.production.condition.ICondition;
 import org.jactr.core.production.condition.VariableCondition;
 import org.jactr.core.production.six.DefaultProduction6;
+import org.jactr.core.utils.collections.FastListFactory;
 import org.jactr.core.utils.parameter.IParameterized;
 import org.jactr.core.utils.parameter.ParameterHandler;
 
@@ -671,7 +670,7 @@ public class DefaultProceduralModule6 extends AbstractModule implements
       int tasks = size / minimumBlockSize;
       tasks += size % minimumBlockSize == 0 ? 0 : 1;
 
-      FastList<IProduction> working = FastList.newInstance();
+      List<IProduction> working = FastListFactory.newInstance();
       working.addAll(productions);
 
       for (int i = 0; i < tasks; i++)
@@ -699,7 +698,7 @@ public class DefaultProceduralModule6 extends AbstractModule implements
           LOGGER.error("Failed to instantiatie productions in parallel: ", e);
         }
 
-      FastList.recycle(working);
+      FastListFactory.recycle(working);
     }
     else
       try

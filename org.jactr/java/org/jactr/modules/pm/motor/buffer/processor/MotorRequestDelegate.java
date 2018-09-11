@@ -1,9 +1,6 @@
 package org.jactr.modules.pm.motor.buffer.processor;
 
-/*
- * default logging
- */
-import javolution.util.FastList;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -15,6 +12,7 @@ import org.jactr.core.model.IModel;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.production.request.IRequest;
 import org.jactr.core.slot.ISlot;
+import org.jactr.core.utils.collections.FastListFactory;
 import org.jactr.modules.pm.motor.AbstractMotorModule;
 import org.jactr.modules.pm.motor.IMotorModule;
 import org.jactr.modules.pm.motor.command.IMovement;
@@ -25,7 +23,7 @@ public class MotorRequestDelegate extends SimpleRequestDelegate
    * Logger definition
    */
   static private final transient Log LOGGER     = LogFactory
-                                                    .getLog(MotorRequestDelegate.class);
+      .getLog(MotorRequestDelegate.class);
 
   static public final String         ADJUSTMENT = ":adjustment";
 
@@ -52,12 +50,11 @@ public class MotorRequestDelegate extends SimpleRequestDelegate
         _module.adjust(movement, (ChunkTypeRequest) request, requestTime);
       }
       else
-        msg = String.format(
-            "No executing movement found matching %s, ignoring", request);
+        msg = String.format("No executing movement found matching %s, ignoring",
+            request);
 
       IModel model = _module.getModel();
-      if (Logger.hasLoggers(model))
-        Logger.log(model, Logger.Stream.MOTOR, msg);
+      if (Logger.hasLoggers(model)) Logger.log(model, Logger.Stream.MOTOR, msg);
     }
     else
       _module.prepare((ChunkTypeRequest) request, requestTime, false);
@@ -75,10 +72,17 @@ public class MotorRequestDelegate extends SimpleRequestDelegate
 
   private boolean isAdjustment(ChunkTypeRequest request)
   {
-    FastList<ISlot> container = FastList.newInstance();
+    List<ISlot> container = FastListFactory.newInstance();
     request.getSlots(container);
-    for (ISlot slot : container)
-      if (slot.getName().equals(ADJUSTMENT)) return true;
-    return false;
+    try
+    {
+      for (ISlot slot : container)
+        if (slot.getName().equals(ADJUSTMENT)) return true;
+      return false;
+    }
+    finally
+    {
+      FastListFactory.recycle(container);
+    }
   }
 }

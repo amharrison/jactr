@@ -1,11 +1,10 @@
 package org.jactr.core.module.declarative.basic.chunk;
 
+import java.util.ArrayList;
 /*
  * default logging
  */
 import java.util.List;
-
-import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -24,7 +23,7 @@ public class ChainedChunkConfigurator implements IChunkConfigurator
   static private final transient Log LOGGER = LogFactory
                                                 .getLog(ChainedChunkConfigurator.class);
 
-  private List<IChunkConfigurator>   _configurators = new FastList<IChunkConfigurator>();
+  private List<IChunkConfigurator>   _configurators = new ArrayList<IChunkConfigurator>();
 
   public void configure(IChunk chunk)
   {

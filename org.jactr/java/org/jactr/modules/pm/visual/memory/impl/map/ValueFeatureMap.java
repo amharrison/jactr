@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javolution.util.FastSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.identifier.IIdentifier;
@@ -18,6 +16,7 @@ import org.commonreality.object.IAfferentObject;
 import org.commonreality.object.UnknownPropertyNameException;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.IConditionalSlot;
+import org.jactr.core.utils.collections.FastSetFactory;
 import org.jactr.modules.pm.visual.IVisualModule;
 
 public class ValueFeatureMap extends AbstractVisualFeatureMap<String>
@@ -41,12 +40,12 @@ public class ValueFeatureMap extends AbstractVisualFeatureMap<String>
 
   private Set<IIdentifier> acquireSet()
   {
-    return FastSet.newInstance();
+    return FastSetFactory.newInstance();
   }
 
   private void releaseSet(Set<IIdentifier> set)
   {
-    FastSet.recycle((FastSet<IIdentifier>) set);
+    FastSetFactory.recycle(set);
   }
 
   @Override
@@ -88,7 +87,7 @@ public class ValueFeatureMap extends AbstractVisualFeatureMap<String>
       Set<IIdentifier> results)
   {
     boolean firstInsertion = true;
-    FastSet<IIdentifier> tmp = FastSet.newInstance();
+    Set<IIdentifier> tmp = FastSetFactory.newInstance();
 
     for (IConditionalSlot slot : request.getConditionalSlots())
       if (slot.getName().equals(IVisualModule.VALUE_SLOT))
@@ -114,10 +113,10 @@ public class ValueFeatureMap extends AbstractVisualFeatureMap<String>
           results.retainAll(tmp);
       }
 
-    FastSet.recycle(tmp);
+    FastSetFactory.recycle(tmp);
   }
 
-  private void not(String value, FastSet<IIdentifier> tmp)
+  private void not(String value, Set<IIdentifier> tmp)
   {
     for (Map.Entry<String, Set<IIdentifier>> entry : _byToken.entrySet())
       if (entry.getKey() != null && !entry.getKey().equals(value)
@@ -125,7 +124,7 @@ public class ValueFeatureMap extends AbstractVisualFeatureMap<String>
         tmp.addAll(entry.getValue());
   }
 
-  private void equals(String value, FastSet<IIdentifier> tmp)
+  private void equals(String value, Set<IIdentifier> tmp)
   {
     Set<IIdentifier> ids = _byToken.get(value);
     if(ids!=null)

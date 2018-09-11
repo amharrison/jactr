@@ -10,8 +10,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import javolution.util.FastSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.identifier.IIdentifier;
@@ -19,6 +17,7 @@ import org.jactr.core.chunk.IChunk;
 import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.slot.IConditionalSlot;
 import org.jactr.core.slot.ISlot;
+import org.jactr.core.utils.collections.FastSetFactory;
 import org.jactr.modules.pm.IPerceptualModule;
 
 public abstract class AbstractSortedFeatureMap<T> extends AbstractFeatureMap<T>
@@ -149,7 +148,7 @@ public abstract class AbstractSortedFeatureMap<T> extends AbstractFeatureMap<T>
   {
     boolean firstInsertion = true;
     String slotName = getRelevantSlotName();
-    FastSet<IIdentifier> tmp = FastSet.newInstance();
+    Set<IIdentifier> tmp = FastSetFactory.newInstance();
     for (IConditionalSlot slot : request.getConditionalSlots())
       if (slot.getName().equalsIgnoreCase(slotName))
         if (isValidValue(slot))
@@ -195,7 +194,7 @@ public abstract class AbstractSortedFeatureMap<T> extends AbstractFeatureMap<T>
         else if (LOGGER.isDebugEnabled())
           LOGGER.debug(this + " " + slot + " value is not naturally ordered");
 
-    FastSet.recycle(tmp);
+    FastSetFactory.recycle(tmp);
   }
 
   @Override
@@ -207,7 +206,7 @@ public abstract class AbstractSortedFeatureMap<T> extends AbstractFeatureMap<T>
     Set<IIdentifier> identifiers = _valueMap.get(data);
     if (identifiers == null)
     {
-      identifiers = FastSet.newInstance();
+      identifiers = FastSetFactory.newInstance();
       _valueMap.put(data, identifiers);
     }
     identifiers.add(identifier);
@@ -231,7 +230,7 @@ public abstract class AbstractSortedFeatureMap<T> extends AbstractFeatureMap<T>
         if (identifiers.size() == 0)
         {
           _valueMap.remove(value);
-          FastSet.recycle((FastSet) identifiers);
+          FastSetFactory.recycle(identifiers);
         }
       }
     }

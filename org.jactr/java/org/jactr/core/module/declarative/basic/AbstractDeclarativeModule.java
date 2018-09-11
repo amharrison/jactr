@@ -1,5 +1,6 @@
 package org.jactr.core.module.declarative.basic;
 
+import java.util.ArrayList;
 /*
  * default logging
  */
@@ -12,8 +13,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,6 +56,7 @@ import org.jactr.core.production.request.ChunkTypeRequest;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.slot.ISlot;
 import org.jactr.core.utils.StringUtilities;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 
 /**
  * Abstract declarative module that provides most of the functionality required
@@ -75,10 +75,10 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
    * Logger definition
    */
   static private final transient Log LOGGER               = LogFactory
-                                                              .getLog(AbstractDeclarativeModule.class);
+      .getLog(AbstractDeclarativeModule.class);
 
   static public final String         SUSPEND_DISPOSAL_KEY = DefaultDeclarativeModule.class
-                                                              + ".suspendDisposal";
+      + ".suspendDisposal";
 
   /**
    * there is a grey area between the creation of a chunk and it's use in a
@@ -158,7 +158,7 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
   /**
    * lock for _chunksToDispose
    */
-  private ReentrantLock                                                       _disposalLock     = new ReentrantLock();
+  private ReentrantLock                                                       _disposalLock      = new ReentrantLock();
 
   private IModelListener                                                      _disposalListener;
 
@@ -167,16 +167,16 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
    */
   private List<IChunk>                                                        _deferredEncodings;
 
-  private ReentrantLock                                                       _encodingLock     = new ReentrantLock();
+  private ReentrantLock                                                       _encodingLock      = new ReentrantLock();
 
-  protected ChunkActivationComparator                                         _activationSorter = new ChunkActivationComparator();
+  protected ChunkActivationComparator                                         _activationSorter  = new ChunkActivationComparator();
 
   public AbstractDeclarativeModule(String name)
   {
     super(name);
     _eventDispatcher = new ACTREventDispatcher<IDeclarativeModule, IDeclarativeModuleListener>();
-    _chunksToDispose = FastList.newInstance();
-    _deferredEncodings = FastList.newInstance();
+    _chunksToDispose = new ArrayList<>();
+    _deferredEncodings = new ArrayList<>();
 
     _disposalListener = new ModelListenerAdaptor() {
 
@@ -227,7 +227,8 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
   {
   }
 
-  public void addListener(IDeclarativeModuleListener listener, Executor executor)
+  public void addListener(IDeclarativeModuleListener listener,
+      Executor executor)
   {
     _eventDispatcher.addListener(listener, executor);
   }
@@ -691,8 +692,8 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
           Boolean.FALSE);
 
     if (Logger.hasLoggers(getModel()))
-      Logger.log(getModel(), Logger.Stream.DECLARATIVE, "Copied "
-          + StringUtilities.toString(destination));
+      Logger.log(getModel(), Logger.Stream.DECLARATIVE,
+          "Copied " + StringUtilities.toString(destination));
   }
 
   /**
@@ -951,25 +952,23 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
      */
     if (originalChunk.equals(newChunk)) return originalChunk;
 
-    if (LOGGER.isDebugEnabled())
-      LOGGER.debug("Merging new chunk " + newChunk + " into existing chunk "
-          + originalChunk);
+    if (LOGGER.isDebugEnabled()) LOGGER.debug("Merging new chunk " + newChunk
+        + " into existing chunk " + originalChunk);
 
+    originalChunk.dispatch(
+        new ChunkEvent(originalChunk, ChunkEvent.Type.MERGING_WITH, newChunk));
 
-    originalChunk.dispatch(new ChunkEvent(originalChunk,
-        ChunkEvent.Type.MERGING_WITH, newChunk));
-
-    newChunk.dispatch(new ChunkEvent(newChunk, ChunkEvent.Type.MERGING_INTO,
-        originalChunk));
+    newChunk.dispatch(
+        new ChunkEvent(newChunk, ChunkEvent.Type.MERGING_INTO, originalChunk));
 
     mergeChunksInternal(originalChunk, newChunk);
 
     String msg = null;
 
     if (Logger.hasLoggers(getModel()))
-      msg = String.format("Merged %s into %s (%.2f)", newChunk, StringUtilities
-          .toString(originalChunk), originalChunk.getSubsymbolicChunk()
-          .getActivation());
+      msg = String.format("Merged %s into %s (%.2f)", newChunk,
+          StringUtilities.toString(originalChunk),
+          originalChunk.getSubsymbolicChunk().getActivation());
 
     if (msg != null) Logger.log(getModel(), Logger.Stream.DECLARATIVE, msg);
 
@@ -1121,8 +1120,9 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
 
   protected void processPendingEncodingAndDisposals()
   {
-    FastList<IChunk> chunkContainer = FastList.newInstance();
-    FastList<IActivationBuffer> bufferContainer = FastList.newInstance();
+    Collection<IChunk> chunkContainer = FastCollectionFactory.newInstance();
+    Collection<IActivationBuffer> bufferContainer = FastCollectionFactory
+        .newInstance();
 
     try
     {
@@ -1131,13 +1131,13 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
     }
     finally
     {
-      FastList.recycle(chunkContainer);
-      FastList.recycle(bufferContainer);
+      FastCollectionFactory.recycle(chunkContainer);
+      FastCollectionFactory.recycle(bufferContainer);
     }
   }
 
-  protected void processPendingEncodings(FastList<IChunk> chunkContainer,
-      FastList<IActivationBuffer> bufferContainer)
+  protected void processPendingEncodings(Collection<IChunk> chunkContainer,
+      Collection<IActivationBuffer> bufferContainer)
   {
     /*
      * even though we are a declarative module, we may not be THE declarative
@@ -1166,13 +1166,10 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
     double currentTime = ACTRRuntime.getRuntime().getClock(getModel())
         .getTime();
 
-    if (LOGGER.isDebugEnabled())
-      LOGGER.debug(String.format("Deferred encoding %d chunks",
-          chunkContainer.size()));
+    if (LOGGER.isDebugEnabled()) LOGGER.debug(
+        String.format("Deferred encoding %d chunks", chunkContainer.size()));
 
-    // fast, destructive iterator where processing order does not matter
-    for (IChunk chunk = null; !chunkContainer.isEmpty()
-        && (chunk = chunkContainer.removeLast()) != null;)
+    for (IChunk chunk : chunkContainer)
     {
       /*
        * because this chunk might get merged, effectively changing the lock
@@ -1203,8 +1200,8 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
   /**
    * called internally at the top & bottom of the cycle and at the end of a run.
    */
-  protected void processPendingDisposals(FastList<IChunk> chunkContainer,
-      FastList<IActivationBuffer> bufferContainer)
+  protected void processPendingDisposals(Collection<IChunk> chunkContainer,
+      Collection<IActivationBuffer> bufferContainer)
   {
 
     chunkContainer.clear();
@@ -1223,13 +1220,11 @@ public abstract class AbstractDeclarativeModule extends AbstractModule
       _disposalLock.unlock();
     }
 
-    if (LOGGER.isDebugEnabled())
-      LOGGER.debug(String.format("Disposing of %d chunks",
-          chunkContainer.size()));
+    if (LOGGER.isDebugEnabled()) LOGGER
+        .debug(String.format("Disposing of %d chunks", chunkContainer.size()));
 
     // fast, destructive iterator where processing order does not matter
-    for (IChunk chunk = null; !chunkContainer.isEmpty()
-        && (chunk = chunkContainer.removeLast()) != null;)
+    for (IChunk chunk : chunkContainer)
     {
       Lock chunkLock = chunk.getWriteLock();
       try

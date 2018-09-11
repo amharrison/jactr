@@ -24,8 +24,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javolution.text.TextBuilder;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.IActivationBuffer;
@@ -38,7 +36,9 @@ import org.jactr.core.chunktype.IRemovableSymbolicChunkType;
 import org.jactr.core.chunktype.ISymbolicChunkType;
 import org.jactr.core.concurrent.ExecutorServices;
 import org.jactr.core.event.IParameterEvent;
+import org.jactr.core.logging.IMessageBuilder;
 import org.jactr.core.logging.Logger;
+import org.jactr.core.logging.impl.MessageBuilderFactory;
 import org.jactr.core.model.IModel;
 import org.jactr.core.module.declarative.IDeclarativeModule;
 import org.jactr.core.module.declarative.IRemovableDeclarativeModule;
@@ -80,13 +80,15 @@ import org.jactr.core.utils.parameter.ParameterHandler;
  * of chunks.<br/>
  * This module provides encoding services for any buffer that returns false for
  * {@link IActivationBuffer#handlesEncoding()}.<br/>
- * This is the ideal point to start from when creating a new declarative module. <br/>
+ * This is the ideal point to start from when creating a new declarative module.
+ * <br/>
  * <br/>
  * Most modelers should be content with this or it's version specific
  * subclasses. If you need to add theoretic behavior, it is recommended that you
  * start with customizing the symbolic/ subsymbolic factories (most likely just
  * the {@link ISubsymbolicChunkFactory}). Custom {@link IChunk}s should not be
- * required as they are simply wrappers to the theoretically relevant contents. <br/>
+ * required as they are simply wrappers to the theoretically relevant contents.
+ * <br/>
  * <br/>
  * Most extensions will just extend this module to add their parameter
  * accessors, and any required listeners. If chunks do not need to be extended,
@@ -102,7 +104,7 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
    * logger definition
    */
   static final Log                    LOGGER                               = LogFactory
-                                                                               .getLog(DefaultDeclarativeModule.class);
+      .getLog(DefaultDeclarativeModule.class);
 
   static public final String          CHUNK_FACTORY_PARAM                  = "ChunkFactoryClass";
 
@@ -256,14 +258,12 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
     if (possibleMatches.size() > 0)
     {
       if (LOGGER.isDebugEnabled())
-        LOGGER.debug("chunk " + chunk + " has yielded "
-            + possibleMatches.size() + " matches " + possibleMatches);
+        LOGGER.debug("chunk " + chunk + " has yielded " + possibleMatches.size()
+            + " matches " + possibleMatches);
 
-      if (possibleMatches.size() > 1)
-        if (LOGGER.isWarnEnabled())
-          LOGGER.warn(String.format(
-              "Found multiple identical chunks to %s : %s", chunk,
-              possibleMatches));
+      if (possibleMatches.size() > 1) if (LOGGER.isWarnEnabled())
+        LOGGER.warn(String.format("Found multiple identical chunks to %s : %s",
+            chunk, possibleMatches));
 
       IChunk mergeInto = possibleMatches.iterator().next();
 
@@ -310,8 +310,8 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
         chunk.encode(now);
 
         if (Logger.hasLoggers(getModel()))
-          Logger.log(getModel(), Logger.Stream.DECLARATIVE, "Encoded "
-              + StringUtilities.toString(chunk));
+          Logger.log(getModel(), Logger.Stream.DECLARATIVE,
+              "Encoded " + StringUtilities.toString(chunk));
         /*
          * we index after since an unencoded chunk wont be indexed
          */
@@ -355,12 +355,9 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
     // noop
     if (!chunk.isEncoded() || chunk.hasBeenDisposed())
     {
-      if (LOGGER.isDebugEnabled())
-        LOGGER
-            .debug(String
-                .format(
-                    "%s has not been encoded or has been disposed of, no need to remove",
-                    chunk));
+      if (LOGGER.isDebugEnabled()) LOGGER.debug(String.format(
+          "%s has not been encoded or has been disposed of, no need to remove",
+          chunk));
       return;
     }
 
@@ -406,8 +403,8 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
       if (removed)
       {
         if (Logger.hasLoggers(getModel()))
-          Logger.log(getModel(), Logger.Stream.DECLARATIVE, "Removed "
-              + StringUtilities.toString(chunk));
+          Logger.log(getModel(), Logger.Stream.DECLARATIVE,
+              "Removed " + StringUtilities.toString(chunk));
 
         fireChunkRemoved(chunk);
       }
@@ -436,8 +433,8 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
       sct.setName(name);
 
       _allChunkTypes.put(name.toLowerCase(), chunkType);
-      addChunkTypeToParents(chunkType, chunkType.getSymbolicChunkType()
-          .getParents());
+      addChunkTypeToParents(chunkType,
+          chunkType.getSymbolicChunkType().getParents());
       added = true;
       return chunkType;
     }
@@ -450,9 +447,8 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
       {
         chunkType.encode();
 
-        if (Logger.hasLoggers(getModel()))
-          Logger.log(getModel(), Logger.Stream.DECLARATIVE, "Encoded "
-              + chunkType);
+        if (Logger.hasLoggers(getModel())) Logger.log(getModel(),
+            Logger.Stream.DECLARATIVE, "Encoded " + chunkType);
         fireChunkTypeAdded(chunkType);
       }
     }
@@ -464,8 +460,8 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
     for (IChunkType parent : parents)
     {
       parent.getSymbolicChunkType().addChild(chunkType);
-      addChunkTypeToParents(chunkType, parent.getSymbolicChunkType()
-          .getParents());
+      addChunkTypeToParents(chunkType,
+          parent.getSymbolicChunkType().getParents());
     }
   }
 
@@ -478,7 +474,8 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
       ChunkTypeRequest pattern, final Comparator<IChunk> sorter,
       IChunkFilter filter)
   {
-    TextBuilder logMessage = null;
+    IMessageBuilder logMessage = null;
+    boolean recycle = false;
 
     SortedSet<IChunk> candidates = _searchSystem.findExact(pattern, sorter,
         filter);
@@ -488,18 +485,21 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
 
     // just incase a message builder wasn't created
     if (logMessage == null && Logger.hasLoggers(getModel()))
-      logMessage = new TextBuilder();
+    {
+      logMessage = MessageBuilderFactory.newInstance();
+      recycle = true;
+    }
 
-    if (LOGGER.isDebugEnabled())
-      LOGGER.debug("find exact matches (" + pattern + ") evaluating "
-          + candidates.size() + " candidates");
+    if (LOGGER.isDebugEnabled()) LOGGER.debug("find exact matches (" + pattern
+        + ") evaluating " + candidates.size() + " candidates");
 
-    if (Logger.hasLoggers(getModel()))
-      logMessage.insert(0,
-          String.format("Evaluating exact matches : %s \n", candidates));
+    if (Logger.hasLoggers(getModel())) logMessage
+        .prepend(String.format("Evaluating exact matches : %s \n", candidates));
 
     if (Logger.hasLoggers(getModel()))
       Logger.log(getModel(), Logger.Stream.DECLARATIVE, logMessage.toString());
+
+    if (recycle) MessageBuilderFactory.recycle(logMessage);
 
     // clean up
     // if (candidates instanceof FastSet) FastSet.recycle((FastSet) candidates);
@@ -519,20 +519,26 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
     SortedSet<IChunk> candidates = _searchSystem.findFuzzy(pattern, sorter,
         filter);
 
-    TextBuilder logMessage = null;
+    boolean recycle = false;
+    IMessageBuilder logMessage = null;
 
     if (filter instanceof ILoggedChunkFilter)
       logMessage = ((ILoggedChunkFilter) filter).getMessageBuilder();
     else
-      logMessage = new TextBuilder();
+    {
+      recycle = true;
+      logMessage = MessageBuilderFactory.newInstance();
+    }
 
     if (Logger.hasLoggers(getModel()))
     {
-      logMessage.insert(0,
+      logMessage.prepend(
           String.format("Evaluating partial matches : %s \n", candidates));
 
       Logger.log(getModel(), Logger.Stream.DECLARATIVE, logMessage.toString());
     }
+
+    if (recycle) MessageBuilderFactory.recycle(logMessage);
 
     return candidates;
   }
@@ -695,7 +701,8 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
     }
     else if (SYMBOLIC_CHUNK_FACTORY_PARAM.equalsIgnoreCase(key))
     {
-      ISymbolicChunkFactory factory = (ISymbolicChunkFactory) instantiate(value);
+      ISymbolicChunkFactory factory = (ISymbolicChunkFactory) instantiate(
+          value);
       if (factory == null)
       {
         if (LOGGER.isWarnEnabled())
@@ -706,7 +713,8 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
     }
     else if (SUBSYMBOLIC_CHUNK_FACTORY_PARAM.equalsIgnoreCase(key))
     {
-      ISubsymbolicChunkFactory factory = (ISubsymbolicChunkFactory) instantiate(value);
+      ISubsymbolicChunkFactory factory = (ISubsymbolicChunkFactory) instantiate(
+          value);
       if (factory == null)
       {
         if (LOGGER.isWarnEnabled())
@@ -728,7 +736,8 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
     }
     else if (SYMBOLIC_CHUNK_TYPE_FACTORY_PARAM.equalsIgnoreCase(key))
     {
-      ISymbolicChunkTypeFactory factory = (ISymbolicChunkTypeFactory) instantiate(value);
+      ISymbolicChunkTypeFactory factory = (ISymbolicChunkTypeFactory) instantiate(
+          value);
       if (factory == null)
       {
         if (LOGGER.isWarnEnabled())
@@ -739,7 +748,8 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
     }
     else if (SUBSYMBOLIC_CHUNK_TYPE_FACTORY_PARAM.equalsIgnoreCase(key))
     {
-      ISubsymbolicChunkTypeFactory factory = (ISubsymbolicChunkTypeFactory) instantiate(value);
+      ISubsymbolicChunkTypeFactory factory = (ISubsymbolicChunkTypeFactory) instantiate(
+          value);
       if (factory == null)
       {
         if (LOGGER.isWarnEnabled())
@@ -783,7 +793,8 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
     }
     else if (CHUNK_TYPE_CONFIGURATOR_PARAM.equalsIgnoreCase(key))
     {
-      IChunkTypeConfigurator factory = (IChunkTypeConfigurator) instantiate(value);
+      IChunkTypeConfigurator factory = (IChunkTypeConfigurator) instantiate(
+          value);
       if (factory == null)
       {
         if (LOGGER.isWarnEnabled())
@@ -793,10 +804,9 @@ public class DefaultDeclarativeModule extends AbstractDeclarativeModule
       setChunkTypeConfigurator(factory);
     }
 
-    else if (LOGGER.isWarnEnabled())
-      LOGGER.warn(String.format(
-          "%s doesn't recognize %s. Available parameters : %s", getClass()
-              .getSimpleName(), key, getSetableParameters()));
+    else if (LOGGER.isWarnEnabled()) LOGGER.warn(
+        String.format("%s doesn't recognize %s. Available parameters : %s",
+            getClass().getSimpleName(), key, getSetableParameters()));
   }
 
   private Object instantiate(String className)

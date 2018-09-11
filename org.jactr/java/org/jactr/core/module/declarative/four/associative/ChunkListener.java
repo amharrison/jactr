@@ -13,7 +13,7 @@
  */
 package org.jactr.core.module.declarative.four.associative;
 
-import javolution.util.FastList;
+import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,6 +26,7 @@ import org.jactr.core.chunk.link.IAssociativeLink;
 import org.jactr.core.module.declarative.associative.IAssociativeLinkContainer;
 import org.jactr.core.module.declarative.basic.chunk.IChunkFactory;
 import org.jactr.core.module.declarative.basic.chunk.ISubsymbolicChunkFactory;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 
 /**
  * Chunk listener that handles associative links. This does three things. 1) it
@@ -134,7 +135,7 @@ public class ChunkListener extends ChunkListenerAdaptor
     master.getAdapter(IAssociativeLinkContainer.class);
     copy.getAdapter(IAssociativeLinkContainer.class);
 
-    FastList.newInstance();
+
 
     // link between copy-master
     Link4 link = (Link4) getAssociativeLink(copy, master, false);
@@ -215,7 +216,7 @@ public class ChunkListener extends ChunkListenerAdaptor
         .getAdapter(IAssociativeLinkContainer.class);
     master.getAdapter(IAssociativeLinkContainer.class);
 
-    FastList<IAssociativeLink> links = FastList.newInstance();
+    Collection<IAssociativeLink> links = FastCollectionFactory.newInstance();
     if (processInboundLinks)
       cCont.getInboundLinks(links);
     else
@@ -351,7 +352,7 @@ public class ChunkListener extends ChunkListenerAdaptor
       // otherSSC.removeLink(oldLink);
     }
 
-    FastList.recycle(links);
+    FastCollectionFactory.recycle(links);
   }
 
   /**
@@ -367,7 +368,7 @@ public class ChunkListener extends ChunkListenerAdaptor
   static public IAssociativeLink getAssociativeLink(IChunk containingChunk,
       IChunk referenceChunk, boolean getOutbound)
   {
-    FastList<IAssociativeLink> links = FastList.newInstance();
+    Collection<IAssociativeLink> links = FastCollectionFactory.newInstance();
     try
     {
       IAssociativeLinkContainer alc = containingChunk
@@ -382,7 +383,7 @@ public class ChunkListener extends ChunkListenerAdaptor
     }
     finally
     {
-      FastList.recycle(links);
+      FastCollectionFactory.recycle(links);
     }
   }
 

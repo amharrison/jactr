@@ -13,6 +13,7 @@
  */
 package org.jactr.core.model.six;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -29,8 +30,7 @@ import org.jactr.core.module.procedural.IProceduralModule;
 import org.jactr.core.production.IInstantiation;
 import org.jactr.core.queue.TimedEventQueue;
 import org.jactr.core.runtime.ACTRRuntime;
-
-import javolution.util.FastList;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 
 /**
  * default cycle control for the model
@@ -43,7 +43,7 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
    * logger definition
    */
   static private final Log     LOGGER                            = LogFactory
-                                                                     .getLog(DefaultCycleProcessor6.class);
+      .getLog(DefaultCycleProcessor6.class);
 
   private double               _nextPossibleProductionFiringTime = 0;
 
@@ -57,13 +57,13 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
 
   public DefaultCycleProcessor6()
   {
-    _executeAfter = FastList.newInstance();
-    _executeBefore = FastList.newInstance();
+    _executeAfter = new ArrayList<>();
+    _executeBefore = new ArrayList<>();
   }
 
   private void execute(Collection<Runnable> source)
   {
-    FastList<Runnable> container = FastList.newInstance();
+    Collection<Runnable> container = FastCollectionFactory.newInstance();
     synchronized (source)
     {
       container.addAll(source);
@@ -80,7 +80,7 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
         LOGGER.error("Failed to execute " + runner, e);
       }
 
-    FastList.recycle(container);
+    FastCollectionFactory.recycle(container);
   }
 
   @Override
@@ -107,8 +107,8 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
     double now = ACTRRuntime.getRuntime().getClock(basicModel).getTime();
 
     basicModel.setCycle(basicModel.getCycle() + 1);
-    basicModel.dispatch(new ModelEvent(basicModel,
-        ModelEvent.Type.CYCLE_STARTED));
+    basicModel
+        .dispatch(new ModelEvent(basicModel, ModelEvent.Type.CYCLE_STARTED));
     double nextWaitTime = Double.NEGATIVE_INFINITY;
 
     _isExecuting = true;
@@ -119,12 +119,9 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
       nextWaitTime = calculateNextWaitTime(now, productionFiringTime,
           basicModel, eventsHaveFired);
 
-      if (nextWaitTime <= now)
-        LOGGER
-            .error(String
-                .format(
-                    "WARNING: Time discrepancy detected. Next cycle time : %.10f(next) <= %.10f(current). Should be >",
-                    nextWaitTime, now));
+      if (nextWaitTime <= now) LOGGER.error(String.format(
+          "WARNING: Time discrepancy detected. Next cycle time : %.10f(next) <= %.10f(current). Should be >",
+          nextWaitTime, now));
 
       if (LOGGER.isDebugEnabled())
         LOGGER.debug("nextWaitTime : " + nextWaitTime);
@@ -148,8 +145,8 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
       /*
        * always fire the cycle stopped event
        */
-      basicModel.dispatch(new ModelEvent(basicModel,
-          ModelEvent.Type.CYCLE_STOPPED));
+      basicModel
+          .dispatch(new ModelEvent(basicModel, ModelEvent.Type.CYCLE_STOPPED));
 
       execute(_executeAfter);
     }
@@ -194,43 +191,43 @@ public class DefaultCycleProcessor6 implements ICycleProcessor
         || Double.isNaN(productionFiringTime))
       if (queue.isEmpty() && !eventsHaveFired)
       {
-        if (!model.isPersistentExecutionEnabled())
-        {
-          /*
-           * nothing to do, no production fired, and we aren't required to stay
-           * running. lets empty the goal buffer to permit empty productions (w/
-           * no goal) to fire. if the goal buffer is already empty, signal quit
-           */
-          IActivationBuffer goalBuffer = model
-              .getActivationBuffer(IActivationBuffer.GOAL);
-          if (goalBuffer != null && goalBuffer.getSourceChunk() != null)
-            goalBuffer.clear();
-          else
-            return Double.NaN; // signal quit
-  }
-}
-/*
- * we only skip cycles if no events have fired. If events have fired, then
- * productions might be able to fire..
- */
-else if (model.isCycleSkippingEnabled())
-{
-  if (eventsHaveFired)
-    nextWaitTime = Math.min(nextEventFiringTime, nextProductionFiringTime);
-  else
-  {
-    nextWaitTime = nextEventFiringTime;
-    nextProductionFiringTime = nextEventFiringTime;
-  }
+      if (!model.isPersistentExecutionEnabled())
+      {
+      /*
+       * nothing to do, no production fired, and we aren't required to stay
+       * running. lets empty the goal buffer to permit empty productions (w/ no
+       * goal) to fire. if the goal buffer is already empty, signal quit
+       */
+      IActivationBuffer goalBuffer = model
+          .getActivationBuffer(IActivationBuffer.GOAL);
+      if (goalBuffer != null && goalBuffer.getSourceChunk() != null)
+      goalBuffer.clear();
+      else
+      return Double.NaN; // signal quit
+      }
+      }
+      /*
+       * we only skip cycles if no events have fired. If events have fired, then
+       * productions might be able to fire..
+       */
+      else if (model.isCycleSkippingEnabled())
+      {
+      if (eventsHaveFired)
+      nextWaitTime = Math.min(nextEventFiringTime, nextProductionFiringTime);
+      else
+      {
+      nextWaitTime = nextEventFiringTime;
+      nextProductionFiringTime = nextEventFiringTime;
+      }
 
-  /*
-   * increment the cycles
-   */
-  long cycleDelta = (long) ((nextWaitTime - now) / model.getProceduralModule()
-      .getDefaultProductionFiringTime());
-  cycleDelta--;
-  model.setCycle(model.getCycle() + cycleDelta);
-}
+      /*
+       * increment the cycles
+       */
+      long cycleDelta = (long) ((nextWaitTime - now)
+          / model.getProceduralModule().getDefaultProductionFiringTime());
+      cycleDelta--;
+      model.setCycle(model.getCycle() + cycleDelta);
+      }
 
     /*
      * if the two are absurdly close, just take the larger of the two. this
@@ -241,31 +238,24 @@ else if (model.isCycleSkippingEnabled())
      * display since the time display is rounded to the millisecond, we're
      * missing that these are just ever so slightly different
      */
-    if (nextEventFiringTime != nextProductionFiringTime
-        && Math.abs(nextProductionFiringTime - nextEventFiringTime) < TEMPORAL_TOLERANCE)
+    if (nextEventFiringTime != nextProductionFiringTime && Math.abs(
+        nextProductionFiringTime - nextEventFiringTime) < TEMPORAL_TOLERANCE)
     {
       nextWaitTime = Math.max(nextProductionFiringTime, nextEventFiringTime);
-      if (LOGGER.isDebugEnabled())
-        LOGGER
-            .warn(String
-                .format(
-                    "Dangerously close timing : nextProd (%.5f) and nextEvent (%.5f) are insanely close, using larger (%.5f)",
-                    nextProductionFiringTime, nextEventFiringTime, nextWaitTime));
+      if (LOGGER.isDebugEnabled()) LOGGER.warn(String.format(
+          "Dangerously close timing : nextProd (%.5f) and nextEvent (%.5f) are insanely close, using larger (%.5f)",
+          nextProductionFiringTime, nextEventFiringTime, nextWaitTime));
     }
 
     if (nextWaitTime <= now)
     {
-      double newWaitTime = Math
-          .nextAfter(now + 0.001,
+      double newWaitTime = Math.nextAfter(now + 0.001,
           Double.POSITIVE_INFINITY);
 
-      if (LOGGER.isWarnEnabled())
-        LOGGER
-            .warn(String
-                .format(
-                    "nextWaitTime (%.5f) is less than or equal to the time (%.5f), incrementing to (%.5f). eventsFired=%s nextEvent=%.2f productionFiringTime=%.2f",
-                    nextWaitTime, now, newWaitTime, eventsHaveFired,
-                    queue.getNextEndTime(), productionFiringTime));
+      if (LOGGER.isWarnEnabled()) LOGGER.warn(String.format(
+          "nextWaitTime (%.5f) is less than or equal to the time (%.5f), incrementing to (%.5f). eventsFired=%s nextEvent=%.2f productionFiringTime=%.2f",
+          nextWaitTime, now, newWaitTime, eventsHaveFired,
+          queue.getNextEndTime(), productionFiringTime));
 
       nextWaitTime = newWaitTime;
     }
@@ -298,12 +288,9 @@ else if (model.isCycleSkippingEnabled())
      */
     if (_nextPossibleProductionFiringTime - currentTime > TEMPORAL_TOLERANCE)
     {
-      if (LOGGER.isDebugEnabled())
-        LOGGER
-            .debug(String
-                .format(
-                    "nextPossibleFiringTime (%.4f) is greater than current time (%.4f), no production may fire yet.",
-                    _nextPossibleProductionFiringTime, currentTime));
+      if (LOGGER.isDebugEnabled()) LOGGER.debug(String.format(
+          "nextPossibleFiringTime (%.4f) is greater than current time (%.4f), no production may fire yet.",
+          _nextPossibleProductionFiringTime, currentTime));
       return Double.NEGATIVE_INFINITY;
     }
 
@@ -356,9 +343,8 @@ else if (model.isCycleSkippingEnabled())
             e.getCause());
       }
     else
-      _nextPossibleProductionFiringTime = BasicClock
-          .constrainPrecision(currentTime
-              + procMod.getDefaultProductionFiringTime());
+      _nextPossibleProductionFiringTime = BasicClock.constrainPrecision(
+          currentTime + procMod.getDefaultProductionFiringTime());
 
     return firingDuration;
   }

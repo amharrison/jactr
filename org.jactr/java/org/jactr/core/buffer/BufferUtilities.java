@@ -1,12 +1,11 @@
 package org.jactr.core.buffer;
 
+import java.util.ArrayList;
 /*
  * default logging
  */
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -133,7 +132,7 @@ public class BufferUtilities
   static public Collection<IActivationBuffer> getContainingBuffers(
       IChunk chunk, boolean isStrict)
   {
-    FastList<IActivationBuffer> container = FastList.newInstance();
+    Collection<IActivationBuffer> container = new ArrayList<>();
     getContainingBuffers(chunk, isStrict, container);
     return container;
   }

@@ -7,15 +7,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import javolution.util.FastList;
-import javolution.util.FastSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,6 +31,9 @@ import org.commonreality.object.delta.FullObjectDelta;
 import org.commonreality.object.delta.IObjectDelta;
 import org.commonreality.object.identifier.ISensoryIdentifier;
 import org.commonreality.object.manager.event.IObjectEvent;
+import org.eclipse.collections.impl.list.mutable.FastList;
+import org.jactr.core.utils.collections.FastListFactory;
+import org.jactr.core.utils.collections.FastSetFactory;
 
 /**
  * abstract class used to manage specific efferent commands.Extending this class
@@ -99,7 +100,7 @@ public abstract class EfferentCommandManager<C extends IEfferentCommand>
 
       public void objectsAdded(IObjectEvent<IEfferentCommand, ?> addEvent)
       {
-        FastList<IEfferentCommand> valid = FastList.newInstance();
+        List<IEfferentCommand> valid = FastListFactory.newInstance();
         try
         {
           _lock.readLock().lock();
@@ -120,13 +121,13 @@ public abstract class EfferentCommandManager<C extends IEfferentCommand>
         for (IEfferentCommand command : valid)
           update((C) command);
 
-        FastList.recycle(valid);
+        FastListFactory.recycle(valid);
       }
 
       public void objectsRemoved(IObjectEvent<IEfferentCommand, ?> removeEvent)
       {
-        FastList<C> valid = FastList.newInstance();
-        FastSet<C> abortions = FastSet.newInstance();
+        List<C> valid = FastListFactory.newInstance();
+        Set<C> abortions = FastSetFactory.newInstance();
         try
         {
           _lock.readLock().lock();
@@ -188,13 +189,13 @@ public abstract class EfferentCommandManager<C extends IEfferentCommand>
           _lock.writeLock().unlock();
         }
 
-        FastSet.recycle(abortions);
-        FastList.recycle(valid);
+        FastSetFactory.recycle(abortions);
+        FastListFactory.recycle(valid);
       }
 
       public void objectsUpdated(IObjectEvent<IEfferentCommand, ?> updateEvent)
       {
-        FastList<IEfferentCommand> valid = FastList.newInstance();
+        List<IEfferentCommand> valid = FastListFactory.newInstance();
 
         try
         {
@@ -223,7 +224,7 @@ public abstract class EfferentCommandManager<C extends IEfferentCommand>
         for (IEfferentCommand command : valid)
           update((C) command);
 
-        FastList.recycle(valid);
+        FastListFactory.recycle(valid);
       }
 
     };
@@ -317,7 +318,7 @@ public abstract class EfferentCommandManager<C extends IEfferentCommand>
    */
   public void clear()
   {
-    FastSet<C> commands = FastSet.newInstance();
+    Set<C> commands = FastSetFactory.newInstance();
     try
     {
       _lock.writeLock().lock();
@@ -356,7 +357,7 @@ public abstract class EfferentCommandManager<C extends IEfferentCommand>
     }
     finally
     {
-      FastSet.recycle(commands);
+      FastSetFactory.recycle(commands);
 
       _lock.writeLock().unlock();
     }

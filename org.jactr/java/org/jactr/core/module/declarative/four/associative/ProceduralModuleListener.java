@@ -13,11 +13,10 @@
  */
 package org.jactr.core.module.declarative.four.associative;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
-import javolution.util.FastList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,6 +31,7 @@ import org.jactr.core.production.IInstantiation;
 import org.jactr.core.production.condition.IBufferCondition;
 import org.jactr.core.production.condition.ICondition;
 import org.jactr.core.slot.ISlot;
+import org.jactr.core.utils.collections.FastCollectionFactory;
 
 /**
  * we use a proceduralmodule listener to track the chunks that are accessed in
@@ -114,7 +114,7 @@ public class ProceduralModuleListener extends ProceduralModuleListenerAdaptor
 
   public void updateStatistics(SortedMap<String, IChunk> matchedChunks)
   {
-    FastList<ISlot> slots = FastList.newInstance();
+    Collection<ISlot> slots = FastCollectionFactory.newInstance();
     for (Map.Entry<String, IChunk> matchedEntry : matchedChunks.entrySet())
     {
       IChunk matchedChunk = matchedEntry.getValue();
@@ -178,7 +178,7 @@ public class ProceduralModuleListener extends ProceduralModuleListenerAdaptor
 
     }
 
-    FastList.recycle(slots);
+    FastCollectionFactory.recycle(slots);
   }
 
 }

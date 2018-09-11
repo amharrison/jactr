@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -30,10 +31,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import javolution.util.FastList;
-import javolution.util.FastSet;
-import javolution.util.FastTable;
 
 import org.apache.commons.collections.collection.CompositeCollection;
 import org.apache.commons.collections.set.CompositeSet;
@@ -62,6 +59,8 @@ import org.jactr.core.slot.ISlot;
 import org.jactr.core.utils.collections.ChunkNameComparator;
 import org.jactr.core.utils.collections.CompositeCollectionFactory;
 import org.jactr.core.utils.collections.CompositeSetFactory;
+import org.jactr.core.utils.collections.FastCollectionFactory;
+import org.jactr.core.utils.collections.FastListFactory;
 import org.jactr.core.utils.collections.SkipListSetFactory;
 
 /**
@@ -250,14 +249,15 @@ public class DefaultSearchSystem implements ISearchSystem
      * will not work yet since this old version of fastset might not work
      * multithreaded
      */
-    final FastSet<IChunk> candidates = new FastSet<IChunk>();
+    final Set<IChunk> candidates = new HashSet<IChunk>();
     final IChunkType chunkType = pattern.getChunkType();
     if (chunkType != null)
       candidates.addAll(chunkType.getSymbolicChunkType().getChunks());
 
     ExecutorService pool = ExecutorServices.getExecutor(ExecutorServices.POOL);
 
-    FastList<Future<Collection<IChunk>>> results = FastList.newInstance();
+    Collection<Future<Collection<IChunk>>> results = FastCollectionFactory
+        .newInstance();
 
     for (ISlot slot : pattern.getConditionalAndLogicalSlots())
     {
@@ -307,7 +307,7 @@ public class DefaultSearchSystem implements ISearchSystem
         LOGGER.error("Failed to process parallel search results :", e);
       }
 
-    FastList.recycle(results);
+    FastCollectionFactory.recycle(results);
 
     if (LOGGER.isDebugEnabled())
       LOGGER.debug("First pass candidates for " + pattern + " chunks: "
@@ -631,21 +631,21 @@ public class DefaultSearchSystem implements ISearchSystem
     else if (slot instanceof ILogicalSlot)
     {
       ILogicalSlot logicalSlot = (ILogicalSlot) slot;
-      FastList<ISlot> children = FastList.newInstance();
+      List<ISlot> children = FastListFactory.newInstance();
       logicalSlot.getSlots(children);
 
       switch (logicalSlot.getOperator())
       {
         case ILogicalSlot.AND:
         case ILogicalSlot.OR:
-          size = guessSize(type, children.getFirst());
-          size += guessSize(type, children.getLast());
+          size = guessSize(type, children.get(0));
+          size += guessSize(type, children.get(children.size() - 1));
           break;
         case ILogicalSlot.NOT:
-          size = guessSize(type, children.getFirst());
+          size = guessSize(type, children.get(0));
       }
 
-      FastList.recycle(children);
+      FastListFactory.recycle(children);
     }
     else
       LOGGER.error("Ignoring slot " + slot
@@ -718,7 +718,7 @@ public class DefaultSearchSystem implements ISearchSystem
     else if (slot instanceof ILogicalSlot)
     {
       ILogicalSlot logicalSlot = (ILogicalSlot) slot;
-      FastList<ISlot> children = FastList.newInstance();
+      List<ISlot> children = FastListFactory.newInstance();
       logicalSlot.getSlots(children);
 
       switch (logicalSlot.getOperator())
@@ -730,12 +730,14 @@ public class DefaultSearchSystem implements ISearchSystem
 
           rtn = SkipListSetFactory.newInstance(_chunkNameComparator);
 
-          cleanAddAll(rtn, find(type, children.getFirst(), candidates));
-          cleanRetainAll(rtn, find(type, children.getLast(), candidates));
+          cleanAddAll(rtn, find(type, children.get(0), candidates));
+          cleanRetainAll(rtn,
+              find(type, children.get(children.size() - 1), candidates));
           break;
         case ILogicalSlot.OR:
-          cleanAddAll(rtn, find(type, children.getFirst(), candidates));
-          cleanAddAll(rtn, find(type, children.getLast(), candidates));
+          cleanAddAll(rtn, find(type, children.get(0), candidates));
+          cleanAddAll(rtn,
+              find(type, children.get(children.size() - 1), candidates));
           break;
         case ILogicalSlot.NOT:
           // don't use this guy, it won't work. if we use retainAll/removeAll
@@ -745,10 +747,10 @@ public class DefaultSearchSystem implements ISearchSystem
           rtn = SkipListSetFactory.newInstance(_chunkNameComparator);
 
           cleanAddAll(rtn, candidates);
-          cleanRemoveAll(rtn, find(type, children.getFirst(), candidates));
+          cleanRemoveAll(rtn, find(type, children.get(0), candidates));
       }
 
-      FastList.recycle(children);
+      FastListFactory.recycle(children);
       LOGGER.debug("Logical.AND search for " + logicalSlot + " returning "
           + rtn);
     }
@@ -903,12 +905,7 @@ public class DefaultSearchSystem implements ISearchSystem
       CompositeSetFactory.recycle((CompositeSet) collection);
     else if (collection instanceof ConcurrentSkipListSet)
       SkipListSetFactory.recycle((ConcurrentSkipListSet) collection);
-    else if (collection instanceof FastList)
-      FastList.recycle((FastList) collection);
-    else if (collection instanceof FastSet)
-      FastSet.recycle((FastSet) collection);
-    else if (collection instanceof FastTable)
-      FastTable.recycle((FastTable) collection);
+
   }
 
   @SuppressWarnings("unchecked")

@@ -18,8 +18,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import javolution.util.FastList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.chunk.IChunk;
@@ -113,8 +111,7 @@ public class ExactParallelSearchDelegate implements ISearchDelegate
      * for each slot, we execute a completable future
      */
     ExecutorService pool = ExecutorServices.getExecutor(ExecutorServices.POOL);
-    final FastList<CompletableFuture<Collection<IChunk>>> submittedSlotSearches = FastList
-        .newInstance();
+    final List<CompletableFuture<Collection<IChunk>>> submittedSlotSearches = new ArrayList<>();
 
     for (ISlot slot : prioritizedSlots)
     {
