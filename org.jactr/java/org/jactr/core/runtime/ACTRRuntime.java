@@ -22,6 +22,7 @@ import java.util.concurrent.Executor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.commonreality.time.IClock;
+import org.commonreality.time.impl.BasicClock;
 import org.jactr.core.event.ACTREventDispatcher;
 import org.jactr.core.model.IModel;
 import org.jactr.core.reality.connector.IConnector;
@@ -35,8 +36,8 @@ public class ACTRRuntime
   /**
    * logger definition
    */
-  static public final Log                                LOGGER = LogFactory
-                                                                    .getLog(ACTRRuntime.class);
+  static public final Log                                LOGGER      = LogFactory
+      .getLog(ACTRRuntime.class);
 
   static private ACTRRuntime                             _instance;
 
@@ -55,6 +56,8 @@ public class ACTRRuntime
   private IConnector                                     _commonRealityConnector;
 
   private File                                           _workingDirectory;
+
+  private IClock                                         _buildClock = new BasicClock();
 
   /**
    * return the ACTRRuntime singleton
@@ -148,12 +151,15 @@ public class ACTRRuntime
    * connected to common reality, otherwise it returns a default shared clock
    * 
    * @param model
-   *            if null will always return the default shared clock
+   *          if null will always return the default shared clock
    * @return
    */
   public IClock getClock(IModel model)
   {
-    return getConnector().getClock(model);
+    IConnector connector = getConnector();
+    if (connector != null) return connector.getClock(model);
+
+    return _buildClock;
   }
 
   /**
@@ -191,9 +197,8 @@ public class ACTRRuntime
        * the event may throw an exception if you are removing from a running
        * runtime
        */
-      if (hasListeners())
-        dispatch(new ACTRRuntimeEvent(model,
-            ACTRRuntimeEvent.Type.MODEL_REMOVED));
+      if (hasListeners()) dispatch(
+          new ACTRRuntimeEvent(model, ACTRRuntimeEvent.Type.MODEL_REMOVED));
 
       _allModels.remove(model);
     }

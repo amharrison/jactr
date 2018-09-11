@@ -93,12 +93,12 @@ public class BasicSymbolicProduction extends DefaultAdaptable implements
     for (IAction action : _actions)
       action.dispose();
     _actions.clear();
-    _actions = null;
+//    _actions = null;
 
     for (ICondition condition : _conditions)
       condition.dispose();
     _conditions.clear();
-    _conditions = null;
+//    _conditions = null;
     
     _production = null;
   }

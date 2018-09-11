@@ -58,9 +58,9 @@ public class PeckTranslator extends AbstractManualTranslator
 
     for (ISlot slot : request.getSlots())
       if (slot.getName().equalsIgnoreCase("r"))
-        distance = (Double) slot.getValue();
+        distance = ((Number) slot.getValue()).doubleValue();
       else if (slot.getName().equalsIgnoreCase("theta"))
-        theta = (Double) slot.getValue();
+        theta = ((Number) slot.getValue()).doubleValue();
 
     if (Double.isNaN(distance) || Double.isNaN(theta))
       throw new IllegalArgumentException(
