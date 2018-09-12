@@ -48,9 +48,10 @@ USA
    <requires>
       <import plugin="org.jactr"/>
       <import plugin="org.jactr.io"/>
-      <import plugin="org.commonreality"/>
+      <import plugin="org.commonreality.core"/>
       <import plugin="org.jactr.support"/>
-      <import plugin="org.jactr.tools" version="1.0.6" match="greaterOrEqual"/>
+      <import plugin="org.commonreality.api" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.jactr.tools"/>
       <import plugin="org.apache.log4j"/>
    </requires>
 

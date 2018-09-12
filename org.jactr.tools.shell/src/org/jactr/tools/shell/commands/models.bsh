@@ -1,7 +1,0 @@
-
-
-models()
-{
-  for(model : getModels().toArray())
-   print(model.getName());
-}

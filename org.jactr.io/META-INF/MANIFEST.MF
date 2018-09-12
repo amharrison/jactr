@@ -4,11 +4,7 @@ Bundle-Name: jACT-R IO
 Bundle-SymbolicName: org.jactr.io; singleton:=true
 Bundle-Version: 1.0.10.qualifier
 Bundle-Localization: plugin
-Export-Package: org.antlr,
- org.antlr.runtime,
- org.antlr.runtime.misc,
- org.antlr.runtime.tree,
- org.jactr.io,
+Export-Package: org.jactr.io,
  org.jactr.io.activator,
  org.jactr.io.antlr3.builder,
  org.jactr.io.antlr3.compiler,
@@ -39,12 +35,7 @@ Export-Package: org.antlr,
  org.jactr.io.writer
 Eclipse-BuddyPolicy: registered 
 Eclipse-RegisterBuddy: org.jactr, org.commonreality, org.apache.log4j
-Require-Bundle: org.jactr,
- org.jactr.support,
- org.eclipse.core.runtime,
- org.commonreality.core
-Bundle-ClassPath: .,
- lib/antlr-3.1.1.jar
+Bundle-ClassPath: .
 Bundle-Vendor: jactr.org
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.jactr.io.activator.Activator

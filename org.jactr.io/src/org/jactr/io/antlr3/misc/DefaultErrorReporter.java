@@ -5,8 +5,7 @@ package org.jactr.io.antlr3.misc;
  */
 import java.net.URI;
 import java.util.Collection;
-
-import javolution.util.FastList;
+import java.util.List;
 
 import org.antlr.runtime.CharStream;
 import org.antlr.runtime.CommonToken;
@@ -14,6 +13,7 @@ import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.Token;
 import org.antlr.runtime.TokenStream;
 import org.antlr.runtime.tree.TreeNodeStream;
+import org.jactr.core.utils.collections.FastListFactory;
 import org.jactr.io.misc.JACTRIOException;
 import org.jactr.io.misc.JACTRIOException.Level;
 import org.jactr.io.misc.JACTRIOException.Stage;
@@ -23,11 +23,11 @@ public class DefaultErrorReporter implements IErrorReporter
 
   private final URI                  _source;
 
-  private FastList<JACTRIOException> _error;
+  private List<JACTRIOException> _error;
 
-  private FastList<JACTRIOException> _warn;
+  private List<JACTRIOException> _warn;
 
-  private FastList<JACTRIOException> _info;
+  private List<JACTRIOException> _info;
 
   private final Stage                _defaultStage;
 
@@ -40,16 +40,16 @@ public class DefaultErrorReporter implements IErrorReporter
 
   private void acquireCollections()
   {
-    _error = FastList.newInstance();
-    _warn = FastList.newInstance();
-    _info = FastList.newInstance();
+    _error = FastListFactory.newInstance();
+    _warn = FastListFactory.newInstance();
+    _info = FastListFactory.newInstance();
   }
 
   private void releaseCollections()
   {
-    FastList.recycle(_error);
-    FastList.recycle(_warn);
-    FastList.recycle(_info);
+    FastListFactory.recycle(_error);
+    FastListFactory.recycle(_warn);
+    FastListFactory.recycle(_info);
   }
 
   public void reportError(Exception exception)
@@ -100,7 +100,7 @@ public class DefaultErrorReporter implements IErrorReporter
     else if(stage==Stage.PARSING)
     {
       /*
-       * token 
+       * token
        */
       Token token = exception.token;
       if(token instanceof CommonToken)
@@ -109,17 +109,14 @@ public class DefaultErrorReporter implements IErrorReporter
         end = ((CommonToken)token).getStopIndex();
       }
     }
-    else if(stage==Stage.COMPILING || stage==Stage.BUILDING)
+    else if(stage==Stage.COMPILING || stage==Stage.BUILDING) /*
+     * trees
+     */
+    if(exception.node instanceof DetailedCommonTree)
     {
-      /*
-       * trees
-       */
-      if(exception.node instanceof DetailedCommonTree)
-      {
-        DetailedCommonTree tree = (DetailedCommonTree) exception.node;
-        start = tree.getStartOffset();
-        end = tree.getStopOffset();
-      }
+      DetailedCommonTree tree = (DetailedCommonTree) exception.node;
+      start = tree.getStartOffset();
+      end = tree.getStopOffset();
     }
     
     JACTRIOException io = new JACTRIOException(level, stage, _source, message, line, start, end);

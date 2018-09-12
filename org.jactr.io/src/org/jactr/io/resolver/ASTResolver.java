@@ -25,8 +25,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Predicate;
 
-import javolution.util.FastList;
-
 import org.antlr.runtime.tree.CommonTree;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -380,7 +378,7 @@ public class ASTResolver
     ISymbolicChunkType sct = chunkType.getSymbolicChunkType();
     ISubsymbolicChunkType ssct = chunkType.getSubsymbolicChunkType();
 
-    Collection<String> parentChunkTypeNames = new FastList<String>();
+    Collection<String> parentChunkTypeNames = new ArrayList<String>();
 
     for (IChunkType parent : sct.getParents())
       parentChunkTypeNames.add(parent.getSymbolicChunkType().getName());

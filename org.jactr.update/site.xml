@@ -3,22 +3,19 @@
    <description name="jACT-R Main Update site" url="http://jactr.org/update/core/">
       jACT-R update site
    </description>
-   <feature url="features/org.jactr.core.feature_1.3.0.201304290911.jar" id="org.jactr.core.feature" version="1.3.0.201304290911">
+   <feature url="features/org.jactr.core.feature_1.3.0.201808291443.jar" id="org.jactr.core.feature" version="1.3.0.201808291443">
       <category name="org.jactr"/>
    </feature>
-   <feature url="features/org.commonreality.core.feature_1.3.0.201206271147.jar" id="org.commonreality.core.feature" version="1.3.0.201206271147">
+   <feature url="features/org.jactr.io.feature_1.3.0.201808291443.jar" id="org.jactr.io.feature" version="1.3.0.201808291443">
       <category name="org.jactr"/>
    </feature>
-   <feature url="features/org.jactr.io.feature_1.3.0.201304081340.jar" id="org.jactr.io.feature" version="1.3.0.201304081340">
+   <feature url="features/org.jactr.support.feature_1.3.0.201808291443.jar" id="org.jactr.support.feature" version="1.3.0.201808291443">
       <category name="org.jactr"/>
    </feature>
-   <feature url="features/org.jactr.support.feature_1.3.0.201206271147.jar" id="org.jactr.support.feature" version="1.3.0.201206271147">
-      <category name="org.jactr"/>
-   </feature>
-   <feature url="features/org.jactr.tools.feature_1.3.0.201301241955.jar" id="org.jactr.tools.feature" version="1.3.0.201301241955">
+   <feature url="features/org.jactr.tools.feature_1.3.0.201808291443.jar" id="org.jactr.tools.feature" version="1.3.0.201808291443">
       <category name="org.jactr.tools"/>
    </feature>
-   <feature url="features/org.jactr.modules.feature_1.3.0.201207121321.jar" id="org.jactr.modules.feature" version="1.3.0.201207121321">
+   <feature url="features/org.jactr.modules.feature_1.3.0.201808291443.jar" id="org.jactr.modules.feature" version="1.3.0.201808291443">
       <category name="org.jactr.modules"/>
    </feature>
    <category-def name="org.jactr" label="jACT-R : Core"/>

@@ -19,8 +19,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import javolution.util.FastList;
-
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeAdaptor;
 import org.antlr.runtime.tree.Tree;
@@ -730,7 +728,7 @@ public class ASTSupport
   
   static public Collection<String> getParents(CommonTree node)
   {
-	  Collection<String> parents = new FastList<String>();
+    Collection<String> parents = new ArrayList<String>();
 	  for(CommonTree parent : getAllDescendantsWithType(node, JACTRBuilder.PARENT))
 		  parents.add(parent.getText());
     //return getFirstDescendantWithType(node, JACTRBuilder.PARENT).getText();

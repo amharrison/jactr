@@ -53,9 +53,12 @@ USA
 
    <requires>
       <import plugin="org.jactr.support"/>
-      <import plugin="org.commonreality"/>
-      <import plugin="org.commonreality.mina"/>
-      <import plugin="org.mozilla.javascript"/>
+      <import plugin="org.commonreality.core"/>
+      <import plugin="org.commonreality.api" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.commonreality.time" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.commonreality.net" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.commonreality.modalities" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.commonreality.sensors"/>
    </requires>
 
    <plugin

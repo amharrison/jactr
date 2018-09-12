@@ -2,45 +2,70 @@
 
 package org.jactr.io.antlr3.builder;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
 import java.util.HashMap;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 
-import org.jactr.io.antlr3.misc.*;
+import org.antlr.runtime.BitSet;
+import org.antlr.runtime.EarlyExitException;
+import org.antlr.runtime.NoViableAltException;
+import org.antlr.runtime.RecognitionException;
+import org.antlr.runtime.RecognizerSharedState;
+import org.antlr.runtime.Token;
+import org.antlr.runtime.tree.CommonTree;
+import org.antlr.runtime.tree.TreeNodeStream;
+import org.antlr.runtime.tree.TreeParser;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jactr.core.buffer.IActivationBuffer;
+import org.jactr.core.chunk.IChunk;
+import org.jactr.core.chunktype.IChunkType;
+import org.jactr.core.extensions.IExtension;
 import org.jactr.core.model.IModel;
 import org.jactr.core.model.basic.BasicModel;
 import org.jactr.core.module.IModule;
-import org.jactr.core.module.declarative.*;
-import org.jactr.core.module.declarative.six.*;
-import org.jactr.core.module.procedural.*;
-import org.jactr.core.module.procedural.six.*;
-import org.jactr.core.extensions.IExtension;
-import org.jactr.core.chunk.IChunk;
-import org.jactr.core.chunktype.IChunkType;
+import org.jactr.core.module.declarative.IDeclarativeModule;
+import org.jactr.core.module.declarative.six.DefaultDeclarativeModule6;
+import org.jactr.core.module.procedural.IProceduralModule;
+import org.jactr.core.module.procedural.six.DefaultProceduralModule6;
+import org.jactr.core.production.CannotInstantiateException;
 import org.jactr.core.production.IProduction;
 import org.jactr.core.production.ISymbolicProduction;
-import org.jactr.core.buffer.IActivationBuffer;
-import org.jactr.core.slot.*;
-import org.jactr.core.production.action.*;
-import org.jactr.core.production.condition.*;
+import org.jactr.core.production.action.AddAction;
+import org.jactr.core.production.action.IAction;
+import org.jactr.core.production.action.ModifyAction;
+import org.jactr.core.production.action.OutputAction;
+import org.jactr.core.production.action.ProxyAction;
+import org.jactr.core.production.action.RemoveAction;
+import org.jactr.core.production.action.SetAction;
+import org.jactr.core.production.condition.ChunkCondition;
+import org.jactr.core.production.condition.ChunkTypeCondition;
+import org.jactr.core.production.condition.IBufferCondition;
+import org.jactr.core.production.condition.ICondition;
+import org.jactr.core.production.condition.ProxyCondition;
+import org.jactr.core.production.condition.QueryCondition;
+import org.jactr.core.production.condition.VariableCondition;
+import org.jactr.core.slot.DefaultConditionalSlot;
+import org.jactr.core.slot.DefaultLogicalSlot;
+import org.jactr.core.slot.DefaultVariableConditionalSlot;
+import org.jactr.core.slot.IConditionalSlot;
+import org.jactr.core.slot.ILogicalSlot;
+import org.jactr.core.slot.IMutableSlot;
+import org.jactr.core.slot.ISlot;
+import org.jactr.core.slot.ISlotContainer;
+import org.jactr.core.slot.IUniqueSlotContainer;
+import org.jactr.core.utils.collections.FastListFactory;
 import org.jactr.core.utils.parameter.IParameterized;
-import org.jactr.scripting.action.*;
-import org.jactr.scripting.condition.*;
-import org.jactr.scripting.*;
-import org.jactr.core.production.CannotInstantiateException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javolution.util.FastList;
-
-
-import org.antlr.runtime.*;
-import org.antlr.runtime.tree.*;import java.util.Stack;
-import java.util.List;
-import java.util.ArrayList;
+import org.jactr.io.antlr3.misc.ASTSupport;
+import org.jactr.scripting.IScriptableFactory;
+import org.jactr.scripting.ScriptingManager;
+import org.jactr.scripting.action.IActionScript;
+import org.jactr.scripting.action.ScriptableAction;
+import org.jactr.scripting.condition.IConditionScript;
+import org.jactr.scripting.condition.ScriptableCondition;
 
 public class JACTRBuilder extends TreeParser {
     public static final String[] tokenNames = new String[] {
@@ -225,12 +250,12 @@ public class JACTRBuilder extends TreeParser {
         {
           if (slot instanceof ILogicalSlot)
         {
-          FastList<ISlot> children = FastList.newInstance();
+          List<ISlot> children = FastListFactory.newInstance();
           ((ILogicalSlot)slot).getSlots(children);
           for(ISlot s : children)
            cleanupSlot(s);
            
-          FastList.recycle(children);
+          FastListFactory.recycle(children);
         }
         else
         {
