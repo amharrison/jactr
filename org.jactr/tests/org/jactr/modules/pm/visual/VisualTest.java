@@ -10,9 +10,12 @@ import java.util.Collections;
  */
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.commonreality.agents.IAgent;
 import org.commonreality.fluent.RealityConfigurator;
 import org.commonreality.net.message.credentials.ICredentials;
 import org.commonreality.net.message.credentials.PlainTextCredentials;
+import org.commonreality.reality.CommonReality;
+import org.commonreality.sensors.ISensor;
 import org.commonreality.sensors.xml2.XMLSensor;
 import org.jactr.core.buffer.IActivationBuffer;
 import org.jactr.core.chunk.IChunk;
@@ -36,8 +39,18 @@ public class VisualTest
   static private final transient Log LOGGER = LogFactory
       .getLog(VisualTest.class);
 
+  protected void interrogateCR()
+  {
+    for (IAgent agent : CommonReality.getAgents())
+      System.err.println(agent);
+    for (ISensor sensor : CommonReality.getSensors())
+      System.err.println(sensor);
+  }
+
   protected void commonReality(String modelName) throws Exception
   {
+    interrogateCR();
+
     try
     {
     ICredentials a = new PlainTextCredentials("xml", "123"),
@@ -47,17 +60,17 @@ public class VisualTest
         .credentials(b);
 
     // model agent, linked through modelName
-      config.agent(new ACTRAgent()).client().local().connectAt("999")
+      config.agent(new ACTRAgent()).client().local().connectAt("997")
         .configure().credentials(b)
         .configure(Collections.singletonMap("ACTRAgent.ModelName", modelName));
 
     // xml sensor to provide stimuli
-      config.sensor(new XMLSensor()).client().local().connectAt("999")
+      config.sensor(new XMLSensor()).client().local().connectAt("997")
         .configure().credentials(a).configure(Collections.singletonMap(
               "XMLSensor.DataURI",
               "org/jactr/modules/pm/visual/sensorData.xml"));
 
-      Runnable startup = (Runnable) config.server().local().connectAt("999")
+      Runnable startup = (Runnable) config.server().local().connectAt("997")
           .configure()
         .configure(Collections.emptyMap());
 
@@ -91,10 +104,20 @@ public class VisualTest
 
   protected void cleanup(ExecutionTester tester, IModel model, boolean dispose)
   {
+    RealityConfigurator.shutdownRunnable(true).run();
+
     model.uninstall(tester);
     if (dispose) model.dispose();
 
-    RealityConfigurator.shutdownRunnable().run();
+    try
+    {
+      Thread.sleep(1000);
+    }
+    catch (InterruptedException e)
+    {
+      // TODO Auto-generated catch block
+      LOGGER.error("VisualTest.cleanup threw InterruptedException : ", e);
+    }
   }
 
   protected ExecutionTester setup(IModel model, String[] validSequence,
@@ -133,7 +156,7 @@ public class VisualTest
   }
 
   @Test
-  public void testAuralAttending() throws Throwable
+  public void testVisualAttending() throws Throwable
   {
     IModel model = new FluentVisual().get();
 

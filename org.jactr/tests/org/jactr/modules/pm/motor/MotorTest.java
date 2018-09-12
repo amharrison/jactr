@@ -47,16 +47,16 @@ public class MotorTest
           .credentials(b);
 
       // model agent, linked through modelName
-      config.agent(new ACTRAgent()).client().local().connectAt("999")
+      config.agent(new ACTRAgent()).client().local().connectAt("998")
           .configure().credentials(b).configure(
               Collections.singletonMap("ACTRAgent.ModelName", modelName));
 
       // mock keyboard support
       config.sensor(new DefaultKeyboardSensor()).client().local()
-          .connectAt("999").configure().credentials(a)
+          .connectAt("998").configure().credentials(a)
           .configure(Collections.emptyMap());
 
-      Runnable startup = (Runnable) config.server().local().connectAt("999")
+      Runnable startup = (Runnable) config.server().local().connectAt("998")
           .configure().configure(Collections.emptyMap());
 
       startup.run();
@@ -89,10 +89,20 @@ public class MotorTest
 
   protected void cleanup(ExecutionTester tester, IModel model, boolean dispose)
   {
+    RealityConfigurator.shutdownRunnable(true).run();
+
     model.uninstall(tester);
     if (dispose) model.dispose();
 
-    RealityConfigurator.shutdownRunnable().run();
+    try
+    {
+      Thread.sleep(1000);
+    }
+    catch (InterruptedException e)
+    {
+      // TODO Auto-generated catch block
+      LOGGER.error("VisualTest.cleanup threw InterruptedException : ", e);
+    }
   }
 
   protected ExecutionTester setup(IModel model, String[] validSequence,
@@ -131,7 +141,7 @@ public class MotorTest
   }
 
   @Test
-  public void testAuralAttending() throws Throwable
+  public void testMotorSystem() throws Throwable
   {
     IModel model = new FluentMotor().get();
 
@@ -143,7 +153,7 @@ public class MotorTest
 
     String[] failures = { "movement-failed" };
 
-    ExecutionTester tester = setup(model, productionSequence, true);
+    ExecutionTester tester = setup(model, productionSequence, false);
 
     tester.setFailedProductions(Arrays.asList(failures));
 

@@ -47,16 +47,16 @@ public class AuralTest
         .credentials(b);
 
     // model agent, linked through modelName
-      config.agent(new ACTRAgent()).client().local().connectAt("999")
+      config.agent(new ACTRAgent()).client().local().connectAt("996")
         .configure().credentials(b)
         .configure(Collections.singletonMap("ACTRAgent.ModelName", modelName));
 
     // xml sensor to provide stimuli
-      config.sensor(new XMLSensor()).client().local().connectAt("999")
+      config.sensor(new XMLSensor()).client().local().connectAt("996")
         .configure().credentials(a).configure(Collections.singletonMap(
             "XMLSensor.DataURI", "org/jactr/modules/pm/aural/sensorData.xml"));
 
-      Runnable startup = (Runnable) config.server().local().connectAt("999")
+      Runnable startup = (Runnable) config.server().local().connectAt("996")
           .configure()
         .configure(Collections.emptyMap());
 
@@ -90,10 +90,20 @@ public class AuralTest
 
   protected void cleanup(ExecutionTester tester, IModel model, boolean dispose)
   {
+    RealityConfigurator.shutdownRunnable(true).run();
+
     model.uninstall(tester);
     if (dispose) model.dispose();
 
-    RealityConfigurator.shutdownRunnable().run();
+    try
+    {
+      Thread.sleep(1000);
+    }
+    catch (InterruptedException e)
+    {
+      // TODO Auto-generated catch block
+      LOGGER.error("VisualTest.cleanup threw InterruptedException : ", e);
+    }
   }
 
   protected ExecutionTester setup(IModel model, String[] validSequence,

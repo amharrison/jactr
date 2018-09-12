@@ -230,11 +230,10 @@ public class DefaultProceduralModule6 extends AbstractModule implements
       // _allProductionsByChunkType = null;
 
       _allProductionsByName.clear();
-      _allProductionsByName = null;
+      // _allProductionsByName = null;
 
       _eventDispatcher.clear();
-      _eventDispatcher = null;
-
+      // _eventDispatcher = null;
     }
     finally
     {

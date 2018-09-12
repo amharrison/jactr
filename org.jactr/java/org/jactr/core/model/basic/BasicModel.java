@@ -182,25 +182,25 @@ public class BasicModel extends DefaultAdaptable implements IModel
       _eventDispatcher.clear();
 
       _extensions.clear();
-      _extensions = null;
+      // _extensions = null;
 
       _modules.clear();
-      _modules = null;
+      // _modules = null;
 
       _buffers.clear();
-      _buffers = null;
+      // _buffers = null;
 
       _metaData.clear();
-      _metaData = null;
+      // _metaData = null;
 
       _parameterMap.clear();
-      _parameterMap = null;
+      // _parameterMap = null;
 
       _timedEventQueue.dispose();
-      _timedEventQueue = null;
+      // _timedEventQueue = null;
 
-      _declarativeModule = null;
-      _proceduralModule = null;
+      // _declarativeModule = null;
+      // _proceduralModule = null;
     }
     finally
     {

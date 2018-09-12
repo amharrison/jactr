@@ -37,7 +37,7 @@ public class VocalTest
   static private final transient Log LOGGER = LogFactory
       .getLog(VocalTest.class);
 
-  protected void commonReality(String modelName) throws Exception
+  protected Runnable commonReality(String modelName) throws Exception
   {
     try
     {
@@ -66,7 +66,11 @@ public class VocalTest
       Runnable startup = (Runnable) config.server().local().connectAt("999")
           .configure().configure(Collections.emptyMap());
 
-      startup.run();
+      /*
+       * we can ignore this startup since the controller will start everything
+       * for us. We just needed to configure everything
+       */
+      return startup;
     }
     catch (Exception e)
     {
@@ -78,7 +82,8 @@ public class VocalTest
 
   protected void run(IModel model) throws Exception
   {
-    commonReality(model.getName());
+
+    commonReality(model.getName()).run();
 
     ACTRRuntime runtime = ACTRRuntime.getRuntime();
     runtime.setController(new DefaultController());
@@ -96,10 +101,21 @@ public class VocalTest
 
   protected void cleanup(ExecutionTester tester, IModel model, boolean dispose)
   {
+    RealityConfigurator.shutdownRunnable(true).run();
+
     model.uninstall(tester);
+
     if (dispose) model.dispose();
 
-    RealityConfigurator.shutdownRunnable().run();
+    try
+    {
+      Thread.sleep(1000);
+    }
+    catch (InterruptedException e)
+    {
+      // TODO Auto-generated catch block
+      LOGGER.error("VisualTest.cleanup threw InterruptedException : ", e);
+    }
   }
 
   protected ExecutionTester setup(IModel model, String[] validSequence,
@@ -161,7 +177,6 @@ public class VocalTest
 
     for (Throwable thrown : tester.getExceptions())
       fail(thrown.getMessage());
-
   }
 
 }

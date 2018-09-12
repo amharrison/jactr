@@ -118,15 +118,15 @@ public class TimedEventQueue
   public void dispose()
   {
     _eventDispatcher.clear();
-    _eventDispatcher = null;
+    // _eventDispatcher = null;
 
     _priorityQueue.clear();
-    _priorityQueue = null;
+    // _priorityQueue = null;
 
     _intermediateEvents.clear();
-    _intermediateEvents = null;
+    // _intermediateEvents = null;
 
-    _model = null;
+    // _model = null;
   }
 
   public IModel getModel()

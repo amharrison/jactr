@@ -13,7 +13,6 @@ import org.jactr.core.reality.connector.IConnector;
 import org.jactr.core.reality.connector.LocalConnector;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.runtime.controller.IController;
-import org.jactr.embed.RuntimeBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -118,12 +117,12 @@ public class EmbedTest
     /**
      * null out.
      */
-    ACTRRuntime runtime = ACTRRuntime.getRuntime();
-    runtime.setApplicationData(null);
-    runtime.setOnStart(null);
-    runtime.setOnStop(null);
-    runtime.setController(null);
-    runtime.setConnector(null);
+//    ACTRRuntime runtime = ACTRRuntime.getRuntime();
+//    runtime.setApplicationData(null);
+//    runtime.setOnStart(null);
+//    runtime.setOnStop(null);
+//    runtime.setController(null);
+//    runtime.setConnector(null);
 
   }
 
@@ -164,13 +163,13 @@ public class EmbedTest
      * after this point builder cannot be reused
      */
 
-    controller.start();
+    controller.start().get();
 
     /*
      * to wait until the runtime actually starts: result.get();
      */
 
-    controller.waitForCompletion();
+    controller.waitForCompletion().get();
 
     /*
      * upon runtime termination, the connector will be closed and disposed of
