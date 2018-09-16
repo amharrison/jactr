@@ -1,0 +1,235 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<artifactId>org.jactr.osgi</artifactId>
+
+	<parent>
+		<groupId>org.jactr</groupId>
+		<artifactId>org.jactr.distro</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../org.jactr.distro/pom.xml</relativePath>
+	</parent>
+
+	<!-- <packaging>jar</packaging> -->
+	<packaging>eclipse-plugin</packaging>
+	<properties>
+		<tycho-version>1.2.0</tycho-version>
+	</properties>
+
+	<repositories>
+		<repository>
+			<id>photon</id>
+			<layout>p2</layout>
+			<url>http://download.eclipse.org/releases/photon</url>
+		</repository>
+	</repositories>
+
+	<build>
+		<sourceDirectory>src</sourceDirectory>
+		<plugins>
+			<!-- -->
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-maven-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<extensions>true</extensions>
+			</plugin>
+			<!-- -->
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-source-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<executions>
+					<execution>
+						<id>plugin-source</id>
+						<goals>
+							<goal>plugin-source</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<distinctSourceRoots>true</distinctSourceRoots>
+					<useDefaultManifest>true</useDefaultManifest>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>target-platform-configuration</artifactId>
+				<version>${tycho-version}</version>
+				<configuration>
+					<pomDependencies>consider</pomDependencies>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.7.0</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.0.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.1.1</version>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>org.jactr</groupId>
+									<artifactId>org.jactr.core</artifactId>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.jactr</groupId>
+									<artifactId>org.jactr.io</artifactId>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.jactr</groupId>
+									<artifactId>org.jactr.tools</artifactId>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.jactr</groupId>
+									<artifactId>org.jactr.tools.experiment</artifactId>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.jactr</groupId>
+									<artifactId>org.jactr.modules.threaded</artifactId>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.jactr</groupId>
+									<artifactId>org.jactr.modules.timing</artifactId>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.jactr</groupId>
+									<artifactId>org.jactr.modules.versioned</artifactId>
+								</artifactItem>
+							</artifactItems>
+							<outputDirectory>${project.build.directory}/../lib</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>true</overWriteSnapshots>
+							<overWrite>true</overWrite>
+						</configuration>
+					</execution>
+
+					<!-- for source generation we unpack the source, then zip it up as org.commonreality.osg_version/src.zip. 
+						Our manifest points to itself for its source bundle. Who knows if this will 
+						work. -->
+					<execution>
+						<id>unpack</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>unpack-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeGroupIds>org.jactr</includeGroupIds>
+							<classifier>sources</classifier>
+							<useSubDirectoryPerArtifact>true</useSubDirectoryPerArtifact>
+							<failOnMissingClassifierArtifact>false</failOnMissingClassifierArtifact>
+							<stripVersion>true</stripVersion>
+							<stripClassifier>true</stripClassifier>
+							<outputAbsoluteArtifactFilename>true</outputAbsoluteArtifactFilename>
+							<outputDirectory>${project.build.directory}/src/</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<move todir="${project.build.directory}/../lib"
+									verbose="true">
+									<fileset dir="${project.build.directory}/../lib/"
+										includes="**" />
+									<mapper type="regexp"
+										from="(.*)-\d+\.\d+\.\d-SNAPSHOT.jar$$" to="\1.jar" />
+								</move>
+
+								<copy todir="${project.build.directory}/../lib"
+									verbose="true">
+									<fileset dir="${project.build.directory}/src/"
+										includes="**" />
+									<mapper type="regexp" from="(.*)-sources-jar(.*)"
+										to="\1src\2" />
+									<!-- <mapper type="glob" from="*-sources-jar*" to="*src*"/> -->
+								</copy>
+
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>org.jactr</groupId>
+			<artifactId>org.jactr.core</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jactr</groupId>
+			<artifactId>org.jactr.io</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jactr</groupId>
+			<artifactId>org.jactr.tools</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jactr</groupId>
+			<artifactId>org.jactr.tools.experiment</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jactr</groupId>
+			<artifactId>org.jactr.modules.timing</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jactr</groupId>
+			<artifactId>org.jactr.modules.versioned</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jactr</groupId>
+			<artifactId>org.jactr.modules.threaded</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
+</project>

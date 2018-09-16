@@ -1,0 +1,154 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.jactr.osgi" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.jactr.osgi" id="modules" name="Model Modules"/>
+      </appInfo>
+      <documentation>
+         Describes a theoretical extension to jACT-R
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="module" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="module">
+      <annotation>
+         <documentation>
+            describes a class that implements org.jactr.core.module.IModule. This enables eclipse to access and display model extensions within the environment
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="description"/>
+         </sequence>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn="org.jactr.core.module.IModule"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="defaultEnabled" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="requiresCommonReality" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="weight" type="string" use="default" value="10">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="requiresClasspath" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  Whether or not this module requires access to your project classpath. Enabled by adding this bundle under the  Eclipse-RegisterBuddy header in Manifest.mf
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="description" type="string">
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         [Enter the first release in which this extension point appears.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         &lt;extension point=&quot;org.jactr.modules&quot;&gt;
+      &lt;module
+            class=&quot;org.jactr.core.module.declarative.six.DefaultDeclarativeModule6&quot;
+            defaultEnabled=&quot;true&quot; name=&quot;Declarative v6&quot; requiresCommonReality=&quot;false&quot;&gt;
+         &lt;description&gt;Provides chunk, chunk-type, and searching capabilities as well as A module of this type is REQUIRED.&lt;/description&gt;   
+      &lt;/module&gt;
+ &lt;/extension&gt;
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="apiInfo"/>
+      </appInfo>
+      <documentation>
+         [Enter API information here.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="implementation"/>
+      </appInfo>
+      <documentation>
+         [Enter information about supplied implementation of this extension point.]
+      </documentation>
+   </annotation>
+
+
+</schema>

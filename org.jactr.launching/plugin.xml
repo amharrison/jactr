@@ -5,9 +5,6 @@
   <!--
    source location
    -->
-   <extension point="org.eclipse.pde.core.source">
-     <location path="."/>
-   </extension>
    
    <extension
          id="application"

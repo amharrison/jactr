@@ -31,7 +31,6 @@ import org.commonreality.netty.transport.NIOTransportProvider;
 import org.jactr.core.logging.Logger;
 import org.jactr.core.logging.impl.DefaultModelLogger;
 import org.jactr.core.model.IModel;
-import org.jactr.core.models.FluentSemantic;
 import org.jactr.core.production.IProduction;
 import org.jactr.core.reality.connector.LocalConnector;
 import org.jactr.core.runtime.ACTRRuntime;

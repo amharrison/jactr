@@ -1,0 +1,824 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+   
+
+   <extension-point id="extensions" name="jACT-R Extensions" schema="schema/org.jactr.extension.exsd"/>
+   <extension-point id="modules" name="jACT-R Modules" schema="schema/org.jactr.module.exsd"/>
+   <extension-point id="instruments" name="jACT-R Instruments" schema="schema/instrument.exsd"/>
+   <extension-point id="scriptfactory" name="Script Factory" schema="schema/scriptfactory.exsd"/>
+   <extension-point id="unitcompilers" name="ACT-R unit compiler" schema="schema/unitcompiler.exsd"/>
+  <extension-point id="astparticipants" name="ACT-R ASTParticipants" schema="schema/astparticipant.exsd"/>
+  <extension-point id="syntaxproviders" name="Parser and code generator for new syntaxes" schema="schema/syntaxproviders.exsd"/>
+  <extension-point id="readerwriters" name="Model Reader and Writer" schema="schema/readerwriter.exsd"/>
+  <extension-point id="translators" name="translator" schema="schema/translators.exsd"/>
+   <extension-point id="iterative" name="Iterative Listeners" schema="schema/iterative.exsd"/>
+   <extension-point id="tracers" name="Runtime Tracers" schema="schema/tracer.exsd"/>
+   <extension-point id="sinks" name="Trace data sinks" schema="schema/sinks.exsd"/>
+   
+   <extension point="org.jactr.osgi.modules" name="jACT-R Core Modules" id="org.jactr.core.modules">
+      <module
+            class="org.jactr.core.module.declarative.six.DefaultDeclarativeModule6"
+            defaultEnabled="true"
+            name="Declarative Module v6"
+            requiresCommonReality="false"
+            weight="0">
+         <description>Provides chunk, chunk-type, and searching capabilities as well.A module of this type is REQUIRED.</description>   
+      </module>
+      <module
+            class="org.jactr.core.module.procedural.six.DefaultProceduralModule6"
+            defaultEnabled="true"
+            name="Procedural Module v6"
+            requiresCommonReality="false"
+            weight="0">
+         <description>
+            Provides productions, conflict resolutions and firing. A module of this type is REQUIRED.
+         </description>
+      </module>
+      <module
+            class="org.jactr.core.module.goal.six.DefaultGoalModule6"
+            defaultEnabled="true"
+            name="Goal Module v6"
+            requiresCommonReality="false"
+            weight="10">
+         <description>
+            Provides basic goal support. Specifically: goal buffer. A module of this type is REQUIRED.
+         </description>
+      </module>
+      <module
+            class="org.jactr.core.module.retrieval.six.DefaultRetrievalModule6"
+            defaultEnabled="true"
+            name="Retrieval Module v6"
+            requiresCommonReality="false"
+            weight="10">
+         <description>
+            Provides retrieval operations and buffer. A module of this type is REQUIRED.
+         </description>
+      </module>
+      
+      <module
+            class="org.jactr.modules.pm.visual.six.DefaultVisualModule6"
+            defaultEnabled="false"
+            name="Visual Module v6"
+            requiresCommonReality="true"
+            weight="15">
+        <description>Provides basic vision support. When running, you must provide a common reality connection. NOTE: This module has only been partially tested. Attending, encoding, and finsts do work. Tracking is unknown.
+        </description>
+      </module>
+      
+      <module
+            class="org.jactr.modules.pm.motor.six.DefaultMotorModule6"
+            defaultEnabled="false"
+            name="Motor Module v6"
+            requiresCommonReality="true"
+            weight="15">
+        <description>Provides basic motor support. When running, you must provide a common reality connection. 
+
+NOTE: This module has only been partially tested. punch, peck, peck-recoil are available. More commands in the future. Note also that this is motor not manual
+        </description>
+      </module>
+      
+      <module
+            class="org.jactr.modules.pm.aural.six.DefaultAuralModule6"
+            defaultEnabled="false"
+            name="Aural Module v6"
+            requiresCommonReality="true"
+            weight="15">
+        <description>Provides basic aural support. When running, you must provide a common reality connection. 
+
+NOTE: This module is untested.
+        </description>
+      </module>
+      
+      <module
+            class="org.jactr.modules.pm.vocal.six.DefaultVocalModule6"
+            defaultEnabled="false"
+            name="Vocal Module v6"
+            requiresCommonReality="true"
+            weight="15">
+        <description>Provides basic vocal support. When running, you must provide a common reality connection. 
+
+NOTE: This module is untested.
+        </description>
+      </module>
+      
+      <module
+            class="org.jactr.core.module.declarative.four.learning.DefaultDeclarativeLearningModule4"
+            defaultEnabled="false"
+            name="Declarative Learning Module v4"
+            requiresCommonReality="false"
+            weight="5">
+         <description>
+            Provides the capability to learn declarative parameters. Specifically: the learning of associative strengths and activation values. Specific equations are configurable in the parameters so that various equations can be evaluated more easily.
+NOTE: This module works but its values have not been verified.
+         </description>
+      </module>
+      
+      <module
+            class="org.jactr.core.module.procedural.six.learning.DefaultProceduralLearningModule6"
+            defaultEnabled="true"
+            name="Procedural Learning Module v6"
+            requiresCommonReality="false"
+            weight="5">
+         <description>
+            Provides for the learning of production parameters: specifically P and C. Equations can be changed via parameters allowing for easier evaluation of different equations.
+NOTE: This module has NOT been tested.
+         </description>
+      </module>
+      <module
+            class="org.jactr.core.module.random.six.DefaultRandomModule"
+            defaultEnabled="true"
+            name="Random Module v6"
+            requiresCommonReality="false"
+            weight="0">
+         <description>
+            Provides a centralized source for random numbers
+         </description>
+      </module>
+      <module
+            class="org.jactr.core.module.imaginal.six.DefaultImaginalModule6"
+            defaultEnabled="true"
+            name="Imaginal Module v6"
+            requiresCommonReality="false">
+         <description>
+            Provides imaginal module
+         </description>
+      </module>
+      <module
+            class="org.jactr.core.module.declarative.six.learning.DefaultDeclarativeLearningModule6"
+            defaultEnabled="true"
+            name="Declarative Learning Module v6"
+            requiresCommonReality="false"
+            weight="5">
+         <description>
+            Provides the capability to learn declarative parameters. Specifically: the learning of associative strengths and activation values. Specific equations are configurable in the parameters so that various equations can be evaluated more easily.
+
+NOTE: This module works but its values have not been verified.
+         </description>
+      </module>
+   </extension>
+
+   
+   <extension point="org.jactr.osgi.instruments" name="jACT-R Core Instruments" id="org.jactr.core.instruments">
+      <instrument
+            class="org.jactr.core.logging.impl.DefaultModelLogger"
+            hidden="false"
+            name="Default Model Logger">
+         <description>
+            This instrument intercepts the log messages and sends them to a named file. After the file reaches a maximum size, it is backed up. The number of backups can be configured. By default, this instrument attaches to all the models in the runtime. When configured programmatically, you can specify which log streams go to which file. In the IDE, all the streams go to a single file.
+
+MaxFileSize: in megabytes before the file is backed up and a new file created.
+NumberOfBackups: the number of backups to retain.
+all: what filename to send all the streams to.
+
+http://jactr.org/node/142
+         </description>
+         <parameter name="attach" value="all"></parameter>         
+         <parameter name="all" value="out"></parameter>
+         <parameter name="MaxFileSize" value="1"></parameter>
+         <parameter name="NumberOfBackups" value="2"></parameter>
+      </instrument>
+   </extension>
+   <extension
+         point="org.jactr.osgi.scriptfactory">
+      <factory
+            class="org.jactr.scripting.javascript.JavascriptFactory">
+      </factory>
+   </extension>
+   <extension
+        point="org.jactr.osgi.astparticipants">
+     <astparticipant
+           contributingClass="org.jactr.core.module.declarative.six.DefaultDeclarativeModule6"
+           content="org/jactr/io/include/declarative.jactr"
+           class="org.jactr.io.participant.modules.DeclarativeModuleParticipant"/>
+     <astparticipant
+           contributingClass="org.jactr.core.module.procedural.six.DefaultProceduralModule6"
+           content="org/jactr/io/include/procedural.jactr"
+           class="org.jactr.io.participant.modules.ProceduralModuleParticipant"/>
+     <astparticipant
+           contributingClass="org.jactr.core.module.goal.six.DefaultGoalModule6"
+           content="org/jactr/io/include/goal.jactr"
+           class="org.jactr.io.participant.modules.GoalModuleParticipant"/>
+     <astparticipant
+           contributingClass="org.jactr.core.module.retrieval.six.DefaultRetrievalModule6"
+           content="org/jactr/io/include/retrieval.jactr"
+           class="org.jactr.io.participant.modules.RetrievalModuleParticipant"/>
+     <astparticipant
+           contributingClass="org.jactr.modules.pm.visual.six.DefaultVisualModule6"
+           content="org/jactr/modules/pm/visual/visual.jactr"
+           class="org.jactr.io.participant.modules.VisualModuleParticipant"/>
+     <astparticipant
+           contributingClass="org.jactr.modules.pm.motor.six.DefaultMotorModule6"
+           content="org/jactr/modules/pm/motor/motor.jactr"
+           class="org.jactr.io.participant.modules.MotorModuleParticipant"/>
+     <astparticipant
+           contributingClass="org.jactr.modules.pm.aural.six.DefaultAuralModule6"
+           content="org/jactr/modules/pm/aural/aural.jactr"
+           class="org.jactr.io.participant.modules.AuralModuleParticipant"/>  
+     <astparticipant
+           contributingClass="org.jactr.modules.pm.vocal.six.DefaultVocalModule6"
+           content="org/jactr/modules/pm/vocal/vocal.jactr"
+           class="org.jactr.io.participant.modules.VocalModuleParticipant"/>             
+     <astparticipant
+           contributingClass="org.jactr.core.module.imaginal.six.DefaultImaginalModule6"
+           content="org/jactr/io/include/imaginal.jactr"
+           class="org.jactr.io.participant.modules.ImaginalModuleParticipant"/>
+     <astparticipant
+           contributingClass="org.jactr.core.module.random.six.DefaultRandomModule"
+           class="org.jactr.io.participant.modules.RandomModuleParticipant">
+     </astparticipant>
+     <astparticipant
+           contributingClass="org.jactr.core.module.declarative.four.learning.DefaultDeclarativeLearningModule4"
+           class="org.jactr.io.participant.modules.DeclarativeLearningModuleParticipant4">
+     </astparticipant>
+     <astparticipant
+           contributingClass="org.jactr.core.module.declarative.six.learning.DefaultDeclarativeLearningModule6"
+           class="org.jactr.io.participant.modules.DeclarativeLearningModuleParticipant6">
+     </astparticipant>
+     <astparticipant
+           contributingClass="org.jactr.core.module.procedural.six.learning.DefaultProceduralLearningModule6"
+           class="org.jactr.io.participant.modules.ProceduralLearningModuleParticipant">
+     </astparticipant>
+  </extension>
+  <extension
+        point="org.jactr.osgi.syntaxproviders">
+     <syntaxprovider
+           extension="jactr"
+           generator="org.jactr.io.antlr3.generator.xml.JACTRCodeGenerator"
+           parser="org.jactr.io.antlr3.parser.xml.JACTRModelParser">
+           <description>Provides jactr core file format</description>
+     </syntaxprovider>      
+     <syntaxprovider
+           extension="lisp"
+           generator="org.jactr.io.antlr3.generator.lisp.LispCodeGenerator"
+           parser="org.jactr.io.antlr3.parser.lisp.LispModelParser">
+           <description>Provides rudimentary Lisp support</description>
+     </syntaxprovider>      
+  </extension>
+  <extension
+        point="org.jactr.osgi.readerwriters">
+     <readerwriter
+           extension="bin"
+           writer="org.jactr.io.antlr3.writer.bin.BinaryModelWriter">
+     </readerwriter>
+     <readerwriter
+           extension="jactr"
+           writer="org.jactr.io.antlr3.writer.xml.JACTRModelWriter">
+     </readerwriter>
+     <readerwriter
+           extension="lisp"
+           writer="org.jactr.io.antlr3.writer.lisp.LispModelWriter">
+     </readerwriter>
+  </extension>
+  <extension
+        point="org.jactr.osgi.instruments">
+     <instrument
+           class="org.jactr.io.logging.XMLLogger"
+           hidden="false"
+           name="XML Model Logger">
+        <parameter
+              name="attach"
+              value="all">
+        </parameter>
+        <description>
+           An alternative logger that routes messages to an xml file. This logger attaches to all the models in the runtime.
+FileName : the xml file to save to.
+
+http://jactr.org/node/143
+        </description>
+        <parameter
+              name="FileName"
+              value="log.xml">
+        </parameter>
+     </instrument>
+  </extension>
+  <extension
+        point="org.jactr.osgi.translators">
+     <buffer
+           destination="motor"
+           message="Generalized motor buffer supercedes manual"
+           source="manual">
+     </buffer>
+     <chunktype
+           destination="attend-to"
+           message="move-attention is automatically transformed to the more general attend-to"
+           report="info"
+           source="move-attention">
+        <rename-slot
+              destination="where"
+              report="info"
+              source="screen-pos">
+        </rename-slot>
+     </chunktype>
+  </extension>
+  <extension
+        point="org.jactr.osgi.unitcompilers">
+     <unitcompiler
+           class="org.jactr.io.compiler.impl.StrictHarvestingUnitCompiler"
+           defaultEnabled="true"
+           name="Strict Harvesting"
+           report="warn">
+           <description>Issues warnings when strict harvesting is applicable</description>
+     </unitcompiler>
+  </extension>
+  
+  <extension point="org.jactr.osgi.modules" name="Threaded Cognition Modules" id="org.jactr.core.modules">
+     
+      <module
+            class="org.jactr.modules.threaded.procedural.DefaultThreadedProceduralModule6"
+            defaultEnabled="false"
+            name="Threaded Procedural v6"
+            requiresCommonReality="false"
+            weight="10">
+         <description>
+            Handles conflict resolution in threaded cases.
+         </description>
+      </module>
+      <module
+            class="org.jactr.modules.threaded.goal.DefaultThreadedGoalModule6"
+            defaultEnabled="false"
+            name="Threaded Goal v6"
+            requiresCommonReality="false"
+            weight="10">
+         <description>
+            Provides a capacity goal buffer permitting multiple goals to be executed in parallel
+         </description>
+      </module>
+   </extension>
+   <extension
+        point="org.jactr.osgi.astparticipants">
+     <astparticipant
+           contributingClass="org.jactr.modules.threaded.procedural.DefaultThreadedProceduralModule6"
+           content="org/jactr/io/include/procedural.jactr"
+           class="org.jactr.modules.threaded.io.ThreadedProceduralModuleParticipant"/>
+     <astparticipant
+           contributingClass="org.jactr.modules.threaded.goal.DefaultThreadedGoalModule6"
+           content="org/jactr/io/include/goal.jactr"
+           class="org.jactr.modules.threaded.io.ThreadedGoalModuleParticipant"/>
+   </extension>     
+   
+    <extension
+         point="org.jactr.osgi.modules">
+      <module
+            class="org.jactr.modules.temporal.six.DefaultTemporalModule6"
+            defaultEnabled="false"
+            name="Temporal v6"
+            requiresCommonReality="false"
+            weight="10">
+         <description>
+            Implementation of Taatgen, Van Rijn and Anderson (2005) temporal module.
+         </description>
+      </module>
+   </extension>
+   <extension
+         point="org.jactr.osgi.astparticipants">
+      <astparticipant
+            content="org/jactr/modules/temporal/temporal.jactr"
+            contributingClass="org.jactr.modules.temporal.six.DefaultTemporalModule6"
+            class="org.jactr.modules.temporal.io.TemporalModuleParticipant">
+      </astparticipant>
+   </extension>    
+   
+   <extension
+         point="org.jactr.osgi.instruments" name="jACT-R Tools Instruments" id="org.jactr.tools.instruments">
+       
+      <instrument
+            class="org.jactr.tools.io.ModelRecorder"
+            hidden="false"
+            name="Model Recorder">
+         <parameter
+               name="attach"
+               value="all"/>
+         <description>Instrument that records the runtime&apos;s models at the start and stop of execution. The format of the saved models can be configured to use any of the installed syntaxes (e.g., jactr, lisp). The location of the files can also be specified.
+
+SaveAsExtension : extension of the code generator to use. (default: jactr)
+StartDirectory : local working directory path to save the start state models to. Will be created if missing. (default: start/)
+StopDirectory : local working directory path to save the stop models to. Will be created if missing. (default: stop/)
+TrimModuleContributions : Don&apos;t include the injected content from modules and extensions in the generated code. (default: true).
+ASTGenerator: default or class name of Function&lt;IModel, CommonTree&gt; to generate a filtered ast for writing to file.
+
+http://jactr.org/node/144</description>
+         <parameter
+               name="SaveAsExtension"
+               value="jactr"/>
+         <parameter
+               name="StartDirectory"
+               value="start"/>
+         <parameter
+               name="StopDirectory"
+               value="stop"/>
+          <parameter
+               name="TrimModuleContributions"
+               value="true"/>
+          <parameter
+                name="ASTGenerator"
+                value="default">
+          </parameter>     
+      </instrument>
+      <instrument
+            class="org.jactr.tools.tracer.RuntimeTracer"
+            hidden="true"
+            name="RuntimeTracer">
+         <description>Do not enable! This instrument is automatically managed by the IDE. Routes jACT-R events to on a specificly named Executor thread to the ITraceSinkClass.
+         </description>
+         <parameter
+               name="attach"
+               value="all"/>
+         <parameter
+               name="ITraceSinkClass"
+               value="org.jactr.tools.tracer.sinks.FileSink"/>
+         <parameter
+               name="ListenerClasses"
+               value=""/>
+         <parameter
+               name="Executor"
+               value="Background"/>
+      </instrument>
+      <instrument
+            class="org.jactr.tools.track.chunktype.ChunkTypeProductionTracker"
+            hidden="false"
+            name="ChunkTypeProductionTracker">
+         <parameter name="attach" value="all"/>
+		  <parameter name="FileName" value="production.txt"/>
+		  <parameter name="MaxFileSize" value="1"/>
+          <parameter name="NumberOfBackups" value="2"/>
+         <description>track the names, firing times and durations for production sequences based on goal chunks
+         </description>      
+      </instrument>
+      <instrument
+            class="org.jactr.tools.change.ChangeTracker"
+            hidden="false"
+            name="Change Tracker">
+         <parameter
+               name="Format"
+               value="jactr">
+         </parameter>
+         <parameter
+               name="TrackActiveChunks"
+               value="true">
+         </parameter>
+         <parameter
+               name="TrackInstantiations"
+               value="true">
+         </parameter>
+         <parameter
+               name="TrackNewChunks"
+               value="true">
+         </parameter>
+         <description>
+            Tracks chunk changes and selected production instantiations during the run, outputing the formatted code (lisp or jactr) to the model logger under the stream name "CHANGE"
+         </description>
+      </instrument>
+      <instrument
+            class="org.jactr.tools.utility.UtilityTracker"
+            hidden="false"
+            name="Utility Tracker">
+         <parameter
+               name="FileName"
+               value="utility.txt">
+         </parameter>
+         <parameter
+               name="TrackInstantiations"
+               value="true">
+         </parameter>
+         <parameter
+               name="Pattern"
+               value=".*">
+         </parameter>
+         <description>
+            Tracks the expected utility of productions that match the provided patterns (regex) and outputs them to the file. If TrackInstantiations is true, it will log the instantiation&apos;s utility (subject to noise) rather than the production&apos;s.
+
+Note: can only be attached to one model
+         </description>
+         <parameter name="attach" value="" />
+      </instrument>
+      <instrument
+            class="org.jactr.tools.stat.StatTracker"
+            hidden="false"
+            name="Stat Tracker">
+         <parameter
+               name="SampleFrequency"
+               value="100">
+         </parameter>
+         <description>
+            Samples number of chunks, types, productions, simulated run time and real run time every SampleFrequency cycles. Outputs to modelname-stats.txt.
+         </description>
+      </instrument>
+      <instrument
+            class="org.jactr.tools.async.sync.SynchronizationManager"
+            hidden="true"
+            name="IDE Synchronization Manager">
+         <parameter
+               name="SynchronizationDelayInMS"
+               value="10000">
+         </parameter>
+         <description>
+            Enable this instrument if your model is running too fast for the IDE to keep up with (this can result in full processor use and memory over committment). The synchronizer will periodically create synchronization points which will block the model until the IDE has processed the backlog of messages.
+         </description>
+      </instrument>
+      <instrument
+            class="org.jactr.tools.throttle.RuntimeThrottler"
+            hidden="false"
+            name="Runtime Throttler">
+         <parameter
+               name="MinimumCycleRealTime"
+               value="0.05">
+         </parameter>
+         <description>
+            Slows model execution down so that each model cycle runs at for least MinimumCycleRealTime. This is useful if your model is running too face to trace or is maxing out your processor.
+         </description>
+      </instrument>
+      <instrument
+            class="org.jactr.tools.loop.ProductionLoopDetector"
+            hidden="false"
+            name="Simple Loop Detector">
+         <parameter
+               name="TerminateOnDetection"
+               value="false">
+         </parameter>
+         <description>
+            Detects simple production loops (same production, firing within defaultAction time of each other). Logs it, and can optionally terminate the model.
+         </description>
+      </instrument>
+      <instrument
+            class="org.jactr.tools.deadlock.DeadLockDetector"
+            hidden="false"
+            name="Deadlock Detector"
+            requiresClasspath="false">
+         <description>
+            Provides a simple mechanism for (eventually) detecting deadlock in models. This is accomplished by periodically checking the model to see if time has advanced. If it hasn&apos;t for long enough, deadlock is assumed and the system will dump heap and thread traces.
+This is provided here for diagnosing individual model runs. Iterative runs automatically install this tool.
+         </description>
+      </instrument>
+   </extension>
+   <extension
+         point="org.jactr.osgi.iterative">
+      <listener
+            class="org.jactr.entry.iterative.impl.GeneralPerformanceListener"
+            hidden="false"
+            name="PerformanceListener">
+         <description>
+            Tracks general performance of the model runs. Takes the following parameters: FileName=where to output the data, RowHeader=text to display at the head of the data, BlockSize=how many iterations to collapse data over.
+         </description>
+         <parameter
+               name="FileName"
+               value="perf.txt">
+         </parameter>
+         <parameter
+               name="BlockSize"
+               value="1">
+         </parameter>
+         <parameter
+               name="RowHeader" value=" ">
+         </parameter>
+      </listener>
+      <listener
+            class="org.jactr.entry.iterative.impl.RealTimeFactorPerformanceListener"
+            hidden="false"
+            name="RealTimePerformanceListener">
+         <description>
+            Performance listener that tracks the real time scalor over a series of runs. FileName=where to output the data, RowHeader=text to display at the head of the data, BlockSize=how many iterations to collapse data over.
+         </description>
+         <parameter
+               name="FileName"
+               value="rt-perf.txt">
+         </parameter>
+         <parameter
+               name="BlockSize"
+               value="1">
+         </parameter>
+         <parameter
+               name="RowHeader" value=" ">
+         </parameter>
+      </listener>
+      <listener
+            class="org.jactr.tools.itr.ModuleParameterModifier"
+            hidden="false"
+            name="ModuleParameterModifier">
+         <description>
+            Enables the setting of a specific module&apos;s parameter in a structured manner. Parameter=name of the parameter, Values= comma separated list of parameter values, ModuleClass= full class name of the module that is to be modified.
+         </description>
+         <parameter
+               name="ParameterName"
+               value="parameterName">
+         </parameter>
+         <parameter
+               name="ParameterValues"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ModuleClass"
+               value="moduleClassName">
+         </parameter>
+      </listener>
+      
+       <listener
+             class="org.jactr.tools.itr.ModelParameterModifier"
+             hidden="false"
+             name="ModelParameterModifier">
+         <description>
+            Enables the setting of a specific model&apos;s parameter in a structured manner. Parameter=name of the parameter, Values= comma separated list of parameter values.
+         </description>
+         <parameter
+               name="ParameterName"
+               value="parameterName">
+         </parameter>
+         <parameter
+               name="ParameterValues"
+               value=" ">
+         </parameter>
+      </listener>
+     
+      <listener
+            class="org.jactr.tools.itr.ZipDataListener"
+            hidden="false"
+            name="Zip Archive Listener">
+         <description>
+            Archives and deletes files generated during the bulk run. FileName=zip file to save to. IgnoreRootDir determines if the root directory contents are archived as well, not just the individual runs.
+         </description>
+         <parameter
+               name="IgnoreRootDir"
+               value="true">
+         </parameter>
+      </listener>
+      
+      <listener
+            class="org.jactr.tools.itr.BufferParameterModifier"
+            hidden="false"
+            name="Buffer Parameter Modifier">
+         <description>
+            Modify buffer parameter before building the model
+         </description>
+         <parameter
+               name="BufferName"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ParameterName"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ParameterValues"
+               value=" ">
+         </parameter>
+      </listener>
+      <listener
+            class="org.jactr.tools.itr.ChunkParameterModifier"
+            hidden="false"
+            name="Chunk Parameter Modifier">
+         <description>
+            Modify chunk parameter before building the model. If the chunk's name matches the provided regular expression, that chunk will be modified
+         </description>
+         <parameter
+               name="ChunkPattern"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ParameterName"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ParameterValues"
+               value=" ">
+         </parameter>
+      </listener>
+      <listener
+            class="org.jactr.tools.itr.ProductionParameterModifier"
+            hidden="false"
+            name="Production Parameter Modifier">
+         <description>
+            Modify production parameter before building the model. If the production's name matches the provided regular expression, that production will be modified
+         </description>
+         <parameter
+               name="ProductionPattern"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ParameterName"
+               value=" ">
+         </parameter>
+         <parameter
+               name="ParameterValues"
+               value=" ">
+         </parameter>
+      </listener>
+      <listener
+            class="org.jactr.tools.itr.ortho.OrthogonalSliceAnalyzer"
+            hidden="false"
+            name="Orthogonal Parameter Space Search">
+         <description>
+            Permits the running of orthogonal parameter space explorations. Tool takes a single parameter: a url to a configuration file.
+         </description>
+         <parameter
+               name="ConfigURL"
+               value=" ">
+         </parameter>
+      </listener>
+   </extension>
+   <extension
+         point="org.jactr.osgi.tracers">
+         <tracer
+            class="org.jactr.tools.grapher.core.GeneralProbe"
+            name="GeneralProbe">
+         <parameter
+               name="ConfigFile"
+               value="org/jactr/eclipse/grapher/core/parser/sample.xml" />
+         <description>
+            Allows you to record arbirtary parameters from productions and chunks and send them back over the network or to a file.
+         </description>
+      </tracer>  
+      <tracer
+            class="org.jactr.tools.tracer.listeners.BufferTracer"
+            name="Buffer Tracer">
+         <description>
+            Routes some buffer events (add, remove, clear) in addition to limited chunk events (to track chunk changes in the buffer)
+         </description>
+      </tracer>
+      <tracer
+            class="org.jactr.tools.tracer.listeners.ProceduralModuleTracer"
+            name="Procedural Tracer">
+         <description>
+            Provides conflict resolution information to the IDE
+         </description>
+      </tracer>
+      <tracer
+            class="org.jactr.tools.tracer.listeners.VisualModuleTracer"
+            name="Visicon Tracer">
+         <description>
+            Routes limited visual events to track feature maps, attending and searching
+         </description>
+      </tracer>
+      <tracer
+            class="org.jactr.tools.tracer.listeners.LogTracer"
+            name="Log Tracer">
+         <description>
+            Routes all logging messages
+         </description>
+      </tracer>
+      <tracer
+            class="org.jactr.tools.marker.tracer.MarkerTraceListener"
+            name="Marker Tracer">
+         <description>
+            Listens for marker events and passes them through. The trace will also detect the presence of a file based sink and will write marker indices for random access.
+         </description>
+      </tracer>
+   </extension>
+   <extension
+         point="org.jactr.osgi.extensions">
+      <model-extension
+            class="org.jactr.modules.pm.visual.scene.SceneChangeExtension"
+            name="Scene Change Detector">
+         <description>
+            Detects changes to the visual scene and makes that information available as a visual buffer query
+         </description>
+      </model-extension>
+      <model-extension
+            class="org.jactr.extensions.cached.procedural.CachedProductionSystem"
+            name="Cached Procedural System">
+         <description>
+            Provides a drop-in replacement of the production instantiator that can cache failed instantiations until the production can possibly be instantiated. This can cut conflict resolution processing time by an order of magnitude (depending on the production patterns used). EnableCaching=true turns it on. ValidateInstantiations=true will verify the correctness of the cache (negating any performance improvements, but a useful test to ensure it's correctness).
+         </description>
+      </model-extension>
+      <model-extension
+            class="org.jactr.extensions.search.performance.DefaultSearchSystemOptimizer"
+            name="LocalSearchProfiler"
+            requiresClasspath="false">
+         <description>
+            description body text
+         </description>
+      </model-extension>
+   </extension>
+   <extension
+         point="org.jactr.osgi.astparticipants">
+      <astparticipant
+            contributingClass="org.jactr.modules.pm.visual.scene.SceneChangeExtension"
+            content="org/jactr/modules/pm/visual/scene/scene.jactr"
+            class="org.jactr.modules.pm.visual.scene.SceneChangeParticipant">
+      </astparticipant>
+   </extension>
+   <extension
+         point="org.jactr.osgi.modules">
+      <module
+            class="org.jactr.modules.general.GeneralBufferModule"
+            defaultEnabled="false"
+            name="GeneralBufferModule"
+            requiresCommonReality="false"
+            weight="10">
+         <description>
+            Provides basic named buffers to the model. The model file must provide buffer sections since AST injection cannot see parameters.
+         </description>
+      </module>
+   </extension>
+   <extension
+         point="org.jactr.osgi.sinks">
+      <sink
+            class="org.jactr.tools.tracer.sinks.trace.ArchivalSink"
+            name="Archive to Directory">
+      </sink>
+      <sink
+            class="org.jactr.tools.tracer.sinks.NetworkedSink"
+            name="Send to IDE">
+      </sink>
+   </extension>
+</plugin>

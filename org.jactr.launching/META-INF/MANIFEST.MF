@@ -7,15 +7,14 @@ Bundle-Activator: org.jactr.launching.Activator
 Bundle-Vendor: jactr.org
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime,
- org.jactr.tools,
- org.jactr.support,
- org.jactr.io,
- org.jactr,
- org.commonreality.core,
  org.eclipse.equinox.launcher,
  org.eclipse.equinox.app,
  org.eclipse.osgi.services,
- org.eclipse.osgi.util
+ org.eclipse.osgi.util,
+ org.jactr.osgi;bundle-version="0.0.1",
+ org.commonreality.osgi;bundle-version="0.0.1",
+ org.apache.commons.logging;bundle-version="1.1.1",
+ org.apache.commons.cli;bundle-version="1.2.0"
 Eclipse-BuddyPolicy: registered  
 Eclipse-RegisterBuddy: org.apache.log4j
 Bundle-ActivationPolicy: lazy

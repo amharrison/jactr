@@ -1,0 +1,119 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.jactr.osgi" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.jactr.osgi" id="astparticipants" name="ACT-R ASTParticipants"/>
+      </appInfo>
+      <documentation>
+         Describes the binding between a IModule or IExtension class and its IASTParticipant.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <element ref="astparticipant" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="astparticipant">
+      <complexType>
+         <attribute name="contributingClass" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The class name of the IModule or IExtension instance that this participant is to provide content for.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.jactr.core.utils.IInstallable"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="class" type="string">
+            <annotation>
+               <documentation>
+                  The class name of the implementation of IASTParticipant. This class must have a zero arg constructor. If none is provided, content must be specified and a BasicASTParticipant will be used.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn="org.jactr.io.participant.IASTParticipant"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="content" type="string">
+            <annotation>
+               <documentation>
+                  The location (in the classpath) of the content to be loaded by BasicASTParticipant. This can be provided in lieu of participantClass if you do not have your own implementation, or it can be provided in addition. You would do this while you are developing a module since the environment would not be able to instantiate your custom participant until the plugin were fully installed.
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         [Enter the first release in which this extension point appears.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         [Enter extension point usage example here.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="apiInfo"/>
+      </appInfo>
+      <documentation>
+         [Enter API information here.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="implementation"/>
+      </appInfo>
+      <documentation>
+         [Enter information about supplied implementation of this extension point.]
+      </documentation>
+   </annotation>
+
+
+</schema>

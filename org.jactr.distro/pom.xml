@@ -71,6 +71,8 @@
 			<version>9.1.0</version>
 		</dependency>
 	</dependencies>
+
+
 	<modules>
 		<module>../org.jactr</module>
 		<module>../org.jactr.io</module>
@@ -79,12 +81,21 @@
 		<module>../org.jactr.modules.versioned</module>
 		<module>../org.jactr.tools</module>
 		<module>../org.jactr.tools.experiment</module>
-		<module>../org.jactr.tools.masterslave</module>
-		
+
+
+
 	</modules>
-	
+
 	<build>
 		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.7.0</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
@@ -92,7 +103,7 @@
 				<executions>
 					<execution>
 						<id>attach-sources</id>
-						<phase>verify</phase>
+						<phase>package</phase>
 						<goals>
 							<goal>jar-no-fork</goal>
 						</goals>
@@ -104,8 +115,19 @@
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>3.0.1</version>
 				<configuration>
-				 <failOnError>false</failOnError>
+					<failOnError>false</failOnError>
 				</configuration>
+				<executions>
+					<execution>
+						<id>aggregate</id>
+						<goals>
+							<goal>aggregate</goal>
+						</goals>
+						<phase>package</phase>
+						<configuration>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

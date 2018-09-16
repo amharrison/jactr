@@ -1,0 +1,10 @@
+<actr>
+ <model name="Core">
+  <declarative-memory>
+
+  </declarative-memory>
+  
+  <procedural-memory>
+  </procedural-memory>
+ </model>
+</actr>

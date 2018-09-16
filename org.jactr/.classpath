@@ -6,13 +6,13 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry including="**/*.java" kind="src" output="target/classes" path="java">
+	<classpathentry kind="src" output="target/classes" path="java">
 		<attributes>
 			<attribute name="optional" value="true"/>
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry including="**/*.java" kind="src" output="target/test-classes" path="tests">
+	<classpathentry kind="src" output="target/test-classes" path="tests">
 		<attributes>
 			<attribute name="optional" value="true"/>
 			<attribute name="maven.pomderived" value="true"/>
