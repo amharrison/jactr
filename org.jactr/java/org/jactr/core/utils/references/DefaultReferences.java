@@ -13,9 +13,10 @@
  */
 package org.jactr.core.utils.references;
 
-import org.apache.commons.collections.primitives.ArrayDoubleList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.collections.api.list.primitive.MutableDoubleList;
+import org.eclipse.collections.impl.factory.primitive.DoubleLists;
 
 public class DefaultReferences implements IOptimizedReferences
 {
@@ -24,7 +25,7 @@ public class DefaultReferences implements IOptimizedReferences
    */
   static private final Log LOGGER = LogFactory.getLog(DefaultReferences.class);
 
-  private ArrayDoubleList  _arrayOfDoubles;
+  private MutableDoubleList _arrayOfDoubles;
 
   private int              _nextInsertionPoint;
 
@@ -45,7 +46,7 @@ public class DefaultReferences implements IOptimizedReferences
     setOptimizationLevel(optimization);
     // it optimizatilevel is massive, we don't actually want to create that
     // whole mess of storage unnecssairly
-    _arrayOfDoubles = new ArrayDoubleList(Math.min(getOptimizationLevel(), 10));
+    _arrayOfDoubles = DoubleLists.mutable.empty();
   }
 
   synchronized public void addReferenceTime(double time)
@@ -143,14 +144,20 @@ public class DefaultReferences implements IOptimizedReferences
    */
   synchronized public double[] getTimes(double[] container)
   {
-    if (container == null) container = new double[_arrayOfDoubles.size()];
-    return _arrayOfDoubles.toArray(container);
+    // empty or too small
+    if (container == null || container.length < _arrayOfDoubles.size())
+      return _arrayOfDoubles.toArray();
+
+    double[] tmp = _arrayOfDoubles.toArray();
+    System.arraycopy(tmp, 0, container, 0, tmp.length);
+
+    return container;
   }
 
   synchronized public void removeReferenceTime(double time)
   {
     _referenceCount--;
-    if (_arrayOfDoubles.removeElement(time)) _nextInsertionPoint--;
+    if (_arrayOfDoubles.remove(time)) _nextInsertionPoint--;
     if (_nextInsertionPoint < 0)
       _nextInsertionPoint = _arrayOfDoubles.size() - 1;
   }
