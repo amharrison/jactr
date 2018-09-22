@@ -6,13 +6,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry exported="true" kind="lib" path="lib/org.jactr.core.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/org.jactr.io.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/org.jactr.modules.threaded.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/org.jactr.modules.timing.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/org.jactr.modules.versioned.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/org.jactr.tools.experiment.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/org.jactr.tools.jar"/>
 	<classpathentry kind="src" path="src/"/>
+	<classpathentry kind="src" path="generated-src"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

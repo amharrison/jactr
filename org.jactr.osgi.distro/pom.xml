@@ -1,0 +1,84 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.jactr</groupId>
+	<artifactId>org.jactr.osgi.distro</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<properties>
+		<tycho-version>1.2.0</tycho-version>
+	</properties>
+
+	<repositories>
+		<repository>
+			<id>photon</id>
+			<layout>p2</layout>
+			<!-- should be photon but as of 9.13 photon's p2 site is borked -->
+			<url>http://download.eclipse.org/eclipse/updates/4.8</url>
+		</repository>
+		<repository>
+			<id>orbit</id>
+			<layout>p2</layout>
+			<url>http://download.eclipse.org/tools/orbit/downloads/drops/R20180606145124/repository</url>
+		</repository>		
+		<repository>
+			<id>milestones</id>
+			<layout>p2</layout>
+			<url>http://download.eclipse.org/eclipse/updates/milestones</url>
+		</repository>
+		<repository>
+			<id>collections</id>
+			<layout>p2</layout>
+			<url>http://download.eclipse.org/collections/9.2.0/repository</url>
+		</repository>
+		
+	</repositories>
+
+	<build>
+		<plugins>
+
+			<!-- -->
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-maven-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<extensions>true</extensions>
+			</plugin>
+			<!-- -->
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-source-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<executions>
+					<execution>
+						<id>plugin-source</id>
+						<goals>
+							<goal>plugin-source</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<distinctSourceRoots>true</distinctSourceRoots>
+					<useDefaultManifest>true</useDefaultManifest>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>target-platform-configuration</artifactId>
+				<version>${tycho-version}</version>
+				<configuration>
+					<pomDependencies>consider</pomDependencies>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<modules>
+		<module>../org.jactr.osgi</module>
+		<module>../org.jactr.launching</module>
+		<module>../org.jactr.osgi.feature</module>
+		<module>../org.jactr.update</module>
+	</modules>
+</project>

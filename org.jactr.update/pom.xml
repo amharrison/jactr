@@ -1,0 +1,41 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+ 
+  <artifactId>org.jactr.update</artifactId>
+  <parent>
+		<groupId>org.jactr</groupId>
+		<artifactId>org.jactr.osgi.distro</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../org.jactr.osgi.distro/pom.xml</relativePath>
+	</parent>
+
+	<packaging>eclipse-repository</packaging>
+
+	
+	
+	<build>
+		<plugins>
+<!-- 
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+					    <id>renameDeps</id>
+						<phase>assemble-repository</phase>
+						<configuration>
+							<tasks>
+								<move todir="${project.build.directory}/../repository"
+									verbose="true">
+									<fileset dir="${project.build.directory}/repository/"
+										includes="**" />
+								</move>
+							</tasks>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+ -->
+		</plugins>
+	</build>
+</project>

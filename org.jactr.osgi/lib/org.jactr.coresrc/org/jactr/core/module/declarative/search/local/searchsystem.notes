@@ -1,7 +1,0 @@
-Search system notes:
-
-next iteration of javolution will eliminate recycling of FastX collections. This means
-no more recycling. But the update will also support thread safe and non conccurent mods..
-so, we should be able to implement the same functionality while returning unmodifiable
-versions of collections.
-

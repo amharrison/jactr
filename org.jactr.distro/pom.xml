@@ -26,11 +26,6 @@
 			<version>3.2.2</version>
 		</dependency>
 		<dependency>
-			<groupId>commons-primitives</groupId>
-			<artifactId>commons-primitives</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
 			<version>2.6</version>
@@ -64,7 +59,6 @@
 			<artifactId>eclipse-collections-api</artifactId>
 			<version>9.1.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.eclipse.collections</groupId>
 			<artifactId>eclipse-collections</artifactId>
@@ -72,8 +66,8 @@
 		</dependency>
 	</dependencies>
 
-
 	<modules>
+	<!-- core modules as default maven builds -->
 		<module>../org.jactr</module>
 		<module>../org.jactr.io</module>
 		<module>../org.jactr.modules.threaded</module>
@@ -81,8 +75,6 @@
 		<module>../org.jactr.modules.versioned</module>
 		<module>../org.jactr.tools</module>
 		<module>../org.jactr.tools.experiment</module>
-
-
 
 	</modules>
 

@@ -11,18 +11,17 @@ Bundle-ActivationPolicy: lazy
 Eclipse-BuddyPolicy: registered
 Eclipse-RegisterBuddy: org.commonreality.osgi
 Require-Bundle: org.eclipse.pde.core,
- org.commonreality.osgi;bundle-version="0.0.1",
+ org.commonreality.osgi,
  org.eclipse.equinox.registry,
- org.eclipse.core.runtime;bundle-version="3.14.0",
- org.apache.commons.logging
-Bundle-ClassPath: lib/org.jactr.core.jar,
- lib/org.jactr.io.jar,
- lib/org.jactr.modules.threaded.jar,
- lib/org.jactr.modules.timing.jar,
- lib/org.jactr.modules.versioned.jar,
- lib/org.jactr.tools.experiment.jar,
- lib/org.jactr.tools.jar,
- .
+ org.eclipse.core.runtime,
+ org.apache.commons.logging,
+ org.apache.commons.lang;bundle-version="2.6.0",
+ org.apache.commons.cli;bundle-version="1.2.0",
+ org.apache.commons.collections;bundle-version="3.2.2",
+ org.eclipse.collections;bundle-version="9.2.0",
+ org.antlr.runtime;bundle-version="3.2.0",
+ org.apache.commons.math;bundle-version="2.1.0"
+Bundle-ClassPath: .
 Export-Package: org.jactr.core.buffer,
  org.jactr.core.buffer.delegate,
  org.jactr.core.buffer.event,

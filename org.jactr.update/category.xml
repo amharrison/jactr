@@ -3,22 +3,8 @@
    <description name="jACT-R Main Update site" url="http://jactr.org/update/core/">
       jACT-R update site
    </description>
-   <feature url="features/org.jactr.core.feature_1.3.0.201808291443.jar" id="org.jactr.core.feature" version="1.3.0.201808291443">
+   <feature url="features/org.jactr.osgi.feature_0.0.1.qualifier.jar" id="org.jactr.osgi.feature" version="0.0.1.qualifier">
       <category name="org.jactr"/>
-   </feature>
-   <feature url="features/org.jactr.io.feature_1.3.0.201808291443.jar" id="org.jactr.io.feature" version="1.3.0.201808291443">
-      <category name="org.jactr"/>
-   </feature>
-   <feature url="features/org.jactr.support.feature_1.3.0.201808291443.jar" id="org.jactr.support.feature" version="1.3.0.201808291443">
-      <category name="org.jactr"/>
-   </feature>
-   <feature url="features/org.jactr.tools.feature_1.3.0.201808291443.jar" id="org.jactr.tools.feature" version="1.3.0.201808291443">
-      <category name="org.jactr.tools"/>
-   </feature>
-   <feature url="features/org.jactr.modules.feature_1.3.0.201808291443.jar" id="org.jactr.modules.feature" version="1.3.0.201808291443">
-      <category name="org.jactr.modules"/>
    </feature>
    <category-def name="org.jactr" label="jACT-R : Core"/>
-   <category-def name="org.jactr.tools" label="jACT-R : Tools"/>
-   <category-def name="org.jactr.modules" label="jACT-R : Modules"/>
 </site>
