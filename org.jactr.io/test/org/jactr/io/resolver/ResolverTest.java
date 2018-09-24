@@ -35,8 +35,7 @@ public class ResolverTest extends TestCase
   static private final transient Log LOGGER = LogFactory
                                                 .getLog(ResolverTest.class);
   
-  String[] _cleanModels = {"org/jactr/core/runtime/semantic-model.jactr",
-      "org/jactr/core/models/semantic-full.jactr"};
+  String[] _cleanModels = {"org/jactr/io/resolver/addition.jactr"};
   
   protected void setUp() throws Exception
   {

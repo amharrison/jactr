@@ -98,7 +98,7 @@ public class AuralTest
     try
     {
       // give all the other threads a chance to cleanup
-      Thread.sleep(1000);
+      Thread.sleep(5000);
     }
     catch (InterruptedException e)
     {

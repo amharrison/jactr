@@ -1,6 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>org.jactr.modules.timing</artifactId>
@@ -8,7 +6,7 @@
 	<parent>
 		<groupId>org.jactr</groupId>
 		<artifactId>org.jactr.distro</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>2.5.0-SNAPSHOT</version>
 		<relativePath>../org.jactr.distro/pom.xml</relativePath>
 	</parent>
 
@@ -42,12 +40,12 @@
 		<dependency>
 			<groupId>org.jactr</groupId>
 			<artifactId>org.jactr.core</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>2.5.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jactr</groupId>
 			<artifactId>org.jactr.io</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>2.5.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 </project>

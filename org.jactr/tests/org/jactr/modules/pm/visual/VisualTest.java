@@ -29,6 +29,7 @@ import org.jactr.core.runtime.controller.DefaultController;
 import org.jactr.core.runtime.controller.IController;
 import org.jactr.core.utils.StringUtilities;
 import org.jactr.test.ExecutionTester;
+import org.junit.Test;
 
 public class VisualTest
 {
@@ -111,7 +112,7 @@ public class VisualTest
     try
     {
       // give all the other threads a chance to cleanup
-      Thread.sleep(1000);
+      Thread.sleep(5000);
     }
     catch (InterruptedException e)
     {
@@ -155,7 +156,7 @@ public class VisualTest
     return tester;
   }
 
-  // @Test
+  @Test
   public void testVisualAttending() throws Throwable
   {
     IModel model = new FluentVisual().get();
