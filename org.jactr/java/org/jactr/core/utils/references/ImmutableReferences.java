@@ -13,6 +13,8 @@
  */
 package org.jactr.core.utils.references;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 public class ImmutableReferences implements IReferences
@@ -94,6 +96,12 @@ public class ImmutableReferences implements IReferences
   public int getNumberOfRecentReferences()
   {
     return _references.getNumberOfRecentReferences();
+  }
+
+  @Override
+  public Collection<Double> getTimes(Collection<Double> container)
+  {
+    return _references.getTimes(container);
   }
 
 }

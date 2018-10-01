@@ -107,7 +107,7 @@ public class ParameterHelper
    * 
    * @param container
    */
-  public void getSetableParameterNames(Set<String> container)
+  public Set<String> getSetableParameterNames(Set<String> container)
   {
     if (_deferredParameters != null)
       container.addAll(_deferredParameters.keySet());
@@ -116,6 +116,8 @@ public class ParameterHelper
       _parameterProcessors.values().forEach(p -> {
         if (p.isSetable()) container.add(p.getParameterName());
       });
+
+    return container;
   }
 
   /**
@@ -123,7 +125,7 @@ public class ParameterHelper
    * 
    * @param container
    */
-  public void getParameterNames(Set<String> container)
+  public Set<String> getParameterNames(Set<String> container)
   {
     if (_deferredParameters != null)
       container.addAll(_deferredParameters.keySet());
@@ -132,6 +134,7 @@ public class ParameterHelper
       _parameterProcessors.values().forEach(p -> {
         container.add(p.getParameterName());
       });
+    return container;
   }
 
   public void getDeferredParameters(Map<String, String> container)

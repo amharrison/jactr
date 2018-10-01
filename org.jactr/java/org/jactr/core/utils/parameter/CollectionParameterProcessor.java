@@ -12,21 +12,19 @@ import java.util.function.Supplier;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class CollectionParameterProcessor<T> extends
-    ParameterProcessor<Collection<T>>
+public class CollectionParameterProcessor<T>
+    extends ParameterProcessor<Collection<T>>
 {
   /**
    * Logger definition
    */
-  static private final transient Log LOGGER       = LogFactory
-                                                      .getLog(CollectionParameterProcessor.class);
-
+  static private final transient Log LOGGER = LogFactory
+      .getLog(CollectionParameterProcessor.class);
 
 
   public CollectionParameterProcessor(String parameterName,
       Consumer<Collection<T>> setFunction, Supplier<Collection<T>> getFunction,
-      final ParameterProcessor<T> contentProcessor,
-      final boolean ignoreNulls)
+      final ParameterProcessor<T> contentProcessor, final boolean ignoreNulls)
   {
     super(parameterName, (String s) -> {
       String stripped = s.substring(s.indexOf("(") + 1, s.lastIndexOf(")"));
@@ -40,18 +38,16 @@ public class CollectionParameterProcessor<T> extends
       for (String split : splits)
       {
         split = split.trim();
-        if (split.length() != 0)
-          try
-          {
-                T secondary = contentProcessor.getFromStringFunction().apply(
-                    split);
-            if (secondary != null || !ignoreNulls) rtn.add(secondary);
-          }
-          catch (Exception e)
-          {
-            LOGGER.error("Failed to coerce " + split
-                + " with secondary handler " + contentProcessor, e);
-          }
+        if (split.length() != 0) try
+        {
+          T secondary = contentProcessor.getFromStringFunction().apply(split);
+          if (secondary != null || !ignoreNulls) rtn.add(secondary);
+        }
+        catch (Exception e)
+        {
+          LOGGER.error("Failed to coerce " + split + " with secondary handler "
+              + contentProcessor, e);
+        }
       }
 
       return rtn;

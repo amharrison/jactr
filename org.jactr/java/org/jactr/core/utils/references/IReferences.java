@@ -13,6 +13,8 @@
  */
 package org.jactr.core.utils.references;
 
+import java.util.Collection;
+
 /**
  * interface used to track the number and times of references of objects in a
  * model
@@ -41,8 +43,10 @@ public interface IReferences
    */
   default public double[] getTimes()
   {
-    return getTimes(null);
+    return getTimes((double[]) null);
   }
+
+  public Collection<Double> getTimes(Collection<Double> container);
 
   /**
    * get all the reference times relative to referenceTime, order is not

@@ -253,7 +253,7 @@ public class DefaultSubsymbolicProduction4 extends BasicSubsymbolicProduction
     else if (FAILURE_TIMES.equals(key))
     {
       Collection<Number> nTimes = new ArrayList<Number>();
-      for (double time : _failures.getTimes(null))
+      for (double time : _failures.getTimes())
         nTimes.add(new Double(time));
 
       CollectionParameterHandler<Number> aph = new CollectionParameterHandler<Number>(
@@ -263,7 +263,7 @@ public class DefaultSubsymbolicProduction4 extends BasicSubsymbolicProduction
     else if (SUCCESS_TIMES.equals(key))
     {
       Collection<Number> nTimes = new ArrayList<Number>();
-      for (double time : _successes.getTimes(null))
+      for (double time : _successes.getTimes())
         nTimes.add(new Double(time));
 
       CollectionParameterHandler<Number> aph = new CollectionParameterHandler<Number>(
@@ -273,7 +273,7 @@ public class DefaultSubsymbolicProduction4 extends BasicSubsymbolicProduction
     else if (EFFORT_TIMES.equals(key))
     {
       Collection<Number> nTimes = new ArrayList<Number>();
-      for (double time : _efforts.getTimes(null))
+      for (double time : _efforts.getTimes())
         nTimes.add(new Double(time));
 
       CollectionParameterHandler<Number> aph = new CollectionParameterHandler<Number>(
@@ -459,7 +459,7 @@ public class DefaultSubsymbolicProduction4 extends BasicSubsymbolicProduction
   protected void setReferenceCount(long referenceCount, IReferences references,
       String countParameterName, String timesParameterName)
   {
-    double[] oldTimes = references.getTimes(null);
+    double[] oldTimes = references.getTimes();
     long oldCount = references.getNumberOfReferences();
     references.clear();
 
@@ -477,14 +477,14 @@ public class DefaultSubsymbolicProduction4 extends BasicSubsymbolicProduction
       _parentProduction.dispatch(new ProductionEvent(_parentProduction,
           countParameterName, references.getNumberOfReferences(), oldCount));
       _parentProduction.dispatch(new ProductionEvent(_parentProduction,
-          timesParameterName, references.getTimes(null), oldTimes));
+          timesParameterName, references.getTimes(), oldTimes));
     }
   }
 
   protected void setReferenceTimes(Collection<Number> times,
       IReferences references, String parameterName)
   {
-    double[] oldTimes = references.getTimes(null);
+    double[] oldTimes = references.getTimes();
 
     /*
      * we do not clear here since count may have been set and this reference
@@ -510,6 +510,6 @@ public class DefaultSubsymbolicProduction4 extends BasicSubsymbolicProduction
 
     if (_parentProduction.hasListeners())
       _parentProduction.dispatch(new ProductionEvent(_parentProduction,
-          parameterName, references.getTimes(null), oldTimes));
+          parameterName, references.getTimes(), oldTimes));
   }
 }

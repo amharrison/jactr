@@ -13,9 +13,12 @@
  */
 package org.jactr.core.utils.references;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.collections.api.list.primitive.MutableDoubleList;
+import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.DoubleLists;
 
 public class DefaultReferences implements IOptimizedReferences
@@ -186,7 +189,7 @@ public class DefaultReferences implements IOptimizedReferences
        * we've got some contracting to do.. snag the values and the current
        * insertion point
        */
-      double[] values = getTimes(null);
+      double[] values = getTimes((double[]) null);
       long currentCount = getNumberOfReferences();
       int lastPosition = _nextInsertionPoint - 1;
 
@@ -216,6 +219,17 @@ public class DefaultReferences implements IOptimizedReferences
   synchronized public int getNumberOfRecentReferences()
   {
     return _arrayOfDoubles.size();
+  }
+
+  @Override
+  public Collection<Double> getTimes(Collection<Double> container)
+  {
+    if (container == null) container = Lists.mutable.empty();
+    final Collection<Double> fContainer = container;
+    _arrayOfDoubles.forEach((d) -> {
+      fContainer.add(d);
+    });
+    return container;
   }
 
 }
