@@ -1,9 +1,5 @@
 package org.jactr.core.module.declarative.basic;
 
-/*
- * default logging
- */
-import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
@@ -30,14 +26,14 @@ import org.jactr.core.utils.parameter.LinkParameterProcessor;
  * 
  * @author harrison
  */
-public class DefaultAssociativeLinkageSystem implements
-    IAssociativeLinkageSystem
+public class DefaultAssociativeLinkageSystem
+    implements IAssociativeLinkageSystem
 {
   /**
    * Logger definition
    */
   static private final transient Log LOGGER = LogFactory
-                                                .getLog(DefaultAssociativeLinkageSystem.class);
+      .getLog(DefaultAssociativeLinkageSystem.class);
 
   private IAssociativeLinkEquation   _equation;
 
@@ -97,20 +93,12 @@ public class DefaultAssociativeLinkageSystem implements
 
   public LinkParameterProcessor getParameterProcessor(final IChunk sourceChunk)
   {
-    return new LinkParameterProcessor(ISubsymbolicChunk4.LINKS, l -> {
-      addLink(l);
-    },
+    return new LinkParameterProcessor(ISubsymbolicChunk4.LINKS, null, null,
+        new ACTRParameterProcessor("bsName", null, null,
+            sourceChunk.getModel()),
         () -> {
-          IAssociativeLinkContainer container = sourceChunk
-              .getAdapter(IAssociativeLinkContainer.class);
-          Collection<IAssociativeLink> lC = new ArrayList<IAssociativeLink>();
-          container.getOutboundLinks(sourceChunk, lC);
-          if (lC.size() > 0)
-            return lC.iterator().next();
-          else
-            return null;
-        }, new ACTRParameterProcessor("bsName", null, null,
-            sourceChunk.getModel()), sourceChunk);
+          return sourceChunk;
+        });
   }
 
   /**
@@ -188,12 +176,9 @@ public class DefaultAssociativeLinkageSystem implements
       {
         srcCont.getOutboundLinks(links);
 
-        if (LOGGER.isDebugEnabled())
-          LOGGER
-              .debug(String
-                  .format(
-                      "Copying and remapping %d outbound links (those that spread activation from destination)",
-                      links.size()));
+        if (LOGGER.isDebugEnabled()) LOGGER.debug(String.format(
+            "Copying and remapping %d outbound links (those that spread activation from destination)",
+            links.size()));
 
         for (IAssociativeLink link : links)
           remapAndInstall(source, destination, link);
@@ -206,12 +191,9 @@ public class DefaultAssociativeLinkageSystem implements
         // i links, that is, these links spread activation to source
         srcCont.getInboundLinks(links);
 
-        if (LOGGER.isDebugEnabled())
-          LOGGER
-              .debug(String
-                  .format(
-                      "Copying and remapping %d inbound links (those that spread activation into destination)",
-                      links.size()));
+        if (LOGGER.isDebugEnabled()) LOGGER.debug(String.format(
+            "Copying and remapping %d inbound links (those that spread activation into destination)",
+            links.size()));
 
         for (IAssociativeLink link : links)
           remapAndInstall(source, destination, link);
@@ -219,9 +201,8 @@ public class DefaultAssociativeLinkageSystem implements
 
       FastCollectionFactory.recycle(links);
     }
-    else if (LOGGER.isWarnEnabled())
-      LOGGER.warn(String
-          .format("Both source and destination must be ISubsymbolicChunk4"));
+    else if (LOGGER.isWarnEnabled()) LOGGER.warn(String
+        .format("Both source and destination must be ISubsymbolicChunk4"));
   }
 
   protected void remapAndInstall(IChunk source, IChunk dest,
@@ -286,27 +267,25 @@ public class DefaultAssociativeLinkageSystem implements
       {
         if (container.size() == 1)
         {
-          if (LOGGER.isDebugEnabled())
-            LOGGER.debug(String.format(
-                "%s already has a link to %s, returning %s", destinationChunk,
-                other, link));
+          if (LOGGER.isDebugEnabled()) LOGGER
+              .debug(String.format("%s already has a link to %s, returning %s",
+                  destinationChunk, other, link));
         }
-        else if (LOGGER.isWarnEnabled())
-          LOGGER.warn(String.format(
-              "Multiple links between %s and %s found, returning first",
-              destinationChunk, other));
+        else if (LOGGER.isWarnEnabled()) LOGGER.warn(String.format(
+            "Multiple links between %s and %s found, returning first",
+            destinationChunk, other));
 
         return container.iterator().next();
       }
       else
       {
         /* new link */
-        IAssociativeLink newLink = createLink(destIsI ? destinationChunk
-            : other, destIsJ ? destinationChunk : other);
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format(
-              "No existing link between %s and %s, creating and adding %s",
-              destinationChunk, other, newLink));
+        IAssociativeLink newLink = createLink(
+            destIsI ? destinationChunk : other,
+            destIsJ ? destinationChunk : other);
+        if (LOGGER.isDebugEnabled()) LOGGER.debug(String.format(
+            "No existing link between %s and %s, creating and adding %s",
+            destinationChunk, other, newLink));
 
         /*
          * add the new link to the other chunk, but only if this isn't naturally

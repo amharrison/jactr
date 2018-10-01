@@ -18,9 +18,28 @@ public class ACTRParameterProcessor extends ParameterProcessor<Object>
   static private final transient Log LOGGER = LogFactory
                                                 .getLog(ACTRParameterProcessor.class);
 
+  public ACTRParameterProcessor(IModel model)
+  {
+    this(null, null, null, model);
+  }
+
+  public ACTRParameterProcessor(Supplier<IModel> model)
+  {
+    this(null, null, null, model);
+  }
+
   public ACTRParameterProcessor(String parameterName,
       Consumer<Object> setFunction, Supplier<Object> getFunction,
       final IModel model)
+  {
+    this(parameterName, setFunction, getFunction, () -> {
+      return model;
+    });
+  }
+
+  public ACTRParameterProcessor(String parameterName,
+      Consumer<Object> setFunction, Supplier<Object> getFunction,
+      final Supplier<IModel> model)
   {
     super(parameterName, (String element) -> {
       if (element == null) return null;
@@ -29,15 +48,15 @@ public class ACTRParameterProcessor extends ParameterProcessor<Object>
       {
         Object rtn = null;
 
-        rtn = model.getDeclarativeModule().getChunk(element).get();
+        rtn = model.get().getDeclarativeModule().getChunk(element).get();
 
         if (rtn == null)
-          rtn = model.getDeclarativeModule().getChunkType(element).get();
+          rtn = model.get().getDeclarativeModule().getChunkType(element).get();
 
         if (rtn == null)
-          rtn = model.getProceduralModule().getProduction(element).get();
+          rtn = model.get().getProceduralModule().getProduction(element).get();
 
-        if (rtn == null) rtn = model.getActivationBuffer(element);
+        if (rtn == null) rtn = model.get().getActivationBuffer(element);
 
         return rtn;
       }

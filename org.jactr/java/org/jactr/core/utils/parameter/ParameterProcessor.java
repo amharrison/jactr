@@ -18,13 +18,13 @@ public class ParameterProcessor<T>
   static private final transient Log LOGGER = LogFactory
                                                 .getLog(ParameterProcessor.class);
 
-  private final Function<String, T>  _fromString;
+  private Function<String, T>        _fromString;
 
-  private final Function<T, String>  _toString;
+  private Function<T, String>        _toString;
 
-  private final Consumer<T>          _setFunction;
+  private Consumer<T>                _setFunction;
 
-  private final Supplier<T>          _getFunction;
+  private Supplier<T>                _getFunction;
 
   private final String               _parameterName;
 
@@ -45,6 +45,26 @@ public class ParameterProcessor<T>
     _toString = toString;
     _setFunction = setFunction;
     _getFunction = getFunction;
+  }
+
+  protected void setGetter(Supplier<T> supplier)
+  {
+    _getFunction = supplier;
+  }
+
+  protected void setSetter(Consumer<T> consumer)
+  {
+    _setFunction = consumer;
+  }
+
+  protected void setFromString(Function<String, T> from)
+  {
+    _fromString = from;
+  }
+
+  protected void setToString(Function<T, String> to)
+  {
+    _toString = to;
   }
 
   public Function<String, T> getFromStringFunction()
