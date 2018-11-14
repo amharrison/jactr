@@ -6,20 +6,12 @@ package org.jactr.core.utils.collections;
 import java.util.Collection;
 
 import org.apache.commons.collections.set.CompositeSet;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jactr.core.utils.recyclable.CollectionPooledObjectFactory;
 import org.jactr.core.utils.recyclable.PooledRecycableFactory;
 import org.jactr.core.utils.recyclable.RecyclableFactory;
 
 public class CompositeSetFactory
 {
-  /**
-   * Logger definition
-   */
-  static private final transient Log             LOGGER   = LogFactory
-      .getLog(CompositeSetFactory.class);
-
 
   static private RecyclableFactory<CompositeSet>       _factory = new PooledRecycableFactory<CompositeSet>(
       new CollectionPooledObjectFactory<CompositeSet>(CompositeSet::new,

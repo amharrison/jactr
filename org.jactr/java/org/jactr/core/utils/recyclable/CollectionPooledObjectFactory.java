@@ -8,16 +8,22 @@ import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
-public class CollectionPooledObjectFactory<T extends Collection<?>>
-    extends BasePooledObjectFactory<T>
+public class CollectionPooledObjectFactory<T> extends BasePooledObjectFactory<T>
 {
-  
+
   private Supplier<T> _supplier;
 
+  /*
+   * Ideally, we'd make the generic T extends Collection<?> but since we need to
+   * use this for CompositeSet and CompositeCollection, which are 3.2.2
+   * non-generics, we erase that type and hack it back in here.
+   */
+  @SuppressWarnings("rawtypes")
   private Consumer<T> _passivate = (c) -> {
-                                   c.clear();
+                                   if (c instanceof Collection)
+                                     ((Collection) c).clear();
                                  };
-  
+
   public CollectionPooledObjectFactory(Supplier<T> allocator)
   {
     _supplier = allocator;
@@ -35,7 +41,7 @@ public class CollectionPooledObjectFactory<T extends Collection<?>>
   {
     return _supplier.get();
   }
-  
+
   @Override
   public void passivateObject(final PooledObject<T> p)
   {
