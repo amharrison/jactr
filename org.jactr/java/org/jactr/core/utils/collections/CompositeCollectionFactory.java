@@ -28,6 +28,7 @@ public class CompositeCollectionFactory
     _factory.recycle(set);
   }
 
+  @SuppressWarnings("rawtypes")
   static private void clear(CompositeCollection set)
   {
     for (Object composite : set.getCollections())

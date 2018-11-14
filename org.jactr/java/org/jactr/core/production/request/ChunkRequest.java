@@ -37,4 +37,10 @@ public class ChunkRequest extends ChunkTypeRequest
   {
     return _chunk;
   }
+
+  @Override
+  public boolean matches(IChunk reference)
+  {
+    return _chunk.equalsSymbolic(reference) && super.matches(reference);
+  }
 }

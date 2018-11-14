@@ -13,9 +13,6 @@
  */
 package org.jactr.core.slot;
 
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jactr.core.buffer.IActivationBuffer;
@@ -23,6 +20,7 @@ import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunktype.IChunkType;
 import org.jactr.core.model.IModel;
 import org.jactr.core.production.IProduction;
+import org.jactr.core.utils.WeaklyCached;
 
 /**
  * @author harrison TODO To change the template for this generated type comment
@@ -43,7 +41,8 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
    * however this creates a ton of strings that are actually relatively short
    * lived, so we use references to hold onto it for a short term
    */
-  private Reference<String>          _toString;
+  private WeaklyCached<String>       _toString = new WeaklyCached<>(
+      this::createToString);
 
   public BasicSlot(String name)
   {
@@ -182,20 +181,12 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
   @Override
   public String toString()
   {
-    synchronized (this)
-    {
-      if (_toString == null)
-        _toString = new WeakReference<String>(createToString());
-      return _toString.get();
-    }
+    return _toString.get();
   }
 
-  protected void clearToString()
+  protected void invalidateToString()
   {
-    synchronized (this)
-    {
-      _toString = null;
-    }
+    _toString.invalidate();
   }
 
   protected String createToString()
@@ -232,7 +223,7 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
 
     Object old = _value;
     _value = value;
-    clearToString();
+    invalidateToString();
     return old;
   }
 
@@ -240,7 +231,7 @@ public class BasicSlot implements ISlot, Comparable<ISlot>
   {
     String old = _name;
     _name = name;
-    clearToString();
+    invalidateToString();
     return old;
   }
 

@@ -42,7 +42,7 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
    * Logger definition
    */
   static private final transient Log LOGGER  = LogFactory
-                                                 .getLog(SlotBasedRequest.class);
+      .getLog(SlotBasedRequest.class);
 
   protected Collection<ISlot>        _slots;
 
@@ -99,6 +99,35 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
     return count;
   }
 
+  @Override
+  public boolean matches(IChunk reference)
+  {
+    ISymbolicChunk sc = reference.getSymbolicChunk();
+    String name = sc.getName();
+    List<ISlot> slots = FastListFactory.newInstance();
+    getSlots(slots);
+    VariableBindings bindings = new VariableBindings();
+
+    try
+    {
+      for (ISlot slot : slots)
+        try
+        {
+          resolveSlot(slot, bindings, name, sc);
+        }
+        catch (Exception e)
+        {
+          return false;
+        }
+
+      return true;
+    }
+    finally
+    {
+      FastListFactory.recycle(slots);
+    }
+  }
+
   protected boolean resolveSlot(ISlot slot, VariableBindings bindings,
       String slotContainerName, IUniqueSlotContainer container)
       throws CannotMatchException
@@ -110,12 +139,9 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
       return resolveLogicalSlot((ILogicalSlot) slot, bindings,
           slotContainerName, container);
 
-    if (LOGGER.isWarnEnabled())
-      LOGGER
-          .warn(String
-              .format(
-                  "A slot other than conditional or logical was attempted to resolve? %s",
-                  slot));
+    if (LOGGER.isWarnEnabled()) LOGGER.warn(String.format(
+        "A slot other than conditional or logical was attempted to resolve? %s",
+        slot));
     return false;
   }
 
@@ -180,17 +206,15 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
         /*
          * we short circuit AND above.
          */
-        if (LOGGER.isDebugEnabled())
-          LOGGER.debug(String.format(
-              "No exceptions or unresolved slots for %s", slotToResolve));
+        if (LOGGER.isDebugEnabled()) LOGGER.debug(String
+            .format("No exceptions or unresolved slots for %s", slotToResolve));
       }
       else if (op == ILogicalSlot.NOT)
         /*
          * NOTs are expecting an exception., but they should still be resolved
          */
-        if (anyException == null)
-          throw new CannotMatchException(new LogicMatchFailure(container,
-              slotToResolve));
+        if (anyException == null) throw new CannotMatchException(
+            new LogicMatchFailure(container, slotToResolve));
 
       // otherwise
       return true;
@@ -299,8 +323,8 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
             LOGGER.debug(String.format("%s does not contain slot %s",
                 slotContainerName, slotToResolve.getName()));
 
-          throw new CannotMatchException(new SlotMatchFailure(slotContainer,
-              slotToResolve));
+          throw new CannotMatchException(
+              new SlotMatchFailure(slotContainer, slotToResolve));
         }
       }
       catch (CannotMatchException cme)
@@ -317,8 +341,8 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
           LOGGER.debug(String.format("%s does not contain slot %s",
               slotContainerName, slotToResolve.getName()));
 
-        throw new CannotMatchException(new SlotMatchFailure(slotContainer,
-            slotToResolve));
+        throw new CannotMatchException(
+            new SlotMatchFailure(slotContainer, slotToResolve));
       }
 
       boolean locallyBound = false;
@@ -353,20 +377,19 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
            */
           if (slotToResolve.matchesCondition(valueSlot.getValue()))
           {
-            locallyBound = true;
-            bindings.bind(variableName, valueSlot.getValue(), valueSlot);
+          locallyBound = true;
+          bindings.bind(variableName, valueSlot.getValue(), valueSlot);
 
-            if (LOGGER.isDebugEnabled())
-              LOGGER.debug(String.format("Bound %s %s", variableName,
-                  valueSlot.getValue()));
+          if (LOGGER.isDebugEnabled()) LOGGER.debug(
+              String.format("Bound %s %s", variableName, valueSlot.getValue()));
           }
           else
-            /*
-             * it doesn't match, this is likely a slotName =toBeBound, but
-             * container.slotName==null
-             */
-            throw new CannotMatchException(new SlotMatchFailure(slotContainer,
-                slotToResolve, valueSlot));
+          /*
+           * it doesn't match, this is likely a slotName =toBeBound, but
+           * container.slotName==null
+           */
+          throw new CannotMatchException(
+              new SlotMatchFailure(slotContainer, slotToResolve, valueSlot));
       }
 
       /*
@@ -378,32 +401,31 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
          */
         if (slotToResolve.getName().equalsIgnoreCase(ISlot.ISA))
         {
-          /*
-           * isa s must have a chunk as the container and a chunk type as the
-           * value/
-           */
-          if (!(slotContainer instanceof ISymbolicChunk))
-            throw new CannotMatchException(new SlotMatchFailure(slotContainer,
-                slotToResolve, valueSlot));
+        /*
+         * isa s must have a chunk as the container and a chunk type as the
+         * value/
+         */
+        if (!(slotContainer instanceof ISymbolicChunk))
+          throw new CannotMatchException(
+              new SlotMatchFailure(slotContainer, slotToResolve, valueSlot));
 
-          if (!(slotToResolve.getValue() instanceof IChunkType))
-            throw new CannotMatchException(new SlotMatchFailure(slotContainer,
-                slotToResolve, valueSlot));
+        if (!(slotToResolve.getValue() instanceof IChunkType))
+          throw new CannotMatchException(
+              new SlotMatchFailure(slotContainer, slotToResolve, valueSlot));
 
-          ISymbolicChunk chunk = (ISymbolicChunk) slotContainer;
-          IChunkType ct = (IChunkType) slotToResolve.getValue();
+        ISymbolicChunk chunk = (ISymbolicChunk) slotContainer;
+        IChunkType ct = (IChunkType) slotToResolve.getValue();
 
-          if (!chunk.isA(ct))
-            throw new CannotMatchException(new ChunkTypeMatchFailure(ct,
-                chunk.getParentChunk()));
+        if (!chunk.isA(ct)) throw new CannotMatchException(
+            new ChunkTypeMatchFailure(ct, chunk.getParentChunk()));
 
         }
         else if (!slotToResolve.matchesCondition(valueSlot.getValue()))
         {
-          if (locallyBound) bindings.unbind(variableName);
+        if (locallyBound) bindings.unbind(variableName);
 
-          throw new CannotMatchException(new SlotMatchFailure(slotContainer,
-              slotToResolve, valueSlot));
+        throw new CannotMatchException(
+            new SlotMatchFailure(slotContainer, slotToResolve, valueSlot));
         }
 
     }
@@ -418,8 +440,8 @@ public class SlotBasedRequest implements IRequest, ISlotContainer
    * container
    * {@link #bind(IModel, String, IUniqueSlotContainer, VariableBindings, boolean)}
    */
-  public int bind(IModel model, VariableBindings bindings, boolean iterativeCall)
-      throws CannotMatchException
+  public int bind(IModel model, VariableBindings bindings,
+      boolean iterativeCall) throws CannotMatchException
   {
     if (_unresolved == null)
     {

@@ -84,7 +84,7 @@ public class DefaultConditionalSlot extends DefaultMutableSlot implements
     if (condition >= EQUALS && condition <= NOT_EQUALS)
     {
       _condition = condition;
-      clearToString();
+      invalidateToString();
     }
   }
 

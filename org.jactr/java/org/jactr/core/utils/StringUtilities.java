@@ -13,6 +13,8 @@
  */
 package org.jactr.core.utils;
 
+import java.util.stream.Collectors;
+
 import org.jactr.core.chunk.IChunk;
 import org.jactr.core.chunk.ISymbolicChunk;
 import org.jactr.core.chunktype.IChunkType;
@@ -28,8 +30,10 @@ public class StringUtilities
   {
     if (chunk == null) return "null";
     ISymbolicChunk sc = chunk.getSymbolicChunk();
-    StringBuilder sb = new StringBuilder(sc.getName());
-    sb.append(".").append(sc.getSlots());
+    StringBuilder sb = new StringBuilder(sc.getName()).append(" ");
+    sb.append(sc.getSlots().stream().map(s -> {
+      return s.getName() + "=" + s.getValue();
+    }).collect(Collectors.joining(",")));
     return sb.toString();
   }
 
@@ -37,8 +41,10 @@ public class StringUtilities
   {
     if (chunkType == null) return "null";
     ISymbolicChunkType sc = chunkType.getSymbolicChunkType();
-    StringBuilder sb = new StringBuilder(sc.getName());
-    sb.append(".").append(sc.getSlots());
+    StringBuilder sb = new StringBuilder(sc.getName()).append(" ");
+    sb.append(sc.getSlots().stream().map(s -> {
+      return s.getName() + "=" + s.getValue();
+    }).collect(Collectors.joining(",")));
     return sb.toString();
   }
 }

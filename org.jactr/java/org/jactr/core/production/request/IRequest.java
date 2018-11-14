@@ -1,5 +1,7 @@
 package org.jactr.core.production.request;
 
+import org.jactr.core.chunk.IChunk;
+
 /*
  * default logging
  */
@@ -29,7 +31,7 @@ public interface IRequest extends Cloneable
   /**
    * attempt to resolve and bind any variables within this
    * request. This method can be called iteratively and is permitted
-   * to make perminent changes to the request since this should be a clone (or 
+   * to make perminent changes to the request since this should be a clone (or
    * transient). <br>
    * bind will attempt to resolve and bind any variables it contains against
    * those in the bindings. If it has any unresolved bindings and this is an
@@ -45,4 +47,12 @@ public interface IRequest extends Cloneable
    */
   public int bind(IModel model, VariableBindings bindings, boolean iterativeCall) throws CannotMatchException;
   
+  /**
+   * non-destructive check if the chunk matches this request
+   * 
+   * @param reference
+   * @return
+   */
+  public boolean matches(IChunk reference);
+
 }

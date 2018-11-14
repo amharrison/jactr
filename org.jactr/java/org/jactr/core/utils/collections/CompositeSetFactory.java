@@ -35,6 +35,7 @@ public class CompositeSetFactory
     _factory.recycle(set);
   }
 
+  @SuppressWarnings("rawtypes")
   static private void clear(CompositeSet set)
   {
     for (Object composite : set.getCollections())

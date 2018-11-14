@@ -32,6 +32,7 @@ import org.jactr.core.event.ParameterEvent;
 import org.jactr.core.model.IModel;
 import org.jactr.core.runtime.ACTRRuntime;
 import org.jactr.core.utils.DefaultAdaptable;
+import org.jactr.core.utils.IAdaptableFactory;
 import org.jactr.core.utils.parameter.CollectionParameterProcessor;
 import org.jactr.core.utils.parameter.DoubleParameterProcessor;
 import org.jactr.core.utils.parameter.LongParameterProcessor;
@@ -73,16 +74,38 @@ public abstract class AbstractSubsymbolicChunk extends DefaultAdaptable
 
   private Collection<IActivationParticipant> _activationParticipants        = new ArrayList<IActivationParticipant>();
 
-
-
   protected ParameterHelper                  _parameterHelper               = new ParameterHelper();
-
 
   public AbstractSubsymbolicChunk()
   {
     // factory? really. this should be changed
     _referenceList = IReferences.Factory.get().newInstance();
     initializeParameters();
+
+    /**
+     * install adapter handler for parameterHelper
+     */
+    addAdapterFactory(new IAdaptableFactory() {
+
+      @Override
+      public boolean shouldSoftCache()
+      {
+        return false;
+      }
+
+      @Override
+      public boolean shouldCache()
+      {
+        return true;
+      }
+
+      @Override
+      public <T> T adapt(Object sourceObject)
+      {
+        return (T) ((AbstractSubsymbolicChunk) sourceObject)
+            .getParameterHelper();
+      }
+    }, new Class[] { ParameterHelper.class });
   }
 
   public ParameterHelper getParameterHelper()

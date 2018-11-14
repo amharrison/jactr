@@ -28,8 +28,8 @@ public class ChunkTypeRequest extends SlotBasedRequest
   /**
    * Logger definition
    */
-  static private final transient Log LOGGER = LogFactory
-                                                .getLog(ChunkTypeRequest.class);
+  static private final transient Log LOGGER    = LogFactory
+      .getLog(ChunkTypeRequest.class);
 
   private IChunkType                 _chunkType;
 
@@ -56,8 +56,8 @@ public class ChunkTypeRequest extends SlotBasedRequest
    */
   public ChunkTypeRequest(IChunk chunk)
   {
-    this(chunk.getSymbolicChunk().getChunkType(), chunk.getSymbolicChunk()
-        .getSlots());
+    this(chunk.getSymbolicChunk().getChunkType(),
+        chunk.getSymbolicChunk().getSlots());
   }
 
   @Override
@@ -86,12 +86,18 @@ public class ChunkTypeRequest extends SlotBasedRequest
     IChunkType chunkType = getChunkType();
 
     if (chunkType != null && !testChunk.isA(chunkType))
-      throw new CannotMatchException(new ChunkTypeMatchFailure(chunkType,
-          testChunk));
+      throw new CannotMatchException(
+          new ChunkTypeMatchFailure(chunkType, testChunk));
 
     ISymbolicChunk sChunk = testChunk.getSymbolicChunk();
 
     return super.bind(model, sChunk.getName(), sChunk, bindings, iterativeCall);
+  }
+
+  @Override
+  public boolean matches(IChunk reference)
+  {
+    return reference.isA(getChunkType()) && super.matches(reference);
   }
 
   /**
