@@ -21,17 +21,24 @@ import org.jactr.core.slot.ISlot;
 public class FluentChunkType
 {
 
-  private IModel                     _model;
+  private IModel                 _model;
 
-  private Collection<ISlot>          _slots   = new ArrayList<>();
+  private Collection<ISlot>      _slots   = new ArrayList<>();
 
-  private String                     _name;
+  private String                 _name;
 
-  private Collection<IChunkType>     _parents = new ArrayList<>();
+  private IChunkType             _source;
+
+  private Collection<IChunkType> _parents = new ArrayList<>();
 
   private FluentChunkType(IModel model)
   {
     _model = model;
+  }
+
+  private FluentChunkType(IChunkType chunkType)
+  {
+    _source = chunkType;
   }
 
   /**
@@ -46,12 +53,24 @@ public class FluentChunkType
   }
 
   /**
+   * for chunktypes that need further modification but have already been built()
+   * once before. that is,
+   * 
+   * @param chunkType
+   * @return
+   */
+  static public FluentChunkType from(IChunkType chunkType)
+  {
+    return new FluentChunkType(chunkType);
+  }
+
+  /**
    * entry point for a chunktype derived from another
    * 
    * @param parent
    * @return
    */
-  static public FluentChunkType from(IChunkType parent)
+  static public FluentChunkType fromParent(IChunkType parent)
   {
     FluentChunkType builder = new FluentChunkType(parent.getModel());
     builder.childOf(parent);
@@ -67,6 +86,9 @@ public class FluentChunkType
    */
   public Map<String, IChunkType> types(String... typeNames)
   {
+    if (_source != null) throw new IllegalStateException(
+        "Cannot call from builder configured to modify an existing chunktype");
+
     Map<String, IChunkType> rtn = new TreeMap<>();
     for (String typeName : typeNames)
       rtn.put(typeName, named(typeName).encode());
@@ -81,6 +103,8 @@ public class FluentChunkType
    */
   public FluentChunkType named(String name)
   {
+    if (_source != null) throw new IllegalStateException(
+        "Cannot call from builder configured to modify an existing chunktype");
     _name = name;
     return this;
   }
@@ -93,6 +117,8 @@ public class FluentChunkType
    */
   public FluentChunkType childOf(IChunkType chunkType)
   {
+    if (_source != null) throw new IllegalStateException(
+        "Cannot call from builder configured to modify an existing chunktype");
     _parents.add(chunkType);
     return this;
   }
@@ -144,10 +170,13 @@ public class FluentChunkType
   {
     try
     {
-      IChunkType ct = _model.getDeclarativeModule()
+      IChunkType ct = _source;
+      if (ct == null) ct = _model.getDeclarativeModule()
           .createChunkType(_parents, _name).get();
+
+      final IChunkType fct = ct;
       _slots.forEach(s -> {
-        ct.getSymbolicChunkType().addSlot(s);
+        fct.getSymbolicChunkType().addSlot(s);
       });
       _name = null;
       // retain slots for possible repeated structure

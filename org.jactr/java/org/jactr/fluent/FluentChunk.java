@@ -31,6 +31,8 @@ public class FluentChunk
   static private final transient Log LOGGER = LogFactory
       .getLog(FluentChunk.class);
 
+  private IChunk                     _source;
+
   private IChunkType                 _parent;
 
   private String                     _name;
@@ -48,9 +50,30 @@ public class FluentChunk
     return new FluentChunk(chunkType);
   }
 
+  /**
+   * when a chunk needs further modification after build
+   * 
+   * @param chunk
+   * @return
+   * @throws IllegalArgumentException
+   *           if the chunk is already encoded
+   */
+  static public FluentChunk from(IChunk chunk)
+  {
+    if (chunk.isEncoded())
+      throw new IllegalArgumentException("chunk is already encoded");
+
+    return new FluentChunk(chunk);
+  }
+
   private FluentChunk(IChunkType chunkType)
   {
     _parent = chunkType;
+  }
+
+  private FluentChunk(IChunk chunk)
+  {
+    _source = chunk;
   }
 
   /**
@@ -61,6 +84,8 @@ public class FluentChunk
    */
   public FluentChunk named(String name)
   {
+    if (_source != null) throw new IllegalStateException(
+        "Cannot call from builder configured to modify an existing chunk");
     _name = name;
     return this;
   }
@@ -74,6 +99,8 @@ public class FluentChunk
    */
   public Map<String, IChunk> chunks(String... chunkNames)
   {
+    if (_source != null) throw new IllegalStateException(
+        "Cannot call from builder configured to modify an existing chunk");
     Map<String, IChunk> rtn = new TreeMap<>();
     for (String chunkName : chunkNames)
       rtn.put(chunkName, named(chunkName).encodeIfAbsent());
@@ -114,11 +141,15 @@ public class FluentChunk
   {
     try
     {
-      IChunk chunk = _parent.getModel().getDeclarativeModule()
+      IChunk chunk = _source;
+      if (chunk == null) chunk = _parent.getModel().getDeclarativeModule()
           .createChunk(_parent, _name).get();
+
+      final IChunk fChunk = chunk;
       _slots.forEach(s -> {
-        chunk.getSymbolicChunk().addSlot(s);
+        fChunk.getSymbolicChunk().addSlot(s);
       });
+
       _name = null;
       // leave the slots in case we want multiple copies with the same values
 //      _slots.clear();
